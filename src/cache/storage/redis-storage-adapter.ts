@@ -1,4 +1,4 @@
-import redis, { RedisClientType } from "redis";
+import { createClient, RedisClientType } from "redis";
 import { promisify } from "util";
 import {
   deflate as nodeDeflate,
@@ -16,7 +16,7 @@ export class RedisStorageAdapter<T> implements StorageAdapter<T> {
   private client: RedisClientType<any, any>;
 
   constructor(url: string) {
-    this.client = redis.createClient({ url });
+    this.client = createClient({ url });
 
     console.log(`Initialized Redis storage with URL ${url}`);
     this.client.on("error", (error) => {
