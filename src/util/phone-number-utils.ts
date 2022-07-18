@@ -1,6 +1,4 @@
-import { PhoneNumberFormat, PhoneNumberUtil } from "google-libphonenumber";
-
-const phoneUtil: PhoneNumberUtil = PhoneNumberUtil.getInstance();
+import { parsePhoneNumber } from "awesome-phonenumber";
 
 export function convertPhoneNumberToE164(
   phoneNumber: string,
@@ -9,11 +7,9 @@ export function convertPhoneNumberToE164(
   const region = locale.replace(/.+_/, "").toUpperCase();
 
   try {
-    const parsedPhoneNumber: libphonenumber.PhoneNumber = phoneUtil.parse(
-      phoneNumber,
-      region
-    );
-    return phoneUtil.format(parsedPhoneNumber, PhoneNumberFormat.E164);
+    const parsedPhoneNumber = parsePhoneNumber(phoneNumber, region);
+    const e164 = parsedPhoneNumber.getNumber("e164");
+    return e164 ?? phoneNumber;
   } catch {
     return phoneNumber;
   }
