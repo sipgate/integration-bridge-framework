@@ -5,7 +5,7 @@ It provides a unified way to connect apps to any provider of external data manag
 
 ## Bootstrapping a new bridge
 
-If you want to bootstrap a new sipgate Integration Bridge you can use this repository: [sipgate-integration-bridge-boilerplate](https://github.com/sipgate/sipgate-integration-bridge-boilerplate)
+If you want to bootstrap a new sipgate Integration Bridge you can use this repository: [sipgate-integration-bridge-boilerplate](https://github.com/sipgate/integration-bridge-boilerplate)
 
 ## Installation
 
