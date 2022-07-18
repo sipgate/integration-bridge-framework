@@ -36,13 +36,13 @@ const adapter = {
       throw new ServerError(401, "Unauthorized");
     }
 
-    if (response.ok) {
-      const contacts = await response.json();
-      // TODO: Convert contact to the structure above
-      return contacts;
-    } else {
+    if (!response.ok) {
       throw new ServerError(500, "Could not fetch contacts");
     }
+    
+    const contacts = await response.json();
+    // TODO: Convert contact to the structure below
+    return contacts;
   },
 };
 
