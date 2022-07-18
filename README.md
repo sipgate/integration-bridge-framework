@@ -27,7 +27,7 @@ const { ServerError } = bridge;
 
 const adapter = {
   getContacts: async ({ apiKey, apiUrl }) => {
-    // Fetch contacts using apiKey and apiUrl or throw on error
+    // Fetch contacts using apiUrl and apiKey
     const response = await fetch(`${apiUrl}/api/contacts`, {
       headers: { Authorization: `Bearer ${apiKey}` },
     });
@@ -40,8 +40,8 @@ const adapter = {
       throw new ServerError(500, "Could not fetch contacts");
     }
     
+    // TODO: Convert contacts to the structure below
     const contacts = await response.json();
-    // TODO: Convert contact to the structure below
     return contacts;
   },
 };
