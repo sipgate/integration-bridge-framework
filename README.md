@@ -1,6 +1,6 @@
 # sipgate Integration Bridge Framework
 
-This is the sipgate Integration Bridge framework to integrate with external services.
+This is the sipgate Integration Bridge framework to integrate sipgate apps with external services.
 It provides a unified way to connect apps to any provider of external data management, like contacts or calendar events.
 
 ## Bootstrapping a new bridge
