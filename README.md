@@ -76,7 +76,7 @@ Contacts are accepted in this format:
 The sipgate Integration Bridge supports configuration through the following environment variables:
 
 - `OAUTH2_REDIRECT_URL`: URL for to redirect the user at the end of the OAuth2 flow
-- `OAUTH2_IDENTIFIER`: Name of the Integration to indentify credentials
+- `OAUTH2_IDENTIFIER`: Name of the Integration to identify credentials
 - `REDIS_URL`: URL of a Redis instance to cache responses, otherwise memory cache will be used
 - `CACHE_DISABLED`: Disable caching
 - `CACHE_REFRESH_INTERVAL`: Time a contact in cache is not refreshed (in seconds), only used if redis or memory cache is active
