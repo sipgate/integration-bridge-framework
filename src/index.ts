@@ -38,13 +38,11 @@ export function start(adapter: Adapter, port: number = settingsPort): Server {
   app.post("/events/connected", controller.handleConnectedEvent);
   app.get("/health", controller.getHealth);
   app.get("/oauth2/redirect", controller.oAuth2Redirect);
-  app.get("/oauth2/callback", (req, res) =>
-    controller.oAuth2Callback(req, res)
-  );
+  app.get("/oauth2/callback", controller.oAuth2Callback);
 
   app.use(errorHandlerMiddleware);
 
-  return app.listen(port, () => console.log(`Listening on port ${port}`)); // tslint:disable-line
+  return app.listen(port, () => console.log(`Listening on port ${port}`));
 }
 
 export * from "./models";
