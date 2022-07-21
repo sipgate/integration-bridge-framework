@@ -19,8 +19,13 @@ export class RedisStorageAdapter<T> implements StorageAdapter<T> {
     this.client = createClient({ url });
 
     console.log(`Initialized Redis storage with URL ${url}`);
+
     this.client.on("error", (error) => {
       console.warn("Redis error: ", error.message);
+    });
+
+    this.client.connect().catch((error) => {
+      console.warn("Redis connection error: ", error.message);
     });
   }
 
