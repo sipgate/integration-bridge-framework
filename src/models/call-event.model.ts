@@ -1,12 +1,19 @@
-import { CallDirection, Channel, User } from "./";
+import { CallDirection } from "./";
+
+export enum CallParticipantType {
+  LOCAL = "local",
+  REMOTE = "remote",
+}
+
+export type CallParticipant = {
+  type: CallParticipantType;
+  phoneNumber: string;
+};
 
 export interface CallEvent {
   id: string;
-  channel: Channel;
+  startTime: number;
+  endTime: number;
   direction: CallDirection;
-  from: string;
-  to: string;
-  user: User;
-  start: number;
-  end: number;
+  participants: CallParticipant[];
 }
