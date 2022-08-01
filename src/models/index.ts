@@ -4,7 +4,6 @@ export * from "./calendar-event.model";
 export * from "./calendar-filter-options.model";
 export * from "./call-direction.enum";
 export * from "./call-event.model";
-export * from "./channel.model";
 export * from "./config.model";
 export * from "./contact-cache.model";
 export * from "./contact.model";
