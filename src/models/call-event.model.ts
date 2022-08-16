@@ -16,4 +16,5 @@ export interface CallEvent {
   endTime: number;
   direction: CallDirection;
   participants: CallParticipant[];
+  note: string;
 }
