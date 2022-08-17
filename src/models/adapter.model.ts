@@ -37,7 +37,7 @@ export interface Adapter {
     event: CalendarEventTemplate
   ) => Promise<CalendarEvent>;
   deleteCalendarEvent?: (config: Config, id: string) => Promise<void>;
-  handleCallEvent?: (config: Config, event: CallEvent) => Promise<void>;
+  handleCallEvent?: (config: Config, event: CallEvent) => Promise<string>;
   handleConnectedEvent?: (config: Config) => Promise<void>;
   getHealth?: () => Promise<void>;
   getOAuth2RedirectUrl?: () => Promise<string>;
