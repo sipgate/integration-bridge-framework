@@ -471,12 +471,12 @@ export class Controller {
 
       console.log(`Handling call event for key "${anonymizeKey(apiKey)}"`);
 
-      await this.adapter.handleCallEvent(
+      const integrationCallEventRef = await this.adapter.handleCallEvent(
         req.providerConfig,
         req.body as CallEvent
       );
 
-      res.status(200).send();
+      res.status(200).send(integrationCallEventRef);
     } catch (error) {
       console.error("Could not handle call event:", error || "Unknown");
       next(error);
