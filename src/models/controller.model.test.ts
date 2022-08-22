@@ -188,10 +188,7 @@ describe("getContacts", () => {
 
     await controller.getContacts(request, response, next);
 
-    const data: Contact[] = response._getData();
-
-    expect(next).not.toBeCalled();
-    expect(data).toEqual([]);
+    expect(next).toBeCalled();
   });
 
   it("should handle an error when retrieving contacts", async () => {
