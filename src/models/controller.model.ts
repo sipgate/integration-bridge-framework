@@ -12,7 +12,6 @@ import {
   ContactTemplate,
   ContactUpdate,
   ServerError,
-  TimeoutResult,
 } from ".";
 import { calendarEventsSchema, contactsSchema } from "../schemas";
 import { anonymizeKey } from "../util/anonymize-key";
@@ -69,14 +68,13 @@ export class Controller {
   ): Promise<void> {
     const { providerConfig: { apiKey = "", locale = "" } = {} } = req;
     try {
-      const fetchContacts = async () => {
+      const fetchContacts = async (): Promise<Contact[]> => {
         if (!this.adapter.getContacts) {
           throw new ServerError(501, "Fetching contacts is not implemented");
         }
 
         if (!req.providerConfig) {
-          console.error("Missing config parameters");
-          return null;
+          throw new ServerError(400, "Missing parameters");
         }
 
         console.log(`Fetching contacts for key "${anonymizeKey(apiKey)}"`);
@@ -84,32 +82,27 @@ export class Controller {
         const fetchedContacts: Contact[] = await this.adapter.getContacts(
           req.providerConfig
         );
-        return validate(this.ajv, contactsSchema, fetchedContacts)
-          ? fetchedContacts.map((contact) => sanitizeContact(contact, locale))
-          : null;
+
+        if (!validate(this.ajv, contactsSchema, fetchedContacts)) {
+          throw new ServerError(500, "Invalid contacts received");
+        }
+
+        return fetchedContacts.map((contact) =>
+          sanitizeContact(contact, locale)
+        );
       };
 
       const fetcherPromise = this.contactCache
         ? this.contactCache.get(apiKey, fetchContacts)
         : fetchContacts();
 
-      const timeoutPromise: Promise<TimeoutResult> = new Promise((resolve) =>
-        setTimeout(
-          () =>
-            resolve({ status: 408, description: "Request is still fetching" }),
-          CONTACT_FETCH_TIMEOUT
-        )
+      const timeoutPromise: Promise<Contact[]> = new Promise((resolve) =>
+        setTimeout(() => resolve([]), CONTACT_FETCH_TIMEOUT)
       );
 
-      const result = await Promise.race([fetcherPromise, timeoutPromise]);
+      const contacts = await Promise.race([fetcherPromise, timeoutPromise]);
 
-      if (result && "status" in result) {
-        res.status(result.status);
-        res.send(result);
-        return;
-      }
-
-      const responseContacts: Contact[] = result || [];
+      const responseContacts: Contact[] = contacts || [];
 
       console.log(
         `Found ${
@@ -121,6 +114,7 @@ export class Controller {
         const { apiKey } = await this.adapter.getToken(req.providerConfig);
         res.header("X-Provider-Key", apiKey);
       }
+
       res.send(responseContacts);
     } catch (error) {
       console.error("Could not get contacts:", error || "Unknown");

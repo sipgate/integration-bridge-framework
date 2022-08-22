@@ -28,10 +28,6 @@ export interface ContactTemplate {
   phoneNumbers: PhoneNumber[];
 }
 
-export interface TimeoutResult {
-  status: 408;
-  description: string;
-}
 export interface Contact extends ContactTemplate {
   id: string;
   contactUrl: string | null;
