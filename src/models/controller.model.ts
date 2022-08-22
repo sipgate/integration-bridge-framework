@@ -115,7 +115,7 @@ export class Controller {
         res.header("X-Provider-Key", apiKey);
       }
 
-      res.send(responseContacts);
+      res.status(200).send(responseContacts);
     } catch (error) {
       console.error("Could not get contacts:", error || "Unknown");
       next(error);
@@ -160,7 +160,7 @@ export class Controller {
         const { apiKey } = await this.adapter.getToken(req.providerConfig);
         res.header("X-Provider-Key", apiKey);
       }
-      res.send(sanitizedContact);
+      res.status(200).send(sanitizedContact);
 
       if (this.contactCache) {
         const cached = await this.contactCache.get(apiKey);
@@ -212,7 +212,7 @@ export class Controller {
         const { apiKey } = await this.adapter.getToken(req.providerConfig);
         res.header("X-Provider-Key", apiKey);
       }
-      res.send(sanitizedContact);
+      res.status(200).send(sanitizedContact);
 
       if (this.contactCache) {
         const cachedContacts = await this.contactCache.get(apiKey);
@@ -322,7 +322,7 @@ export class Controller {
           apiKey
         )}"`
       );
-      res.send(calendarEvents);
+      res.status(200).send(calendarEvents);
     } catch (error) {
       console.error("Could not get calendar events:", error || "Unknown");
       next(error);
@@ -367,7 +367,7 @@ export class Controller {
         );
       }
 
-      res.send(calendarEvent);
+      res.status(200).send(calendarEvent);
     } catch (error) {
       console.error("Could not create calendar event:", error || "Unknown");
       next(error);
@@ -413,7 +413,7 @@ export class Controller {
         );
       }
 
-      res.send(calendarEvent);
+      res.status(200).send(calendarEvent);
     } catch (error) {
       console.error("Could not update calendar event:", error || "Unknown");
       next(error);
@@ -514,8 +514,8 @@ export class Controller {
     try {
       if (this.adapter.getHealth) {
         await this.adapter.getHealth();
+        res.sendStatus(200);
       }
-      res.sendStatus(200);
     } catch (error) {
       console.error("Health check failed:", error || "Unknown");
       next(error || "Internal Server Error");
@@ -534,7 +534,7 @@ export class Controller {
 
       const redirectUrl = await this.adapter.getOAuth2RedirectUrl();
 
-      res.send({ redirectUrl });
+      res.status(200).send({ redirectUrl });
     } catch (error) {
       console.error("Could not get OAuth2 redirect URL:", error || "Unknown");
       next(error);
