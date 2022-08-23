@@ -514,8 +514,8 @@ export class Controller {
     try {
       if (this.adapter.getHealth) {
         await this.adapter.getHealth();
-        res.sendStatus(200);
       }
+      res.sendStatus(200);
     } catch (error) {
       console.error("Health check failed:", error || "Unknown");
       next(error || "Internal Server Error");
