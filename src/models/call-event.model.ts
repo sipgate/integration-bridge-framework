@@ -10,6 +10,13 @@ export type CallParticipant = {
   phoneNumber: string;
 };
 
+export enum CallStatus {
+  BUSY = "BUSY",
+  CONNECTED = "CONNECTED",
+  MISSED = "MISSED",
+  NOT_FOUND = "NOT_FOUND",
+}
+
 export interface CallEvent {
   id: string;
   startTime: number;
@@ -17,4 +24,5 @@ export interface CallEvent {
   direction: CallDirection;
   participants: CallParticipant[];
   note: string;
+  status: CallStatus;
 }
