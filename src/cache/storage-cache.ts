@@ -1,22 +1,10 @@
 import { Contact, ContactCache } from "../models";
+import {
+  CacheItemState,
+  CacheItemStateType,
+} from "../models/cache-item-state.model";
 import { StorageAdapter } from "../models/storage-adapter.model";
 import { anonymizeKey } from "../util/anonymize-key";
-
-enum CacheItemStateType {
-  CACHED = "CACHED",
-  FETCHING = "FETCHING",
-}
-
-interface CacheItemStateCached {
-  state: CacheItemStateType.CACHED;
-  updated: number;
-}
-
-interface CacheItemStateFetching {
-  state: CacheItemStateType.FETCHING;
-}
-
-type CacheItemState = CacheItemStateCached | CacheItemStateFetching;
 
 export class StorageCache implements ContactCache {
   private storage: StorageAdapter<Contact[]>;
@@ -42,14 +30,27 @@ export class StorageCache implements ContactCache {
 
   public async get(
     key: string,
-    getFreshValue?: (key: string) => Promise<Contact[] | null>
-  ): Promise<Contact[] | null> {
+    getFreshValue?: (key: string) => Promise<Contact[]>
+  ): Promise<Contact[] | CacheItemState> {
     try {
+      const cacheItemState = this.cacheItemStates.get(key);
+
+      if (
+        cacheItemState &&
+        cacheItemState.state === CacheItemStateType.FETCHING
+      ) {
+        console.log(
+          `Not refreshing for key "${anonymizeKey(
+            key
+          )}" because fetching is already in progress.`
+        );
+        return cacheItemState;
+      }
+
       const value = await this.storage.get(key);
+
       if (value) {
         console.log(`Found match for key "${anonymizeKey(key)}" in cache.`);
-
-        const cacheItemState = this.cacheItemStates.get(key);
 
         const now: number = new Date().getTime();
 
@@ -59,9 +60,7 @@ export class StorageCache implements ContactCache {
             now > cacheItemState.updated + this.cacheRefreshIntervalMs
         );
 
-        const isValueNotCached: boolean = !cacheItemState;
-
-        if (getFreshValue && (isValueNotCached || isValueStale)) {
+        if (getFreshValue && isValueStale) {
           this.getRefreshed(key, getFreshValue).catch((error) => {
             console.error(
               `Unable to get fresh values for"${anonymizeKey(
@@ -111,19 +110,8 @@ export class StorageCache implements ContactCache {
 
   private async getRefreshed(
     key: string,
-    getFreshValue: (key: string) => Promise<Contact[] | null>
-  ): Promise<Contact[] | null> {
-    const itemState = this.cacheItemStates.get(key);
-
-    if (itemState && itemState.state === CacheItemStateType.FETCHING) {
-      console.log(
-        `Not refreshing for key "${anonymizeKey(
-          key
-        )}" because fetching is already in progress.`
-      );
-      return null;
-    }
-
+    getFreshValue: (key: string) => Promise<Contact[]>
+  ): Promise<Contact[]> {
     console.info(`Refreshing value for ${anonymizeKey(key)}.`);
 
     this.cacheItemStates.set(key, {

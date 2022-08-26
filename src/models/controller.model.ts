@@ -17,6 +17,7 @@ import { calendarEventsSchema, contactsSchema } from "../schemas";
 import { anonymizeKey } from "../util/anonymize-key";
 import { convertPhoneNumberToE164 } from "../util/phone-number-utils";
 import { validate } from "../util/validate";
+import { CacheItemStateType } from "./cache-item-state.model";
 import { CalendarFilterOptions } from "./calendar-filter-options.model";
 import { PhoneNumberLabel } from "./contact.model";
 
@@ -67,6 +68,7 @@ export class Controller {
     next: NextFunction
   ): Promise<void> {
     const { providerConfig: { apiKey = "", locale = "" } = {} } = req;
+    const anonKey = anonymizeKey(apiKey);
     try {
       const fetchContacts = async (): Promise<Contact[]> => {
         if (!this.adapter.getContacts) {
@@ -77,7 +79,7 @@ export class Controller {
           throw new ServerError(400, "Missing parameters");
         }
 
-        console.log(`Fetching contacts for key "${anonymizeKey(apiKey)}"`);
+        console.log(`Fetching contacts for key "${anonKey}"`);
 
         const fetchedContacts: Contact[] = await this.adapter.getContacts(
           req.providerConfig
@@ -102,13 +104,22 @@ export class Controller {
 
       const contacts = await Promise.race([fetcherPromise, timeoutPromise]);
 
-      const responseContacts: Contact[] = contacts || [];
+      const responseContacts: Contact[] = Array.isArray(contacts)
+        ? contacts
+        : [];
+
+      const contactsCount = responseContacts.length;
 
       console.log(
-        `Found ${
-          responseContacts.length
-        } cached contacts for key "${anonymizeKey(apiKey)}"`
+        `Found ${contactsCount} cached contacts for key "${anonKey}"`
       );
+
+      if (
+        !Array.isArray(contacts) &&
+        contacts.state === CacheItemStateType.FETCHING
+      ) {
+        res.header("X-Fetching-State", "pending");
+      }
 
       if (this.adapter.getToken && req.providerConfig) {
         const { apiKey } = await this.adapter.getToken(req.providerConfig);
@@ -163,9 +174,9 @@ export class Controller {
       res.status(200).send(sanitizedContact);
 
       if (this.contactCache) {
-        const cached = await this.contactCache.get(apiKey);
-        if (cached) {
-          await this.contactCache.set(apiKey, [...cached, sanitizedContact]);
+        const contacts = await this.contactCache.get(apiKey);
+        if (Array.isArray(contacts)) {
+          await this.contactCache.set(apiKey, [...contacts, sanitizedContact]);
         }
       }
     } catch (error) {
@@ -215,9 +226,9 @@ export class Controller {
       res.status(200).send(sanitizedContact);
 
       if (this.contactCache) {
-        const cachedContacts = await this.contactCache.get(apiKey);
-        if (cachedContacts) {
-          const updatedCache: Contact[] = cachedContacts.map((entry) =>
+        const contacts = await this.contactCache.get(apiKey);
+        if (Array.isArray(contacts)) {
+          const updatedCache: Contact[] = contacts.map((entry) =>
             entry.id === sanitizedContact.id ? sanitizedContact : entry
           );
           await this.contactCache.set(apiKey, updatedCache);
@@ -256,9 +267,9 @@ export class Controller {
       res.status(200).send();
 
       if (this.contactCache) {
-        const cached = await this.contactCache.get(apiKey);
-        if (cached) {
-          const updatedCache: Contact[] = cached.filter(
+        const contacts = await this.contactCache.get(apiKey);
+        if (Array.isArray(contacts)) {
+          const updatedCache: Contact[] = contacts.filter(
             (entry) => entry.id !== contactId
           );
           await this.contactCache.set(apiKey, updatedCache);
