@@ -57,9 +57,9 @@ export class StorageCache implements ContactCache {
         const now: number = new Date().getTime();
 
         const isValueStale: boolean = Boolean(
-          cacheItemState &&
-            cacheItemState.state === CacheItemStateType.CACHED &&
-            now > cacheItemState.updated + this.cacheRefreshIntervalMs
+          !cacheItemState ||
+            (cacheItemState.state === CacheItemStateType.CACHED &&
+              now > cacheItemState.updated + this.cacheRefreshIntervalMs)
         );
 
         if (getFreshValue && isValueStale) {
