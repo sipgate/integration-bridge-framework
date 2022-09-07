@@ -1,5 +1,5 @@
-export interface StorageAdapter<T> {
-  get: (key: string) => Promise<T | null>;
-  set: (key: string, value: T) => Promise<void>;
+export interface StorageAdapter {
+  get: <T>(key: string) => Promise<T | null>;
+  set: <T>(key: string, value: T) => Promise<void>;
   delete: (key: string) => Promise<void>;
 }

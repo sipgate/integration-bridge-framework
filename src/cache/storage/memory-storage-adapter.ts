@@ -2,8 +2,8 @@ import LRU from "lru-cache";
 import { StorageAdapter } from "../../models/storage-adapter.model";
 import sizeof from "../../util/size-of";
 
-export class MemoryStorageAdapter<T> implements StorageAdapter<T> {
-  private cache: LRU<string, T>;
+export class MemoryStorageAdapter implements StorageAdapter {
+  private cache: LRU<string, unknown>;
 
   constructor() {
     const { MEMORY_CACHE_TTL_MS } = process.env;
@@ -20,12 +20,12 @@ export class MemoryStorageAdapter<T> implements StorageAdapter<T> {
     console.log(`Initialized Memory storage`);
   }
 
-  public async get(key: string): Promise<T | null> {
-    const cached = this.cache.get(key);
+  public async get<T>(key: string): Promise<T | null> {
+    const cached = this.cache.get(key) as T;
     return cached ? cached : null;
   }
 
-  public async set(key: string, value: T): Promise<void> {
+  public async set<T>(key: string, value: T): Promise<void> {
     this.cache.set(key, value);
   }
 

@@ -6,14 +6,14 @@ import {
 import { StorageAdapter } from "../models/storage-adapter.model";
 import { anonymizeKey } from "../util/anonymize-key";
 
-export class StorageCache implements ContactCache {
-  private storage: StorageAdapter<Contact[]>;
-  private cacheItemStates: Map<string, CacheItemState>;
-  private cacheRefreshIntervalMs = 10 * 60 * 1000; // 10 minutes
+const CACHE_STATE_PREFIX = "cache-state:";
 
-  constructor(storageAdapter: StorageAdapter<Contact[]>) {
+export class StorageCache implements ContactCache {
+  private storage: StorageAdapter;
+  private cacheRefreshIntervalMs = 30 * 60 * 1000; // 30 minutes
+
+  constructor(storageAdapter: StorageAdapter) {
     this.storage = storageAdapter;
-    this.cacheItemStates = new Map<string, CacheItemState>();
 
     const { CACHE_REFRESH_INTERVAL } = process.env;
     if (CACHE_REFRESH_INTERVAL) {
@@ -33,7 +33,9 @@ export class StorageCache implements ContactCache {
     getFreshValue?: (key: string) => Promise<Contact[]>
   ): Promise<Contact[] | CacheItemState> {
     try {
-      const cacheItemState = this.cacheItemStates.get(key);
+      const cacheItemState = await this.storage.get<CacheItemState>(
+        this.getCacheItemKey(key)
+      );
 
       if (
         cacheItemState &&
@@ -47,7 +49,7 @@ export class StorageCache implements ContactCache {
         return cacheItemState;
       }
 
-      const value = await this.storage.get(key);
+      const value = await this.storage.get<Contact[]>(key);
 
       if (value) {
         console.log(`Found match for key "${anonymizeKey(key)}" in cache.`);
@@ -114,14 +116,14 @@ export class StorageCache implements ContactCache {
   ): Promise<Contact[]> {
     console.info(`Refreshing value for ${anonymizeKey(key)}.`);
 
-    this.cacheItemStates.set(key, {
+    await this.storage.set<CacheItemState>(this.getCacheItemKey(key), {
       state: CacheItemStateType.FETCHING,
     });
 
     try {
       const freshValue = await getFreshValue(key);
 
-      this.cacheItemStates.set(key, {
+      await this.storage.set<CacheItemState>(this.getCacheItemKey(key), {
         state: CacheItemStateType.CACHED,
         updated: new Date().getTime(),
       });
@@ -136,8 +138,13 @@ export class StorageCache implements ContactCache {
         `Error while refreshing value for ${anonymizeKey(key)}:`,
         error
       );
-      this.cacheItemStates.delete(key);
+      this.storage.delete(`${CACHE_STATE_PREFIX}${key}`);
+      this.storage.delete(key);
       throw error;
     }
+  }
+
+  private getCacheItemKey(key: string) {
+    return `${CACHE_STATE_PREFIX}${key}`;
   }
 }

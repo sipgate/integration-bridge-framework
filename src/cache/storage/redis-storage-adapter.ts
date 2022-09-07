@@ -12,7 +12,7 @@ const deflate = promisify<InputType, Buffer>(nodeDeflate);
 
 const CACHE_TTL: number = 60 * 60 * 24 * 30; // 30 days
 
-export class RedisStorageAdapter<T> implements StorageAdapter<T> {
+export class RedisStorageAdapter implements StorageAdapter {
   private client: RedisClientType<any, any>;
 
   constructor(url: string) {
@@ -29,7 +29,7 @@ export class RedisStorageAdapter<T> implements StorageAdapter<T> {
     });
   }
 
-  public async get(key: string): Promise<T | null> {
+  public async get<T>(key: string): Promise<T | null> {
     try {
       const value = await this.client.get(key);
       if (!value) {
@@ -42,7 +42,7 @@ export class RedisStorageAdapter<T> implements StorageAdapter<T> {
     }
   }
 
-  public async set(key: string, value: T): Promise<void> {
+  public async set<T>(key: string, value: T): Promise<void> {
     const stringified = JSON.stringify(value);
     const compressed = await deflate(stringified);
     await this.client.set(key, compressed.toString("base64"), {
