@@ -56,6 +56,7 @@ export class Controller {
     this.updateCalendarEvent = this.updateCalendarEvent.bind(this);
     this.deleteCalendarEvent = this.deleteCalendarEvent.bind(this);
     this.handleCallEvent = this.handleCallEvent.bind(this);
+    this.updateCallEvent = this.updateCallEvent.bind(this);
     this.handleConnectedEvent = this.handleConnectedEvent.bind(this);
     this.getHealth = this.getHealth.bind(this);
     this.oAuth2Redirect = this.oAuth2Redirect.bind(this);
@@ -513,6 +514,37 @@ export class Controller {
       res.status(200).send();
     } catch (error) {
       console.error("Could not handle connected event:", error || "Unknown");
+      next(error);
+    }
+  }
+
+  public async updateCallEvent(
+    req: BridgeRequest,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    const { providerConfig: { apiKey = "" } = {} } = req;
+
+    try {
+      if (!this.adapter.updateCallEvent) {
+        throw new ServerError(501, "Updating contacts is not implemented");
+      }
+
+      if (!req.providerConfig) {
+        throw new ServerError(400, "Missing config parameters");
+      }
+
+      console.log(`Updating call event for key "${anonymizeKey(apiKey)}"`);
+
+      //maybe return updated state obj
+      await this.adapter.updateCallEvent(
+        req.providerConfig,
+        req.params.id,
+        req.body as CallEvent
+      );
+      res.status(200).send();
+    } catch (error) {
+      console.error("Could not update contact:", error || "Unknown");
       next(error);
     }
   }

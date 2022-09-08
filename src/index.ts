@@ -35,6 +35,7 @@ export function start(adapter: Adapter, port: number = settingsPort): Server {
   app.put("/calendar/:id", controller.updateCalendarEvent);
   app.delete("/calendar/:id", controller.deleteCalendarEvent);
   app.post("/events/calls", controller.handleCallEvent);
+  app.put("/events/calls/:id", controller.updateCallEvent);
   app.post("/events/connected", controller.handleConnectedEvent);
   app.get("/health", controller.getHealth);
   app.get("/oauth2/redirect", controller.oAuth2Redirect);

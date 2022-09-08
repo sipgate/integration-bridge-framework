@@ -36,6 +36,11 @@ export interface Adapter {
     id: string,
     event: CalendarEventTemplate
   ) => Promise<CalendarEvent>;
+  updateCallEvent?: (
+    config: Config,
+    id: string,
+    event: CallEvent
+  ) => Promise<void>;
   deleteCalendarEvent?: (config: Config, id: string) => Promise<void>;
   handleCallEvent?: (config: Config, event: CallEvent) => Promise<string>;
   handleConnectedEvent?: (config: Config) => Promise<void>;
