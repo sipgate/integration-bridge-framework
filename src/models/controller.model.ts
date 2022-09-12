@@ -46,21 +46,6 @@ export class Controller {
     this.adapter = adapter;
     this.contactCache = contactCache;
     this.ajv = new Ajv();
-
-    this.getContacts = this.getContacts.bind(this);
-    this.createContact = this.createContact.bind(this);
-    this.updateContact = this.updateContact.bind(this);
-    this.deleteContact = this.deleteContact.bind(this);
-    this.getCalendarEvents = this.getCalendarEvents.bind(this);
-    this.createCalendarEvent = this.createCalendarEvent.bind(this);
-    this.updateCalendarEvent = this.updateCalendarEvent.bind(this);
-    this.deleteCalendarEvent = this.deleteCalendarEvent.bind(this);
-    this.handleCallEvent = this.handleCallEvent.bind(this);
-    this.updateCallEvent = this.updateCallEvent.bind(this);
-    this.handleConnectedEvent = this.handleConnectedEvent.bind(this);
-    this.getHealth = this.getHealth.bind(this);
-    this.oAuth2Redirect = this.oAuth2Redirect.bind(this);
-    this.oAuth2Callback = this.oAuth2Callback.bind(this);
   }
 
   public async getContacts(
@@ -575,7 +560,7 @@ export class Controller {
         throw new ServerError(501, "OAuth2 flow not implemented");
       }
 
-      const redirectUrl = await this.adapter.getOAuth2RedirectUrl();
+      const redirectUrl = await this.adapter.getOAuth2RedirectUrl(req, res);
 
       res.status(200).send({ redirectUrl });
     } catch (error) {
@@ -601,7 +586,10 @@ export class Controller {
         throw new ServerError(501, "OAuth2 flow not implemented");
       }
 
-      const { apiKey, apiUrl } = await this.adapter.handleOAuth2Callback(req);
+      const { apiKey, apiUrl } = await this.adapter.handleOAuth2Callback(
+        req,
+        res
+      );
 
       const params = stringify({
         name: oAuth2Identifier,

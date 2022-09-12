@@ -26,20 +26,46 @@ export function start(adapter: Adapter, port: number = settingsPort): Server {
 
   const controller: Controller = new Controller(adapter, cache);
 
-  app.get("/contacts", controller.getContacts);
-  app.post("/contacts", controller.createContact);
-  app.put("/contacts/:id", controller.updateContact);
-  app.delete("/contacts/:id", controller.deleteContact);
-  app.get("/calendar", controller.getCalendarEvents);
-  app.post("/calendar", controller.createCalendarEvent);
-  app.put("/calendar/:id", controller.updateCalendarEvent);
-  app.delete("/calendar/:id", controller.deleteCalendarEvent);
-  app.post("/events/calls", controller.handleCallEvent);
-  app.put("/events/calls/:id", controller.updateCallEvent);
-  app.post("/events/connected", controller.handleConnectedEvent);
-  app.get("/health", controller.getHealth);
-  app.get("/oauth2/redirect", controller.oAuth2Redirect);
-  app.get("/oauth2/callback", controller.oAuth2Callback);
+  app.get("/contacts", (req, res, next) =>
+    controller.getContacts(req, res, next)
+  );
+  app.post("/contacts", (req, res, next) =>
+    controller.createContact(req, res, next)
+  );
+  app.put("/contacts/:id", (req, res, next) =>
+    controller.updateContact(req, res, next)
+  );
+  app.delete("/contacts/:id", (req, res, next) =>
+    controller.deleteContact(req, res, next)
+  );
+  app.get("/calendar", (req, res, next) =>
+    controller.getCalendarEvents(req, res, next)
+  );
+  app.post("/calendar", (req, res, next) =>
+    controller.createCalendarEvent(req, res, next)
+  );
+  app.put("/calendar/:id", (req, res, next) =>
+    controller.updateCalendarEvent(req, res, next)
+  );
+  app.delete("/calendar/:id", (req, res, next) =>
+    controller.deleteCalendarEvent(req, res, next)
+  );
+  app.post("/events/calls", (req, res, next) =>
+    controller.handleCallEvent(req, res, next)
+  );
+  app.put("/events/calls/:id", (req, res, next) =>
+    controller.updateCallEvent(req, res, next)
+  );
+  app.post("/events/connected", (req, res, next) =>
+    controller.handleConnectedEvent(req, res, next)
+  );
+  app.get("/health", (req, res, next) => controller.getHealth(req, res, next));
+  app.get("/oauth2/redirect", (req, res, next) =>
+    controller.oAuth2Redirect(req, res, next)
+  );
+  app.get("/oauth2/callback", (req, res) =>
+    controller.oAuth2Callback(req, res)
+  );
 
   app.use(errorHandlerMiddleware);
 

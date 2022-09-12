@@ -454,10 +454,12 @@ describe("getOAuth2RedirectUrl", () => {
   });
 
   it("should handle OAuth2 callback", async () => {
-    const mockHandleOAuth2Callback = jest.fn(async (_: Request) => ({
-      apiKey: "key",
-      apiUrl: "url",
-    }));
+    const mockHandleOAuth2Callback = jest.fn(async () =>
+      Promise.resolve({
+        apiKey: "key",
+        apiUrl: "url",
+      })
+    );
 
     const controller: Controller = new Controller(
       {
@@ -475,10 +477,12 @@ describe("getOAuth2RedirectUrl", () => {
   it("should handle a custom redirect url", async () => {
     const mockRedirectUrl = "http://example.com?name=TEST&key=key&url=url";
     const mockRedirect = jest.fn();
-    const mockHandleOAuth2Callback = jest.fn(async (_: Request) => ({
-      apiKey: "key",
-      apiUrl: "url",
-    }));
+    const mockHandleOAuth2Callback = jest.fn(async (req: Request) =>
+      Promise.resolve({
+        apiKey: "key",
+        apiUrl: "url",
+      })
+    );
 
     const controller: Controller = new Controller(
       {

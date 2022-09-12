@@ -1,4 +1,4 @@
-import { Request } from "express";
+import { Request, Response } from "express";
 import {
   CalendarEvent,
   CalendarEventTemplate,
@@ -45,8 +45,9 @@ export interface Adapter {
   handleCallEvent?: (config: Config, event: CallEvent) => Promise<string>;
   handleConnectedEvent?: (config: Config) => Promise<void>;
   getHealth?: () => Promise<void>;
-  getOAuth2RedirectUrl?: () => Promise<string>;
+  getOAuth2RedirectUrl?: (req?: Request, res?: Response) => Promise<string>;
   handleOAuth2Callback?: (
-    req: Request
+    req: Request,
+    res?: Response
   ) => Promise<{ apiKey: string; apiUrl: string }>;
 }
