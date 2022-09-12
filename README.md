@@ -1,7 +1,6 @@
 # sipgate Integration Bridge Framework
 
-This is the sipgate Integration Bridge framework to integrate sipgate apps with external services.
-It provides a unified way to connect apps to any provider of external data management, like contacts or calendar events.
+This is the sipgate Integration Bridge framework to integrate sipgate apps with external services. It provides a unified way to connect apps to any provider of external data management, like contacts or calendar events.
 
 ## Bootstrapping a new bridge
 
@@ -10,7 +9,7 @@ If you want to bootstrap a new sipgate Integration Bridge you can use this repos
 ## Installation
 
 ```shell
-npm install --save @sipgate/integration-bridge
+npm install @sipgate/integration-bridge
 # or
 yarn add @sipgate/integration-bridge
 ```
