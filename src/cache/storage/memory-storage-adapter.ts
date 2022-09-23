@@ -14,10 +14,10 @@ export class MemoryStorageAdapter implements StorageAdapter {
     this.cache = new LRU({
       maxSize: maxSizeBytes,
       ttl: cacheTtlMs,
-      length: sizeof,
+      sizeCalculation: sizeof,
     });
 
-    console.log(`Initialized Memory storage`);
+    console.log(`[CACHE] Initialized Memory storage`);
   }
 
   public async get<T>(key: string): Promise<T | null> {

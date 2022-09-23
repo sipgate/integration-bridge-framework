@@ -155,6 +155,6 @@ export class StorageCache implements ContactCache {
   }
 
   private constructLogMessage(...args: any) {
-    return `${LOG_PREFIX} ${args.map(JSON.stringify).join(" ")}`;
+    return `${LOG_PREFIX} ${args.flat().map(JSON.stringify).join(" ")}`;
   }
 }
