@@ -6,6 +6,7 @@ import {
 import { StorageAdapter } from "../models/storage-adapter.model";
 import { anonymizeKey } from "../util/anonymize-key";
 
+const LOG_PREFIX = `[CACHE]`;
 const CACHE_STATE_PREFIX = "cache-state:";
 
 export class StorageCache implements ContactCache {
@@ -21,7 +22,7 @@ export class StorageCache implements ContactCache {
         Math.max(Number(CACHE_REFRESH_INTERVAL), 1) * 1000;
     }
 
-    console.log(
+    this.log(
       `Initialized storage cache with maximum refresh interval of ${
         this.cacheRefreshIntervalMs / 1000
       }s.`
@@ -41,7 +42,7 @@ export class StorageCache implements ContactCache {
         cacheItemState &&
         cacheItemState.state === CacheItemStateType.FETCHING
       ) {
-        console.log(
+        this.log(
           `Not refreshing for key "${anonymizeKey(
             key
           )}" because fetching is already in progress.`
@@ -52,7 +53,7 @@ export class StorageCache implements ContactCache {
       const value = await this.storage.get<Contact[]>(key);
 
       if (value) {
-        console.log(`Found match for key "${anonymizeKey(key)}" in cache.`);
+        this.log(`Found match for key "${anonymizeKey(key)}" in cache.`);
 
         const now: number = new Date().getTime();
 
@@ -64,7 +65,7 @@ export class StorageCache implements ContactCache {
 
         if (getFreshValue && isValueStale) {
           this.getRefreshed(key, getFreshValue).catch((error) => {
-            console.error(
+            this.logErr(
               `Unable to get fresh values for"${anonymizeKey(
                 key
               )}" with error ${error}`
@@ -75,14 +76,14 @@ export class StorageCache implements ContactCache {
         return value;
       }
     } catch (e) {
-      console.warn(`Unable to get cache for key "${anonymizeKey(key)}".`, e);
+      this.logErr(`Unable to get cache for key "${anonymizeKey(key)}".`, e);
     }
 
     if (!getFreshValue) {
       return [];
     }
 
-    console.log(
+    this.log(
       `Found no match for key "${anonymizeKey(
         key
       )}" in cache. Getting fresh value.`
@@ -91,22 +92,22 @@ export class StorageCache implements ContactCache {
   }
 
   public async set(key: string, value: Contact[]): Promise<void> {
-    console.log(
+    this.log(
       `Saving ${value.length} contacts for key "${anonymizeKey(key)}" to cache.`
     );
     try {
       await this.storage.set(key, value);
     } catch (e) {
-      console.warn(`Unable to set cache for key "${anonymizeKey(key)}".`, e);
+      this.logErr(`Unable to set cache for key "${anonymizeKey(key)}".`, e);
     }
   }
 
   public async delete(key: string): Promise<void> {
-    console.log(`Removing contacts for key "${anonymizeKey(key)}" from cache.`);
+    this.log(`Removing contacts for key "${anonymizeKey(key)}" from cache.`);
     try {
       await this.storage.delete(key);
     } catch (e) {
-      console.warn(`Unable to delete cache for key "${anonymizeKey(key)}".`, e);
+      this.logErr(`Unable to delete cache for key "${anonymizeKey(key)}".`, e);
     }
   }
 
@@ -114,7 +115,7 @@ export class StorageCache implements ContactCache {
     key: string,
     getFreshValue: (key: string) => Promise<Contact[]>
   ): Promise<Contact[]> {
-    console.info(`Refreshing value for ${anonymizeKey(key)}.`);
+    this.log(`Refreshing value for ${anonymizeKey(key)}.`);
 
     await this.storage.set<CacheItemState>(this.getCacheItemKey(key), {
       state: CacheItemStateType.FETCHING,
@@ -134,10 +135,7 @@ export class StorageCache implements ContactCache {
 
       return freshValue;
     } catch (error) {
-      console.info(
-        `Error while refreshing value for ${anonymizeKey(key)}:`,
-        error
-      );
+      this.log(`Error while refreshing value for ${anonymizeKey(key)}:`, error);
       this.storage.delete(`${CACHE_STATE_PREFIX}${key}`);
       this.storage.delete(key);
       throw error;
@@ -146,5 +144,17 @@ export class StorageCache implements ContactCache {
 
   private getCacheItemKey(key: string) {
     return `${CACHE_STATE_PREFIX}${key}`;
+  }
+
+  private log(...args: any) {
+    console.log(this.constructLogMessage(args));
+  }
+
+  private logErr(...args: any) {
+    console.error(this.constructLogMessage(args));
+  }
+
+  private constructLogMessage(...args: any) {
+    return `${LOG_PREFIX} ${args.map(JSON.stringify).join(" ")}`;
   }
 }

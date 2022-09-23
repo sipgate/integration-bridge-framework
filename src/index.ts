@@ -5,9 +5,10 @@ import express from "express";
 import { Server } from "http";
 import { errorHandlerMiddleware, extractHeaderMiddleware } from "./middlewares";
 import { Adapter, Controller } from "./models";
+import { CustomRouter } from "./models/custom-routers.model";
 import { getContactCache } from "./util/get-contact-cache";
 
-const settingsPort: number = Number(process.env.PORT) || 8080;
+const PORT: number = Number(process.env.PORT) || 8080;
 
 const app: express.Application = express();
 
@@ -21,9 +22,12 @@ app.use(
 app.use(bodyParser.json());
 app.use(extractHeaderMiddleware);
 
-export function start(adapter: Adapter, port: number = settingsPort): Server {
-  const cache = getContactCache();
+const cache = getContactCache();
 
+export function start(
+  adapter: Adapter,
+  customRouters: CustomRouter[] = []
+): Server {
   const controller: Controller = new Controller(adapter, cache);
 
   app.get("/contacts", (req, res, next) =>
@@ -69,7 +73,17 @@ export function start(adapter: Adapter, port: number = settingsPort): Server {
 
   app.use(errorHandlerMiddleware);
 
-  return app.listen(port, () => console.log(`Listening on port ${port}`));
+  customRouters.forEach(({ path, router }) => app.use(path, router));
+
+  return app.listen(PORT, () => console.log(`Listening on port ${PORT}`));
 }
+
+export const deleteCacheItem = async (key: string) => {
+  await cache?.delete(key);
+};
+
+export const getCacheItem = async (key: string) => {
+  return (await cache?.get(key)) || [];
+};
 
 export * from "./models";
