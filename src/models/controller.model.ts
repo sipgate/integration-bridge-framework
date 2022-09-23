@@ -15,11 +15,13 @@ import {
 } from ".";
 import { calendarEventsSchema, contactsSchema } from "../schemas";
 import { anonymizeKey } from "../util/anonymize-key";
-import { convertPhoneNumberToE164 } from "../util/phone-number-utils";
+import {
+  convertPhoneNumberToE164,
+  isDirectDial,
+} from "../util/phone-number-utils";
 import { validate } from "../util/validate";
 import { CacheItemStateType } from "./cache-item-state.model";
 import { CalendarFilterOptions } from "./calendar-filter-options.model";
-import { PhoneNumberLabel } from "./contact.model";
 
 const CONTACT_FETCH_TIMEOUT: number = 3000;
 
@@ -28,10 +30,9 @@ function sanitizeContact(contact: Contact, locale: string): Contact {
     ...contact,
     phoneNumbers: contact.phoneNumbers.map((phoneNumber) => ({
       ...phoneNumber,
-      phoneNumber:
-        phoneNumber.label === PhoneNumberLabel.DIRECTDIAL
-          ? phoneNumber.phoneNumber
-          : convertPhoneNumberToE164(phoneNumber.phoneNumber, locale),
+      phoneNumber: isDirectDial(phoneNumber)
+        ? phoneNumber.phoneNumber
+        : convertPhoneNumberToE164(phoneNumber.phoneNumber, locale),
     })),
   };
   return result;

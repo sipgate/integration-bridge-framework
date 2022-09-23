@@ -1,4 +1,7 @@
 import { parsePhoneNumber } from "awesome-phonenumber";
+import { PhoneNumber } from "../models";
+
+const MIN_PHONE_NUMBER_LENGTH = 5;
 
 export function convertPhoneNumberToE164(
   phoneNumber: string,
@@ -14,3 +17,7 @@ export function convertPhoneNumberToE164(
     return phoneNumber;
   }
 }
+
+export const isDirectDial = (phoneNumber: PhoneNumber) => {
+  return phoneNumber.phoneNumber.length < MIN_PHONE_NUMBER_LENGTH;
+};
