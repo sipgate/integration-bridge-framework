@@ -5,7 +5,7 @@ import express from "express";
 import { Server } from "http";
 import { errorHandlerMiddleware, extractHeaderMiddleware } from "./middlewares";
 import { Adapter, Controller } from "./models";
-import { CustomRouter } from "./models/custom-routers.model";
+import { CustomRouter } from "./models/custom-router.model";
 import { getContactCache } from "./util/get-contact-cache";
 
 const PORT: number = Number(process.env.PORT) || 8080;

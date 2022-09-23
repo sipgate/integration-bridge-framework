@@ -8,5 +8,6 @@ export * from "./config.model";
 export * from "./contact-cache.model";
 export * from "./contact.model";
 export * from "./controller.model";
+export * from "./custom-router.model";
 export * from "./server-error.model";
 export * from "./user.model";
