@@ -7,7 +7,7 @@ export function convertPhoneNumberToE164(
   phoneNumber: string,
   locale: string
 ): string {
-  const region = locale.replace(/.+_/, "").toUpperCase();
+  const region = locale.replace("_", "-").replace(/.+-/, "").toUpperCase();
 
   try {
     const parsedPhoneNumber = parsePhoneNumber(phoneNumber, region);
