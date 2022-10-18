@@ -1,7 +1,7 @@
 import { NextFunction, Response } from "express";
 import { BridgeRequest } from "../models";
 
-const DEFAULT_LOCALE = "de_DE";
+const DEFAULT_LOCALE = "de-DE";
 
 export function extractHeaderMiddleware(
   req: BridgeRequest,
