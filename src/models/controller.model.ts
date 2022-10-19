@@ -15,25 +15,20 @@ import {
 } from ".";
 import { calendarEventsSchema, contactsSchema } from "../schemas";
 import { anonymizeKey } from "../util/anonymize-key";
-import {
-  convertPhoneNumberToE164,
-  isDirectDial,
-} from "../util/phone-number-utils";
+import { parsePhoneNumber } from "../util/phone-number-utils";
 import { validate } from "../util/validate";
+import { APIContact } from "./api-contact.model";
 import { CacheItemStateType } from "./cache-item-state.model";
 import { CalendarFilterOptions } from "./calendar-filter-options.model";
 
 const CONTACT_FETCH_TIMEOUT: number = 3000;
 
 function sanitizeContact(contact: Contact, locale: string): Contact {
-  const result: Contact = {
+  const result: APIContact = {
     ...contact,
-    phoneNumbers: contact.phoneNumbers.map((phoneNumber) => ({
-      ...phoneNumber,
-      phoneNumber: isDirectDial(phoneNumber)
-        ? phoneNumber.phoneNumber
-        : convertPhoneNumberToE164(phoneNumber.phoneNumber, locale),
-    })),
+    phoneNumbers: contact.phoneNumbers.map((phoneNumber) =>
+      parsePhoneNumber(phoneNumber, locale)
+    ),
   };
   return result;
 }

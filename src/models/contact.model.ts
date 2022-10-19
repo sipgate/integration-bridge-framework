@@ -14,27 +14,37 @@ export enum PhoneNumberLabel {
   DIRECTDIAL = "DIRECTDIAL",
 }
 
-export interface PhoneNumber {
-  label: PhoneNumberLabel;
-  phoneNumber: string;
+export enum PhoneNumberType {
+  DIRECT_DIAL = "DIRECT_DIAL",
+  STANDARD = "STANDARD",
 }
 
-export interface ContactTemplate {
+export type PhoneNumber = {
+  label: PhoneNumberLabel;
+  phoneNumber: string;
+};
+
+export type BaseContact = {
   name: string | null;
   firstName: string | null;
   lastName: string | null;
   email: string | null;
   organization: string | null;
-  phoneNumbers: PhoneNumber[];
-}
+};
 
-export interface Contact extends ContactTemplate {
+export type ContactResult = {
   id: string;
   contactUrl: string | null;
   avatarUrl: string | null;
   readonly?: boolean;
-}
+};
 
-export interface ContactUpdate extends ContactTemplate {
+export type ContactTemplate = BaseContact & {
+  phoneNumbers: PhoneNumber[];
+};
+
+export type ContactUpdate = ContactTemplate & {
   id: string;
-}
+};
+
+export type Contact = ContactTemplate & ContactResult;

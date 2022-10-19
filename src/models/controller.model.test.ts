@@ -8,10 +8,11 @@ import {
 import { CalendarEvent, Contact, Controller } from ".";
 import { StorageCache } from "../cache";
 import { MemoryStorageAdapter } from "../cache/storage";
+import { APIContact } from "./api-contact.model";
 import { BridgeRequest } from "./bridge-request.model";
-import { PhoneNumberLabel } from "./contact.model";
+import { PhoneNumberLabel, PhoneNumberType } from "./contact.model";
 
-const contactsMock: Contact[] = [
+const contactsMock: APIContact[] = [
   {
     id: "abc123",
     name: "Walter Geoffrey",
@@ -24,13 +25,16 @@ const contactsMock: Contact[] = [
     phoneNumbers: [
       {
         label: PhoneNumberLabel.MOBILE,
-        phoneNumber: "+4915799912345",
+        type: PhoneNumberType.STANDARD,
+        phoneNumber: "+4915791234567",
+        e164: "+4915791234567",
+        localized: "01579 1234567",
       },
     ],
   },
 ];
 
-const contactsReadonlyMock: Contact[] = [
+const contactsReadonlyMock: APIContact[] = [
   {
     id: "abc123",
     name: "Walter Geoffrey",
@@ -43,7 +47,10 @@ const contactsReadonlyMock: Contact[] = [
     phoneNumbers: [
       {
         label: PhoneNumberLabel.MOBILE,
-        phoneNumber: "+4915799912345",
+        type: PhoneNumberType.STANDARD,
+        phoneNumber: "+4915791234567",
+        e164: "+4915791234567",
+        localized: "01579 1234567",
       },
     ],
     readonly: true,
@@ -67,7 +74,7 @@ const calendarWithMissingField: Partial<CalendarEvent> = {
   end: 123456789,
 };
 
-const contactsMinimumMock: Contact[] = [
+const contactsMinimumMock: APIContact[] = [
   {
     id: "123",
     email: null,
@@ -80,7 +87,10 @@ const contactsMinimumMock: Contact[] = [
     phoneNumbers: [
       {
         label: PhoneNumberLabel.WORK,
-        phoneNumber: "+4915799912345",
+        type: PhoneNumberType.STANDARD,
+        phoneNumber: "+4915791234567",
+        e164: "+4915791234567",
+        localized: "01579 1234567",
       },
     ],
   },
