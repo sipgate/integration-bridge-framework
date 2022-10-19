@@ -8,6 +8,7 @@ import { anonymizeKey } from "../util/anonymize-key";
 
 const LOG_PREFIX = `[CACHE]`;
 const CACHE_STATE_PREFIX = "cache-state:";
+const CACHE_STATE_TTL = 30 * 60 * 1000; // 30 minutes
 
 export class StorageCache implements ContactCache {
   private storage: StorageAdapter;
@@ -117,9 +118,13 @@ export class StorageCache implements ContactCache {
   ): Promise<Contact[]> {
     this.log(`Refreshing value for ${anonymizeKey(key)}.`);
 
-    await this.storage.set<CacheItemState>(this.getCacheItemKey(key), {
-      state: CacheItemStateType.FETCHING,
-    });
+    await this.storage.set<CacheItemState>(
+      this.getCacheItemKey(key),
+      {
+        state: CacheItemStateType.FETCHING,
+      },
+      CACHE_STATE_TTL
+    );
 
     try {
       const freshValue = await getFreshValue(key);
@@ -136,7 +141,7 @@ export class StorageCache implements ContactCache {
       return freshValue;
     } catch (error) {
       this.log(`Error while refreshing value for ${anonymizeKey(key)}:`, error);
-      this.storage.delete(`${CACHE_STATE_PREFIX}${key}`);
+      this.storage.delete(this.getCacheItemKey(key));
       this.storage.delete(key);
       throw error;
     }

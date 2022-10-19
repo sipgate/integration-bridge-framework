@@ -10,7 +10,7 @@ import { StorageAdapter } from "../../models/storage-adapter.model";
 const inflate = promisify<InputType, Buffer>(nodeInflate);
 const deflate = promisify<InputType, Buffer>(nodeDeflate);
 
-const CACHE_TTL: number = 60 * 60 * 24 * 30; // 30 days
+const DEFAULT_CACHE_TTL: number = 60 * 60 * 24 * 30; // 30 days
 
 export class RedisStorageAdapter implements StorageAdapter {
   private client: RedisClientType<any, any>;
@@ -42,11 +42,11 @@ export class RedisStorageAdapter implements StorageAdapter {
     }
   }
 
-  public async set<T>(key: string, value: T): Promise<void> {
+  public async set<T>(key: string, value: T, ttl?: number): Promise<void> {
     const stringified = JSON.stringify(value);
     const compressed = await deflate(stringified);
     await this.client.set(key, compressed.toString("base64"), {
-      EX: CACHE_TTL,
+      EX: ttl ?? DEFAULT_CACHE_TTL,
     });
   }
 
