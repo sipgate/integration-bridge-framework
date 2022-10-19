@@ -20,7 +20,7 @@ export enum PhoneNumberType {
 }
 
 export type PhoneNumber = {
-  label: PhoneNumberLabel;
+  label: PhoneNumberLabel | string;
   phoneNumber: string;
 };
 

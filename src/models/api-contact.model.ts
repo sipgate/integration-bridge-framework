@@ -6,7 +6,7 @@ import {
 } from "./contact.model";
 
 export interface APIPhoneNumber {
-  label: PhoneNumberLabel;
+  label: PhoneNumberLabel | string;
   type: PhoneNumberType;
   e164: string;
   localized: string;
