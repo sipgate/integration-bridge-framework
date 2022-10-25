@@ -175,13 +175,7 @@ describe("convertPhoneNumberToE164", () => {
       parsePhoneNumber(
         { label: PhoneNumberLabel.WORK, phoneNumber: "+442012341234" },
         "de-DE"
-      ).e164
-    ).toEqual("+442012341234");
-    expect(
-      parsePhoneNumber(
-        { label: PhoneNumberLabel.WORK, phoneNumber: "+442012341234" },
-        "de-DE"
       ).localized
-    ).toEqual("020 1234 1234");
+    ).toEqual("+44 20 1234 1234");
   });
 });

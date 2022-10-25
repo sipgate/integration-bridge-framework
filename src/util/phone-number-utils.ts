@@ -16,13 +16,17 @@ export const parsePhoneNumber = (
     : PhoneNumberType.STANDARD;
   try {
     const region = locale.replace("_", "-").replace(/.+-/, "").toUpperCase();
-    const parsed = parse(phoneNumber, region);
-    const e164 = parsed.getNumber("e164") ?? phoneNumber;
+    const parsedPhoneNumber = parse(phoneNumber, region);
+    const phoneNumberRegion = parsedPhoneNumber.getRegionCode();
+    const e164 = parsedPhoneNumber.getNumber("e164") ?? phoneNumber;
     return {
       label,
       type,
       e164,
-      localized: parsed.getNumber("national") ?? phoneNumber,
+      localized:
+        region === phoneNumberRegion
+          ? parsedPhoneNumber.getNumber("national") ?? phoneNumber
+          : parsedPhoneNumber.getNumber("international") ?? phoneNumber,
       phoneNumber: e164,
     };
   } catch {
