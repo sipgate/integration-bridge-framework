@@ -64,6 +64,7 @@ describe("convertPhoneNumberToE164", () => {
       ).e164
     ).toEqual("+12123661182");
   });
+
   it("converts international phone numbers", () => {
     expect(
       parsePhoneNumber(
@@ -78,6 +79,7 @@ describe("convertPhoneNumberToE164", () => {
       ).e164
     ).toEqual("+4915799912345");
   });
+
   it("sanitizes phone numbers", () => {
     expect(
       parsePhoneNumber(
@@ -116,6 +118,7 @@ describe("convertPhoneNumberToE164", () => {
       ).e164
     ).toEqual("+4915799912345");
   });
+
   it("recovers invalid locale", () => {
     expect(
       parsePhoneNumber(
@@ -148,6 +151,7 @@ describe("convertPhoneNumberToE164", () => {
       ).e164
     ).toEqual("+4915799912345");
   });
+
   it("returns initial phone number on invalid locale", () => {
     expect(
       parsePhoneNumber(
@@ -156,6 +160,7 @@ describe("convertPhoneNumberToE164", () => {
       ).e164
     ).toEqual("801 111 111");
   });
+
   it("returns initial phone number on invalid phone number", () => {
     expect(
       parsePhoneNumber(
@@ -163,5 +168,20 @@ describe("convertPhoneNumberToE164", () => {
         "de-DE"
       ).e164
     ).toEqual("invalid");
+  });
+
+  it("formats a phone number from another region", () => {
+    expect(
+      parsePhoneNumber(
+        { label: PhoneNumberLabel.WORK, phoneNumber: "+442012341234" },
+        "de-DE"
+      ).e164
+    ).toEqual("+442012341234");
+    expect(
+      parsePhoneNumber(
+        { label: PhoneNumberLabel.WORK, phoneNumber: "+442012341234" },
+        "de-DE"
+      ).localized
+    ).toEqual("020 1234 1234");
   });
 });
