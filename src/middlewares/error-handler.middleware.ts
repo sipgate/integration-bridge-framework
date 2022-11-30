@@ -1,6 +1,5 @@
 import { NextFunction, Request, Response } from "express";
 import { ServerError } from "../models";
-import { RefreshError } from "../models/refresh-error.model";
 
 export function errorHandlerMiddleware(
   error: Error | ServerError,
@@ -8,7 +7,7 @@ export function errorHandlerMiddleware(
   res: Response,
   next: NextFunction
 ): void {
-  if (error instanceof ServerError || error instanceof RefreshError) {
+  if (error instanceof ServerError) {
     res.status(error.status).send(error.message);
     return;
   }
