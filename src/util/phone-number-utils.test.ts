@@ -178,4 +178,12 @@ describe("convertPhoneNumberToE164", () => {
       ).localized
     ).toEqual("+44 20 1234 1234");
   });
+  it("formats a direct dial correctly", () => {
+    expect(
+      parsePhoneNumber(
+        { label: PhoneNumberLabel.WORK, phoneNumber: "22" },
+        "de-DE"
+      ).e164
+    ).toEqual("22");
+  });
 });
