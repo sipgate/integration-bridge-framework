@@ -65,6 +65,8 @@ export class StorageCache implements ContactCache {
         );
 
         if (getFreshValue && isValueStale) {
+          // we don't return the fresh value here because we don't want to wait on the result.
+          // We return the old value instead, the fresh value is returned the next time it is requested
           this.getRefreshed(key, getFreshValue).catch((error) => {
             this.logErr(
               `Unable to get fresh values for"${anonymizeKey(
@@ -129,11 +131,6 @@ export class StorageCache implements ContactCache {
     try {
       const freshValue = await getFreshValue(key);
 
-      await this.storage.set<CacheItemState>(this.getCacheItemKey(key), {
-        state: CacheItemStateType.CACHED,
-        updated: new Date().getTime(),
-      });
-
       if (freshValue) {
         await this.set(key, freshValue);
       }
@@ -142,6 +139,12 @@ export class StorageCache implements ContactCache {
     } catch (error) {
       this.log(`Error while refreshing value for ${anonymizeKey(key)}:`, error);
       throw error;
+    } finally {
+      // we need to reset the cacheItemState to prevent loop of fetching state
+      await this.storage.set<CacheItemState>(this.getCacheItemKey(key), {
+        state: CacheItemStateType.CACHED,
+        updated: new Date().getTime(),
+      });
     }
   }
 
