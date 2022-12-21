@@ -38,6 +38,7 @@ export class StorageCache implements ContactCache {
       const cacheItemState = await this.storage.get<CacheItemState>(
         this.getCacheItemKey(key)
       );
+      const value = await this.storage.get<Contact[]>(key);
 
       if (
         cacheItemState &&
@@ -48,10 +49,12 @@ export class StorageCache implements ContactCache {
             anonymizeKey(key),
           ]} Not refreshing for because fetching is already in progress.`
         );
+
+        // if we have old contacts saved in cache we return them instead
+        if (value && value.length > 0) return value;
+
         return cacheItemState;
       }
-
-      const value = await this.storage.get<Contact[]>(key);
 
       if (value) {
         this.log(`[${anonymizeKey(key)}] Found match for key in cache.`);
