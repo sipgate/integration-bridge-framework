@@ -116,6 +116,9 @@ const contactsWithMissingField: Partial<Contact>[] = [
 
 const ERROR_MESSAGE: string = "Error!";
 
+console.log = jest.fn();
+jest.useFakeTimers();
+
 describe("getContacts", () => {
   let request: MockRequest<BridgeRequest>;
   let response: MockResponse<Response>;
@@ -187,6 +190,8 @@ describe("getContacts", () => {
   });
 
   it("should handle invalid contacts with missing fields", async () => {
+    console.error = jest.fn();
+
     const contactsBrokenMock = [...contactsWithMissingField] as Contact[];
 
     const controller: Controller = new Controller(
@@ -202,6 +207,8 @@ describe("getContacts", () => {
   });
 
   it("should handle an error when retrieving contacts", async () => {
+    console.error = jest.fn();
+
     const controller: Controller = new Controller(
       {
         getContacts: () => Promise.reject(ERROR_MESSAGE),
@@ -249,6 +256,8 @@ describe("getCalendarEvents", () => {
   });
 
   it("should handle invalid calendar events", async () => {
+    console.error = jest.fn();
+
     const calendarEventsBrokenMock = [
       { ...calendarWithMissingField },
     ] as CalendarEvent[];
@@ -266,6 +275,8 @@ describe("getCalendarEvents", () => {
   });
 
   it("should handle an error when retrieving calendar events", async () => {
+    console.error = jest.fn();
+
     const controller: Controller = new Controller(
       {
         getCalendarEvents: () => Promise.reject(ERROR_MESSAGE),
@@ -313,6 +324,8 @@ describe("createCalendarEvent", () => {
   });
 
   it("should handle invalid calendar events", async () => {
+    console.error = jest.fn();
+
     const calendarEventBrokenMock = {
       ...calendarWithMissingField,
     } as CalendarEvent;
@@ -330,6 +343,8 @@ describe("createCalendarEvent", () => {
   });
 
   it("should handle an error when creating calendar events", async () => {
+    console.error = jest.fn();
+
     const controller: Controller = new Controller(
       {
         createCalendarEvent: () => Promise.reject(ERROR_MESSAGE),
@@ -377,6 +392,8 @@ describe("updateCalendarEvent", () => {
   });
 
   it("should handle invalid calendar events", async () => {
+    console.error = jest.fn();
+
     const calendarEventBrokenMock = {
       ...calendarWithMissingField,
     } as CalendarEvent;
@@ -394,6 +411,8 @@ describe("updateCalendarEvent", () => {
   });
 
   it("should handle an error when updating calendar events", async () => {
+    console.error = jest.fn();
+
     const controller: Controller = new Controller(
       {
         updateCalendarEvent: () => Promise.reject(ERROR_MESSAGE),
@@ -439,6 +458,8 @@ describe("deleteCalendarEvent", () => {
   });
 
   it("should handle an error when deleting calendar events", async () => {
+    console.error = jest.fn();
+
     const controller: Controller = new Controller(
       {
         deleteCalendarEvent: () => Promise.reject(ERROR_MESSAGE),
@@ -559,6 +580,8 @@ describe("getHealth", () => {
   });
 
   it("should handle an error", async () => {
+    console.error = jest.fn();
+
     const controller: Controller = new Controller(
       {
         getContacts: () => Promise.reject(),
