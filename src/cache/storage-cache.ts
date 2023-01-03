@@ -51,7 +51,14 @@ export class StorageCache implements ContactCache {
         );
 
         // if we have old contacts saved in cache we return them instead
-        if (value && value.length > 0) return value;
+        if (value && value.length > 0) {
+          this.log(
+            `[${anonymizeKey(key)}] Returning previously cached contacts (${
+              value.length
+            }), because new contacts are still being fetched.`
+          );
+          return value;
+        }
 
         return cacheItemState;
       }
