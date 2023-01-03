@@ -45,9 +45,9 @@ export class StorageCache implements ContactCache {
         cacheItemState.state === CacheItemStateType.FETCHING
       ) {
         this.log(
-          `${[
-            anonymizeKey(key),
-          ]} Not refreshing for because fetching is already in progress.`
+          `[${anonymizeKey(
+            key
+          )}] Not refreshing for because fetching is already in progress.`
         );
 
         // if we have old contacts saved in cache we return them instead
@@ -75,9 +75,9 @@ export class StorageCache implements ContactCache {
           // We return the old value instead, the fresh value is returned the next time it is requested
           this.getRefreshed(key, getFreshValue).catch((error) => {
             this.logErr(
-              `${[
-                anonymizeKey(key),
-              ]} Unable to get fresh values, error was ${error}`
+              `[${anonymizeKey(
+                key
+              )}] Unable to get fresh values, error was ${error}`
             );
           });
         }

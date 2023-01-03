@@ -61,7 +61,7 @@ export class Controller {
           throw new ServerError(400, "Missing parameters");
         }
 
-        console.log(`${[anonKey]} Fetching contacts`);
+        console.log(`[${anonKey}] Fetching contacts`);
 
         const fetchedContacts: Contact[] = await this.adapter.getContacts(
           req.providerConfig
@@ -92,7 +92,7 @@ export class Controller {
 
       const contactsCount = responseContacts.length;
 
-      console.log(`${[anonKey]} Found ${contactsCount} cached contacts`);
+      console.log(`[${anonKey}] Found ${contactsCount} cached contacts`);
 
       if (
         !Array.isArray(contacts) &&
@@ -128,7 +128,7 @@ export class Controller {
         throw new ServerError(400, "Missing config parameters");
       }
 
-      console.log(`${[anonymizeKey(apiKey)]} Creating contact`);
+      console.log(`[${anonymizeKey(apiKey)}] Creating contact`);
 
       const contact: Contact = await this.adapter.createContact(
         req.providerConfig,
@@ -161,7 +161,7 @@ export class Controller {
       }
     } catch (error) {
       console.error(
-        `${[anonymizeKey(apiKey)]} Could not create contact`,
+        `[${anonymizeKey(apiKey)}] Could not create contact`,
         error || "Unknown"
       );
       next(error);
@@ -286,7 +286,7 @@ export class Controller {
         throw new ServerError(400, "Missing config parameters");
       }
 
-      console.log(`${[anonymizeKey(apiKey)]} Fetching calendar events`);
+      console.log(`[${anonymizeKey(apiKey)}] Fetching calendar events`);
 
       const filter: CalendarFilterOptions | null =
         typeof start === "string" && typeof end === "string"
@@ -312,7 +312,7 @@ export class Controller {
       }
 
       console.log(
-        `${[anonymizeKey(apiKey)]} Found ${calendarEvents.length} events`
+        `[${anonymizeKey(apiKey)}] Found ${calendarEvents.length} events`
       );
       res.status(200).send(calendarEvents);
     } catch (error) {
@@ -339,7 +339,7 @@ export class Controller {
         throw new ServerError(400, "Missing config parameters");
       }
 
-      console.log(`${[anonymizeKey(apiKey)]} Creating calendar event`);
+      console.log(`[${anonymizeKey(apiKey)}] Creating calendar event`);
 
       const calendarEvent: CalendarEvent =
         await this.adapter.createCalendarEvent(
@@ -430,7 +430,7 @@ export class Controller {
         throw new ServerError(400, "Missing config parameters");
       }
 
-      console.log(`${[anonymizeKey(apiKey)]} Deleting calendar event`);
+      console.log(`[${anonymizeKey(apiKey)}] Deleting calendar event`);
 
       await this.adapter.deleteCalendarEvent(req.providerConfig, req.params.id);
       res.status(200).send();
@@ -455,7 +455,7 @@ export class Controller {
         throw new ServerError(400, "Missing config parameters");
       }
 
-      console.log(`${[anonymizeKey(apiKey)]} Handling call event for key`);
+      console.log(`[${anonymizeKey(apiKey)}] Handling call event for key`);
 
       const integrationCallEventRef = await this.adapter.handleCallEvent(
         req.providerConfig,
@@ -487,7 +487,7 @@ export class Controller {
         throw new ServerError(400, "Missing config parameters");
       }
 
-      console.log(`${[anonymizeKey(apiKey)]} Handling connected event`);
+      console.log(`[${anonymizeKey(apiKey)}] Handling connected event`);
 
       await this.adapter.handleConnectedEvent(req.providerConfig);
 
@@ -514,7 +514,7 @@ export class Controller {
         throw new ServerError(400, "Missing config parameters");
       }
 
-      console.log(`${[anonymizeKey(apiKey)]} Updating call event`);
+      console.log(`[${anonymizeKey(apiKey)}] Updating call event`);
 
       //maybe return updated state obj
       await this.adapter.updateCallEvent(
