@@ -24,9 +24,22 @@ export class RedisStorageAdapter implements StorageAdapter {
       console.warn("Redis error: ", error.message);
     });
 
-    this.client.connect().catch((error) => {
-      console.warn("Redis connection error: ", error.message);
+    this.client.on("ready", () => {
+      console.info("Redis is ready.");
     });
+
+    this.client.on("reconnecting", () => {
+      console.warn("Redis is reconnecting.");
+    });
+
+    this.client
+      .connect()
+      .then(() => {
+        console.info("Redis successfully connected.");
+      })
+      .catch((error) => {
+        console.warn("Redis connection error: ", error.message);
+      });
   }
 
   public async get<T>(key: string): Promise<T | null> {
