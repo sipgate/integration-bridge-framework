@@ -70,7 +70,11 @@ export class StorageCache implements ContactCache {
       }
 
       if (value) {
-        this.log(`[${anonymizeKey(key)}] Found match for key in cache.`);
+        this.log(
+          `[${anonymizeKey(key)}] Found contacts ${
+            value.length
+          } for key in cache.`
+        );
 
         const now: number = new Date().getTime();
 
