@@ -80,14 +80,17 @@ export class Controller {
         ? this.contactCache.get(apiKey, fetchContacts)
         : fetchContacts();
 
-      const timeoutPromise: Promise<Contact[]> = new Promise((resolve) =>
-        setTimeout(() => resolve([]), CONTACT_FETCH_TIMEOUT)
+      const timeoutPromise: Promise<"TIMEOUT"> = new Promise((resolve) =>
+        setTimeout(() => resolve("TIMEOUT"), CONTACT_FETCH_TIMEOUT)
       );
 
-      const contacts = await Promise.race([fetcherPromise, timeoutPromise]);
+      const raceResult = await Promise.race([fetcherPromise, timeoutPromise]);
+      if (raceResult === "TIMEOUT") {
+        console.log(`[${anonKey}] fetching too slow, returning empty array`);
+      }
 
-      const responseContacts: Contact[] = Array.isArray(contacts)
-        ? contacts
+      const responseContacts: Contact[] = Array.isArray(raceResult)
+        ? raceResult
         : [];
 
       const contactsCount = responseContacts.length;
@@ -95,8 +98,9 @@ export class Controller {
       console.log(`[${anonKey}] Found ${contactsCount} cached contacts`);
 
       if (
-        !Array.isArray(contacts) &&
-        contacts.state === CacheItemStateType.FETCHING
+        !Array.isArray(raceResult) &&
+        raceResult !== "TIMEOUT" &&
+        raceResult.state === CacheItemStateType.FETCHING
       ) {
         res.header("X-Fetching-State", "pending");
       }
