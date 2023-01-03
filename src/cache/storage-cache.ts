@@ -35,10 +35,16 @@ export class StorageCache implements ContactCache {
     getFreshValue?: (key: string) => Promise<Contact[]>
   ): Promise<Contact[] | CacheItemState> {
     try {
+      this.log(`[${anonymizeKey(key)}] Trying to get Contacts from cache…`);
+      console.time(`${anonymizeKey(key)}-get-cache-item-state`);
       const cacheItemState = await this.storage.get<CacheItemState>(
         this.getCacheItemKey(key)
       );
+      console.timeEnd(`${anonymizeKey(key)}-get-cache-item-state`);
+
+      console.time(`${anonymizeKey(key)}-get-cache-contacts`);
       const value = await this.storage.get<Contact[]>(key);
+      console.timeEnd(`${anonymizeKey(key)}-get-cache-contacts`);
 
       if (
         cacheItemState &&
@@ -96,6 +102,11 @@ export class StorageCache implements ContactCache {
     }
 
     if (!getFreshValue) {
+      this.log(
+        `[${anonymizeKey(
+          key
+        )}] No getFreshValue function provided. Returning empty array.`
+      );
       return [];
     }
 
