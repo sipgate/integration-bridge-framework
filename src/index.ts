@@ -22,7 +22,7 @@ app.use(
 app.use(bodyParser.json());
 app.use(extractHeaderMiddleware);
 
-const cache = getContactCache();
+const cache = getContactCache("ALTERNATIVE");
 
 export function start(
   adapter: Adapter,
