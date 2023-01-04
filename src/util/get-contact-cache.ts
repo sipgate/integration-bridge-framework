@@ -6,7 +6,9 @@ import {
 } from "../cache/storage";
 import { ContactCache } from "../models";
 
-export function getContactCache(type?: "ALTERNATIVE"): ContactCache | null {
+export function getContactCache(
+  experimentalCache: boolean
+): ContactCache | null {
   const { REDIS_URL, CACHE_DISABLED } = process.env;
 
   if (CACHE_DISABLED && CACHE_DISABLED === "true") {
@@ -15,7 +17,7 @@ export function getContactCache(type?: "ALTERNATIVE"): ContactCache | null {
   }
 
   if (REDIS_URL) {
-    if (type === "ALTERNATIVE") {
+    if (experimentalCache) {
       return new StorageCache(new RedisStorageAdapter2(REDIS_URL));
     }
     console.log("[CACHE] Using redis cache");

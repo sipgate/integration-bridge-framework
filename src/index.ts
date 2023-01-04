@@ -22,13 +22,15 @@ app.use(
 app.use(bodyParser.json());
 app.use(extractHeaderMiddleware);
 
-const cache = getContactCache("ALTERNATIVE");
-
 export function start(
   adapter: Adapter,
-  customRouters: CustomRouter[] = []
+  customRouters: CustomRouter[] = [],
+  experimentalCache: boolean = false
 ): Server {
-  const controller: Controller = new Controller(adapter, cache);
+  const controller: Controller = new Controller(
+    adapter,
+    getContactCache(experimentalCache)
+  );
 
   app.get("/contacts", (req, res, next) =>
     controller.getContacts(req, res, next)
@@ -77,14 +79,6 @@ export function start(
 
   return app.listen(PORT, () => console.log(`Listening on port ${PORT}`));
 }
-
-export const deleteCacheItem = async (key: string) => {
-  await cache?.delete(key);
-};
-
-export const getCacheItem = async (key: string) => {
-  return (await cache?.get(key)) || [];
-};
 
 export * from "./models";
 export * from "./util";
