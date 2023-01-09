@@ -2,6 +2,15 @@
 
 This is the sipgate Integration Bridge framework to integrate sipgate apps with external services. It provides a unified way to connect apps to any provider of external data management, like contacts or calendar events.
 
+## Publishing a version
+To publish a new framework version, simply create a new tag and push it:
+```
+npm version <minor|patch>
+git push --follow-tags
+```
+This will automatically publish the package in the npm registry via the CI pipeline. 
+
+
 ## Bootstrapping a new bridge
 
 If you want to bootstrap a new sipgate Integration Bridge you can use this repository: [integration-bridge-boilerplate](https://github.com/sipgate/integration-bridge-boilerplate)
