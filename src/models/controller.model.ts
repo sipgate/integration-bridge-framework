@@ -99,8 +99,8 @@ export class Controller {
 
       if (
         !Array.isArray(raceResult) &&
-        raceResult !== "TIMEOUT" &&
-        raceResult.state === CacheItemStateType.FETCHING
+        (raceResult === "TIMEOUT" ||
+          raceResult.state === CacheItemStateType.FETCHING)
       ) {
         res.header("X-Fetching-State", "pending");
       }
