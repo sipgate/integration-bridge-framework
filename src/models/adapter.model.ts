@@ -42,10 +42,7 @@ export interface Adapter {
     event: CallEvent
   ) => Promise<void>;
   deleteCalendarEvent?: (config: Config, id: string) => Promise<void>;
-  handleCallEvent?: (
-    config: Config,
-    event: CallEvent
-  ) => Promise<string | { refId: string; contactId?: string }>;
+  handleCallEvent?: (config: Config, event: CallEvent) => Promise<string>;
   handleConnectedEvent?: (config: Config) => Promise<void>;
   getHealth?: () => Promise<void>;
   getOAuth2RedirectUrl?: (req?: Request, res?: Response) => Promise<string>;
