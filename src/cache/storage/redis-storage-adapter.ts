@@ -6,7 +6,6 @@ import {
   InputType,
 } from "zlib";
 import { StorageAdapter } from "../../models/storage-adapter.model";
-import { anonymizeKey } from "../../util";
 
 const inflate = promisify<InputType, Buffer>(nodeInflate);
 const deflate = promisify<InputType, Buffer>(nodeDeflate);
@@ -49,14 +48,8 @@ export class RedisStorageAdapter implements StorageAdapter {
       if (!value) {
         return null;
       }
-      console.time(`${anonymizeKey(key)}-inflate-buffer-cache`);
       const decompressed = await inflate(Buffer.from(value, "base64"));
-      console.timeEnd(`${anonymizeKey(key)}-inflate-buffer-cache`);
-
-      console.time(`${anonymizeKey(key)}-json-parse-cache`);
       const result = JSON.parse(decompressed.toString());
-      console.timeEnd(`${anonymizeKey(key)}-json-parse-cache`);
-
       return result;
     } catch {
       return null;

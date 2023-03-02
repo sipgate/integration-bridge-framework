@@ -36,15 +36,17 @@ export class StorageCache implements ContactCache {
   ): Promise<Contact[] | CacheItemState> {
     try {
       this.log(`[${anonymizeKey(key)}] Trying to get Contacts from cache…`);
-      console.time(`${anonymizeKey(key)}-get-cache-item-state`);
+      const start = performance.now();
       const cacheItemState = await this.storage.get<CacheItemState>(
         this.getCacheItemKey(key)
       );
-      console.timeEnd(`${anonymizeKey(key)}-get-cache-item-state`);
 
-      console.time(`${anonymizeKey(key)}-get-cache-contacts`);
       const value = await this.storage.get<Contact[]>(key);
-      console.timeEnd(`${anonymizeKey(key)}-get-cache-contacts`);
+      console.log(
+        `[${anonymizeKey(key)}] loading contacts took ${
+          performance.now() - start
+        }ms`
+      );
 
       if (
         cacheItemState &&

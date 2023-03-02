@@ -15,6 +15,7 @@ import {
 } from ".";
 import { calendarEventsSchema, contactsSchema } from "../schemas";
 import { anonymizeKey } from "../util/anonymize-key";
+import { shouldSkipCallEvent } from "../util/call-event.util";
 import { parsePhoneNumber } from "../util/phone-number-utils";
 import { validate } from "../util/validate";
 import { APIContact } from "./api-contact.model";
@@ -459,6 +460,16 @@ export class Controller {
         throw new ServerError(400, "Missing config parameters");
       }
 
+      if (shouldSkipCallEvent(req.body as CallEvent)) {
+        console.log(
+          `[${anonymizeKey(apiKey)}] skipping call event for call id ${
+            req.body.id
+          }`
+        );
+        res.status(200).send("Skipping call event");
+        return;
+      }
+
       console.log(`[${anonymizeKey(apiKey)}] Handling call event for key`);
 
       const integrationCallEventRef = await this.adapter.handleCallEvent(
@@ -516,6 +527,16 @@ export class Controller {
 
       if (!req.providerConfig) {
         throw new ServerError(400, "Missing config parameters");
+      }
+
+      if (shouldSkipCallEvent(req.body as CallEvent)) {
+        console.log(
+          `[${anonymizeKey(apiKey)}] skipping call event for call id ${
+            req.body.id
+          }`
+        );
+        res.status(200).send("Skipping call event");
+        return;
       }
 
       console.log(`[${anonymizeKey(apiKey)}] Updating call event`);
