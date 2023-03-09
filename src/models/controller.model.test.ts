@@ -5,7 +5,14 @@ import {
   MockRequest,
   MockResponse,
 } from "node-mocks-http";
-import { CalendarEvent, Contact, Controller } from ".";
+import {
+  CalendarEvent,
+  CallDirection,
+  CallParticipantType,
+  CallState,
+  Contact,
+  Controller,
+} from ".";
 import { StorageCache } from "../cache";
 import { MemoryStorageAdapter } from "../cache/storage";
 import { APIContact } from "./api-contact.model";
@@ -591,6 +598,256 @@ describe("getHealth", () => {
     );
 
     await controller.getHealth(request, response, next);
+
+    expect(next).toBeCalled();
+  });
+});
+
+describe("handleCallEvent", () => {
+  let request: MockRequest<BridgeRequest>;
+  let response: MockResponse<Response>;
+  let next: jest.Mock;
+
+  beforeEach(() => {
+    response = createResponse();
+    next = jest.fn();
+  });
+
+  it("should ignore a call event with a remote direct dial", async () => {
+    request = createRequest({
+      providerConfig: {
+        apiKey: "a1b2c3",
+        apiUrl: "http://example.com",
+        locale: "de_DE",
+      },
+      body: {
+        participants: [
+          {
+            type: CallParticipantType.LOCAL,
+            phoneNumber: "1234567890",
+          },
+          {
+            type: CallParticipantType.REMOTE,
+            phoneNumber: "13",
+          },
+        ],
+        id: "",
+        startTime: 0,
+        endTime: 0,
+        direction: CallDirection.IN,
+        note: "",
+        state: CallState.BUSY,
+      },
+    });
+    const controller: Controller = new Controller(
+      {
+        handleCallEvent: (config, event) => Promise.resolve(""),
+      },
+      new StorageCache(new MemoryStorageAdapter())
+    );
+
+    await controller.handleCallEvent(request, response, next);
+
+    const data: string = response._getData();
+
+    expect(next).not.toBeCalled();
+    expect(data).toEqual("Skipping call event");
+  });
+
+  it("should handle a call event", async () => {
+    request = createRequest({
+      providerConfig: {
+        apiKey: "a1b2c3",
+        apiUrl: "http://example.com",
+        locale: "de_DE",
+      },
+      body: {
+        participants: [
+          {
+            type: CallParticipantType.LOCAL,
+            phoneNumber: "1234567890",
+          },
+          {
+            type: CallParticipantType.REMOTE,
+            phoneNumber: "0123456789",
+          },
+        ],
+        id: "",
+        startTime: 0,
+        endTime: 0,
+        direction: CallDirection.IN,
+        note: "",
+        state: CallState.BUSY,
+      },
+    });
+    const controller: Controller = new Controller(
+      {
+        handleCallEvent: (config, event) => Promise.resolve("callRef"),
+      },
+      new StorageCache(new MemoryStorageAdapter())
+    );
+
+    await controller.handleCallEvent(request, response, next);
+
+    const data: string = response._getData();
+
+    expect(next).not.toBeCalled();
+    expect(data).toEqual("callRef");
+  });
+
+  it("should handle adapter not implementing the feature", async () => {
+    request = createRequest({
+      providerConfig: {
+        apiKey: "a1b2c3",
+        apiUrl: "http://example.com",
+        locale: "de_DE",
+      },
+    });
+    const controller: Controller = new Controller(
+      {},
+      new StorageCache(new MemoryStorageAdapter())
+    );
+
+    await controller.handleCallEvent(request, response, next);
+
+    expect(next).toBeCalled();
+  });
+
+  it("should handle config being missing", async () => {
+    request = createRequest({});
+    const controller: Controller = new Controller(
+      {
+        handleCallEvent: (config, event) => Promise.resolve("callRef"),
+      },
+      new StorageCache(new MemoryStorageAdapter())
+    );
+
+    await controller.handleCallEvent(request, response, next);
+
+    expect(next).toBeCalled();
+  });
+});
+
+describe("updateCallEvent", () => {
+  let request: MockRequest<BridgeRequest>;
+  let response: MockResponse<Response>;
+  let next: jest.Mock;
+
+  beforeEach(() => {
+    response = createResponse();
+    next = jest.fn();
+  });
+
+  it("should ignore a call event with a remote direct dial", async () => {
+    request = createRequest({
+      providerConfig: {
+        apiKey: "a1b2c3",
+        apiUrl: "http://example.com",
+        locale: "de_DE",
+      },
+      body: {
+        participants: [
+          {
+            type: CallParticipantType.LOCAL,
+            phoneNumber: "1234567890",
+          },
+          {
+            type: CallParticipantType.REMOTE,
+            phoneNumber: "13",
+          },
+        ],
+        id: "",
+        startTime: 0,
+        endTime: 0,
+        direction: CallDirection.IN,
+        note: "",
+        state: CallState.BUSY,
+      },
+    });
+    const controller: Controller = new Controller(
+      {
+        updateCallEvent: (config, id, event) => Promise.resolve(),
+      },
+      new StorageCache(new MemoryStorageAdapter())
+    );
+
+    await controller.updateCallEvent(request, response, next);
+
+    const data: string = response._getData();
+
+    expect(next).not.toBeCalled();
+    expect(data).toEqual("Skipping call event");
+  });
+
+  it("should handle a call event", async () => {
+    request = createRequest({
+      providerConfig: {
+        apiKey: "a1b2c3",
+        apiUrl: "http://example.com",
+        locale: "de_DE",
+      },
+      body: {
+        participants: [
+          {
+            type: CallParticipantType.LOCAL,
+            phoneNumber: "1234567890",
+          },
+          {
+            type: CallParticipantType.REMOTE,
+            phoneNumber: "0123456789",
+          },
+        ],
+        id: "",
+        startTime: 0,
+        endTime: 0,
+        direction: CallDirection.IN,
+        note: "",
+        state: CallState.BUSY,
+      },
+    });
+    const controller: Controller = new Controller(
+      {
+        updateCallEvent: (config, id, event) => Promise.resolve(),
+      },
+      new StorageCache(new MemoryStorageAdapter())
+    );
+
+    await controller.updateCallEvent(request, response, next);
+
+    const data: string = response._getData();
+
+    expect(next).not.toBeCalled();
+    expect(data).toEqual("");
+  });
+
+  it("should handle adapter not implementing the feature", async () => {
+    request = createRequest({
+      providerConfig: {
+        apiKey: "a1b2c3",
+        apiUrl: "http://example.com",
+        locale: "de_DE",
+      },
+    });
+    const controller: Controller = new Controller(
+      {},
+      new StorageCache(new MemoryStorageAdapter())
+    );
+
+    await controller.updateCallEvent(request, response, next);
+
+    expect(next).toBeCalled();
+  });
+
+  it("should handle config being missing", async () => {
+    request = createRequest({});
+    const controller: Controller = new Controller(
+      {
+        updateCallEvent: (config, id, event) => Promise.resolve(),
+      },
+      new StorageCache(new MemoryStorageAdapter())
+    );
+
+    await controller.updateCallEvent(request, response, next);
 
     expect(next).toBeCalled();
   });
