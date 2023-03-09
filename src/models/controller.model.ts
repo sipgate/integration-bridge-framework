@@ -528,7 +528,7 @@ export class Controller {
       );
       res.status(200).send();
     } catch (error) {
-      console.error("Could not update contact:", error || "Unknown");
+      console.error("Could not update call event:", error || "Unknown");
       next(error);
     }
   }
