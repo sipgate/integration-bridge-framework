@@ -8,7 +8,7 @@ import { anonymizeKey } from "../util/anonymize-key";
 
 const LOG_PREFIX = `[CACHE]`;
 const CACHE_STATE_PREFIX = "cache-state:";
-const CACHE_STATE_TTL = 30 * 60 * 1000; // 30 minutes
+const CACHE_STATE_SECONDS_TTL = 1800; // 30 minutes
 
 export class StorageCache implements ContactCache {
   private storage: StorageAdapter;
@@ -153,7 +153,7 @@ export class StorageCache implements ContactCache {
       {
         state: CacheItemStateType.FETCHING,
       },
-      CACHE_STATE_TTL
+      CACHE_STATE_SECONDS_TTL
     );
 
     try {
@@ -171,7 +171,7 @@ export class StorageCache implements ContactCache {
       //in any case we need to reset the cacheItemState to prevent loop of fetching state
       await this.storage.set<CacheItemState>(this.getCacheItemKey(key), {
         state: CacheItemStateType.CACHED,
-        updated: new Date().getTime(),
+        updated: Date.now(),
       });
     }
   }
