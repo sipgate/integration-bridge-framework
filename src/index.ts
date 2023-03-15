@@ -4,7 +4,7 @@ import cors from "cors";
 import express from "express";
 import { Server } from "http";
 import { errorHandlerMiddleware, extractHeaderMiddleware } from "./middlewares";
-import { Adapter, Controller } from "./models";
+import { Adapter, ContactCache, Controller } from "./models";
 import { CustomRouter } from "./models/custom-router.model";
 import { getContactCache } from "./util/get-contact-cache";
 
@@ -22,12 +22,14 @@ app.use(
 app.use(bodyParser.json());
 app.use(extractHeaderMiddleware);
 
-const cache = getContactCache();
+let cache: ContactCache | null = null;
 
 export function start(
   adapter: Adapter,
   customRouters: CustomRouter[] = []
 ): Server {
+  cache = getContactCache();
+
   const controller: Controller = new Controller(adapter, cache);
 
   app.get("/contacts", (req, res, next) =>

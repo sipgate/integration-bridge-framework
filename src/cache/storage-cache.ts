@@ -18,6 +18,7 @@ export class StorageCache implements ContactCache {
     this.storage = storageAdapter;
 
     const { CACHE_REFRESH_INTERVAL } = process.env;
+
     if (CACHE_REFRESH_INTERVAL) {
       this.cacheRefreshIntervalMs =
         Math.max(Number(CACHE_REFRESH_INTERVAL), 1) * 1000;
@@ -34,49 +35,35 @@ export class StorageCache implements ContactCache {
     key: string,
     getFreshValue?: (key: string) => Promise<Contact[]>
   ): Promise<Contact[] | CacheItemState> {
+    const anonKey = anonymizeKey(key);
+
     try {
-      this.log(`[${anonymizeKey(key)}] Trying to get Contacts from cache…`);
-      const start = performance.now();
+      this.log(`[${anonKey}] Trying to get contacts from cache`);
+
       const cacheItemState = await this.storage.get<CacheItemState>(
         this.getCacheItemKey(key)
       );
 
-      const value = await this.storage.get<Contact[]>(key);
-      console.log(
-        `[${anonymizeKey(key)}] loading contacts took ${
-          performance.now() - start
-        }ms`
-      );
+      const contacts = await this.storage.get<Contact[]>(key);
 
-      if (
-        cacheItemState &&
-        cacheItemState.state === CacheItemStateType.FETCHING
-      ) {
+      if (cacheItemState?.state === CacheItemStateType.FETCHING) {
         this.log(
-          `[${anonymizeKey(
-            key
-          )}] Not refreshing for because fetching is already in progress.`
+          `[${anonKey}] Not refreshing contacts, because cache state is FETCHING`
         );
 
         // if we have old contacts saved in cache we return them instead
-        if (value && value.length > 0) {
+        if (contacts && contacts?.length > 0) {
           this.log(
-            `[${anonymizeKey(key)}] Returning previously cached contacts (${
-              value.length
-            }), because new contacts are still being fetched.`
+            `[${anonKey}] Returning previously cached contacts (${contacts.length}), because new contacts are still being fetched`
           );
-          return value;
+          return contacts;
         }
 
         return cacheItemState;
       }
 
-      if (value) {
-        this.log(
-          `[${anonymizeKey(key)}] Found contacts ${
-            value.length
-          } for key in cache.`
-        );
+      if (contacts) {
+        this.log(`[${anonKey}] Found ${contacts.length} contacts in cache`);
 
         const now: number = new Date().getTime();
 
@@ -88,57 +75,49 @@ export class StorageCache implements ContactCache {
 
         if (getFreshValue && isValueStale) {
           this.log(
-            `[${anonymizeKey(key)}] value was stale, fetching fresh contacts`
+            `[${anonKey}] cached value was stale, fetching fresh contacts`
           );
           // we don't return the fresh value here because we don't want to wait on the result.
           // We return the old value instead, the fresh value is returned the next time it is requested
           this.getRefreshed(key, getFreshValue).catch((error) => {
-            this.logErr(
-              `[${anonymizeKey(
-                key
-              )}] Unable to get fresh values, error was ${error}`
-            );
+            this.logErr(`[${anonKey}] Unable to get fresh contacts`, error);
           });
         }
 
-        return value;
+        return contacts;
       }
     } catch (e) {
-      this.logErr(`[${anonymizeKey(key)}] Unable to get cache".`, e);
+      this.logErr(`[${anonKey}] Unable to get cache".`, e);
     }
 
     if (!getFreshValue) {
       this.log(
-        `[${anonymizeKey(
-          key
-        )}] No getFreshValue function provided. Returning empty array.`
+        `[${anonKey}] No getFreshValue function provided - returning empty array`
       );
       return [];
     }
 
-    this.log(
-      `[${anonymizeKey(key)}] Found no match in cache. Getting fresh value.`
-    );
+    this.log(`[${anonKey}] Found no match in cache. Getting fresh value.`);
     return this.getRefreshed(key, getFreshValue);
   }
 
-  public async set(key: string, value: Contact[]): Promise<void> {
-    this.log(
-      `[${anonymizeKey(key)}] Saving ${value.length} contacts to cache.`
-    );
+  public async set(key: string, contacts: Contact[]): Promise<void> {
+    const anonKey = anonymizeKey(key);
+    this.log(`[${anonKey}] Saving ${contacts.length} contacts to cache`);
     try {
-      await this.storage.set(key, value);
+      await this.storage.set(key, contacts);
     } catch (e) {
-      this.logErr(`[${anonymizeKey(key)}] Unable to set cache.`, e);
+      this.logErr(`[${anonKey}] Unable to set cache`, e);
     }
   }
 
   public async delete(key: string): Promise<void> {
-    this.log(`[${anonymizeKey(key)}] Removing contacts from cache.`);
+    const anonKey = anonymizeKey(key);
+    this.log(`[${anonKey}] Removing contacts from cache`);
     try {
       await this.storage.delete(key);
     } catch (e) {
-      this.logErr(`[${anonymizeKey(key)}] Unable to delete cache`, e);
+      this.logErr(`[${anonKey}] Unable to delete cache`, e);
     }
   }
 
@@ -146,7 +125,9 @@ export class StorageCache implements ContactCache {
     key: string,
     getFreshValue: (key: string) => Promise<Contact[]>
   ): Promise<Contact[]> {
-    this.log(`[${anonymizeKey(key)}] Refreshing value…`);
+    const anonKey = anonymizeKey(key);
+
+    this.log(`[${anonKey}] Setting cache state to FETCHING`);
 
     await this.storage.set<CacheItemState>(
       this.getCacheItemKey(key),
@@ -159,13 +140,19 @@ export class StorageCache implements ContactCache {
     try {
       const freshValue = await getFreshValue(key);
 
-      if (freshValue) {
-        await this.set(key, freshValue);
-      }
+      await this.set(key, freshValue);
+
+      this.log(`[${anonKey}] Setting cache state to CACHED`);
+
+      await this.storage.set<CacheItemState>(this.getCacheItemKey(key), {
+        state: CacheItemStateType.CACHED,
+        updated: Date.now(),
+      });
 
       return freshValue;
     } catch (error) {
-      this.log(`[${anonymizeKey(key)}] Error while refreshing value`, error);
+      this.log(`[${anonKey}] Error while refreshing value`, error);
+      await this.storage.delete(this.getCacheItemKey(key));
       throw error;
     }
   }

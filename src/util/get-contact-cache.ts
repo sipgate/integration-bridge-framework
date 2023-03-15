@@ -11,7 +11,7 @@ export function getContactCache(): ContactCache | null {
   }
 
   if (REDIS_URL) {
-    console.log("[CACHE] Using redis cache");
+    console.log("[CACHE] Using Redis cache");
     return new StorageCache(new RedisStorageAdapter(REDIS_URL));
   }
 

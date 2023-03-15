@@ -17,12 +17,12 @@ export class MemoryStorageAdapter implements StorageAdapter {
       sizeCalculation: sizeof,
     });
 
-    console.log(`[CACHE] Initialized Memory storage`);
+    console.log(`Initialized memory cache`);
   }
 
   public async get<T>(key: string): Promise<T | null> {
-    const cached = this.cache.get(key) as T;
-    return cached ? cached : null;
+    const cached = await this.cache.get<T>(key);
+    return cached ?? null;
   }
 
   public async set<T>(key: string, value: T): Promise<void> {

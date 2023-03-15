@@ -21,21 +21,21 @@ export class RedisStorageAdapter implements StorageAdapter {
     console.log(`Initialized Redis storage with URL ${url}`);
 
     this.client.on("error", (error) => {
-      console.warn("Redis error: ", error.message);
+      console.error("Redis error: ", error.message);
     });
 
     this.client.on("ready", () => {
-      console.info("Redis is ready.");
+      console.info("Redis is ready");
     });
 
     this.client.on("reconnecting", () => {
-      console.warn("Redis is reconnecting.");
+      console.warn("Redis is reconnecting");
     });
 
     this.client
       .connect()
       .then(() => {
-        console.info("Redis successfully connected.");
+        console.info("Redis successfully connected");
       })
       .catch((error) => {
         console.warn("Redis connection error: ", error.message);
@@ -43,17 +43,13 @@ export class RedisStorageAdapter implements StorageAdapter {
   }
 
   public async get<T>(key: string): Promise<T | null> {
-    try {
-      const value = await this.client.get(key);
-      if (!value) {
-        return null;
-      }
-      const decompressed = await inflate(Buffer.from(value, "base64"));
-      const result = JSON.parse(decompressed.toString());
-      return result;
-    } catch {
+    const value = await this.client.get(key);
+    if (!value) {
       return null;
     }
+    const decompressed = await inflate(Buffer.from(value, "base64"));
+    const result = JSON.parse(decompressed.toString());
+    return result;
   }
 
   public async set<T>(key: string, value: T, ttl?: number): Promise<void> {
