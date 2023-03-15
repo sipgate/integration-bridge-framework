@@ -167,12 +167,6 @@ export class StorageCache implements ContactCache {
     } catch (error) {
       this.log(`[${anonymizeKey(key)}] Error while refreshing value`, error);
       throw error;
-    } finally {
-      //in any case we need to reset the cacheItemState to prevent loop of fetching state
-      await this.storage.set<CacheItemState>(this.getCacheItemKey(key), {
-        state: CacheItemStateType.CACHED,
-        updated: Date.now(),
-      });
     }
   }
 
