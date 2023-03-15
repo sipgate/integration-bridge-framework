@@ -3,13 +3,7 @@ export enum CacheItemStateType {
   FETCHING = "FETCHING",
 }
 
-export interface CacheItemStateCached {
-  state: CacheItemStateType.CACHED;
-  updated: number;
-}
-
-export interface CacheItemStateFetching {
-  state: CacheItemStateType.FETCHING;
-}
-
-export type CacheItemState = CacheItemStateCached | CacheItemStateFetching;
+export type CacheItemState = {
+  state: CacheItemStateType;
+  timestamp: number;
+};
