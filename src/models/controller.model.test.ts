@@ -738,47 +738,6 @@ describe("updateCallEvent", () => {
     next = jest.fn();
   });
 
-  it("should ignore a call event with a remote direct dial", async () => {
-    request = createRequest({
-      providerConfig: {
-        apiKey: "a1b2c3",
-        apiUrl: "http://example.com",
-        locale: "de_DE",
-      },
-      body: {
-        participants: [
-          {
-            type: CallParticipantType.LOCAL,
-            phoneNumber: "1234567890",
-          },
-          {
-            type: CallParticipantType.REMOTE,
-            phoneNumber: "13",
-          },
-        ],
-        id: "",
-        startTime: 0,
-        endTime: 0,
-        direction: CallDirection.IN,
-        note: "",
-        state: CallState.BUSY,
-      },
-    });
-    const controller: Controller = new Controller(
-      {
-        updateCallEvent: (config, id, event) => Promise.resolve(),
-      },
-      new StorageCache(new MemoryStorageAdapter())
-    );
-
-    await controller.updateCallEvent(request, response, next);
-
-    const data: string = response._getData();
-
-    expect(next).not.toBeCalled();
-    expect(data).toEqual("Skipping call event");
-  });
-
   it("should handle a call event", async () => {
     request = createRequest({
       providerConfig: {

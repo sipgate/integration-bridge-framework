@@ -1,0 +1,15 @@
+#!/bin/sh
+
+branch=$(
+    v=$(git branch 2>/dev/null | grep "^*" | cut -d" " -f 2)
+    test -z "$v" || echo $v
+)
+
+. "$(dirname "$0")/_/husky.sh"
+
+if [ "$branch" != "main" ]; then
+    echo "Skipping pre-push on "$branch
+    exit 0
+fi
+
+npm run test
