@@ -529,16 +529,6 @@ export class Controller {
         throw new ServerError(400, "Missing config parameters");
       }
 
-      if (shouldSkipCallEvent(req.body as CallEvent)) {
-        console.log(
-          `[${anonymizeKey(apiKey)}] skipping call event for call id ${
-            req.body.id
-          }`
-        );
-        res.status(200).send("Skipping call event");
-        return;
-      }
-
       console.log(`[${anonymizeKey(apiKey)}] Updating call event`);
 
       //maybe return updated state obj
