@@ -2,37 +2,49 @@ import { anonymizeKey } from "./anonymize-key";
 import { Config } from "../models";
 
 export const infoLogger = (
-  { apiKey }: Config,
   message: string,
+  config?: Config,
   ...args: unknown[]
 ): void => {
   // eslint-disable-next-line no-console
-  console.log(
-    `${anonymizeKey(apiKey)}: ${message}`,
-    args && args.length ? args : ""
-  );
+  if (config) {
+    console.log(
+      `${`[${anonymizeKey(config.apiKey)}]`}: ${message}`,
+      args && args.length ? args : ""
+    );
+  } else {
+    console.log(message, args && args.length ? args : "");
+  }
 };
 
 export const errorLogger = (
-  config: Config | undefined,
   message: string,
+  config?: Config,
   ...args: unknown[]
 ): void => {
   // eslint-disable-next-line no-console
-  console.error(
-    `${config?.apiKey ? `[${anonymizeKey(config.apiKey)}]` : ""}: ${message}`,
-    args && args.length ? args : ""
-  );
+  if (config?.apiKey) {
+    console.error(
+      `[${anonymizeKey(config.apiKey)}] ${message}`,
+      args && args.length ? args : ""
+    );
+  } else {
+    console.error(message, args && args.length ? args : "");
+  }
 };
 
 export const warnLogger = (
-  config: Config | undefined,
   message: string,
+  config?: Config,
   ...args: unknown[]
 ): void => {
   // eslint-disable-next-line no-console
-  console.warn(
-    `${config?.apiKey ? `[${anonymizeKey(config.apiKey)}]` : ""}: ${message}`,
-    args && args.length ? args : ""
-  );
+  if (config?.apiKey) {
+    console.warn(
+      `[${anonymizeKey(config.apiKey)}] ${message}`,
+      args && args.length ? args : ""
+    );
+  } else {
+    console.warn(message, args && args.length ? args : "");
+  }
 };

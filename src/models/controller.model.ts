@@ -64,7 +64,7 @@ export class Controller {
           throw new ServerError(501, "Fetching contacts is not implemented");
         }
 
-        infoLogger(providerConfig, `Fetching contacts…`);
+        infoLogger(`Fetching contacts…`, providerConfig);
 
         const fetchedContacts: Contact[] = await this.adapter.getContacts(
           providerConfig
@@ -89,7 +89,7 @@ export class Controller {
 
       const raceResult = await Promise.race([fetcherPromise, timeoutPromise]);
       if (raceResult === "TIMEOUT") {
-        infoLogger(providerConfig, `Fetching too slow, returning empty array.`);
+        infoLogger(`Fetching too slow, returning empty array.`, providerConfig);
       }
 
       const responseContacts: Contact[] = Array.isArray(raceResult)
@@ -98,7 +98,7 @@ export class Controller {
 
       const contactsCount = responseContacts.length;
 
-      infoLogger(providerConfig, `Found ${contactsCount} cached contacts.`);
+      infoLogger(`Found ${contactsCount} cached contacts.`, providerConfig);
 
       if (
         !Array.isArray(raceResult) &&
@@ -116,8 +116,8 @@ export class Controller {
       res.status(200).send(responseContacts);
     } catch (error) {
       errorLogger(
-        providerConfig,
         "Could not get contacts:",
+        providerConfig,
         error || "Unknown"
       );
       next(error);
@@ -469,14 +469,14 @@ export class Controller {
 
       if (shouldSkipCallEvent(req.body as CallEvent)) {
         infoLogger(
-          providerConfig,
-          `Skipping call event for call id ${req.body.id}`
+          `Skipping call event for call id ${req.body.id}`,
+          providerConfig
         );
         res.status(200).send("Skipping call event");
         return;
       }
 
-      infoLogger(providerConfig, `Handling call event`);
+      infoLogger(`Handling call event`, providerConfig);
 
       const integrationCallEventRef = await this.adapter.handleCallEvent(
         providerConfig,
@@ -486,8 +486,8 @@ export class Controller {
       res.status(200).send(integrationCallEventRef);
     } catch (error) {
       errorLogger(
-        providerConfig,
         "Could not handle call event:",
+        providerConfig,
         error || "Unknown"
       );
       next(error);
