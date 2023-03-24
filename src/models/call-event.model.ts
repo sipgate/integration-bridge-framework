@@ -26,3 +26,7 @@ export interface CallEvent {
   note: string;
   state: CallState;
 }
+
+export interface UpdateCallEventBody {
+  note: string;
+}

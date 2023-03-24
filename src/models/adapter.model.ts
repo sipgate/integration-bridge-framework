@@ -8,6 +8,7 @@ import {
   Contact,
   ContactTemplate,
   ContactUpdate,
+  UpdateCallEventBody,
 } from ".";
 
 export interface Adapter {
@@ -39,7 +40,7 @@ export interface Adapter {
   updateCallEvent?: (
     config: Config,
     id: string,
-    event: CallEvent
+    event: UpdateCallEventBody
   ) => Promise<void>;
   deleteCalendarEvent?: (config: Config, id: string) => Promise<void>;
   handleCallEvent?: (config: Config, event: CallEvent) => Promise<string>;

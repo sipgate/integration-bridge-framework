@@ -12,6 +12,7 @@ import {
   ContactTemplate,
   ContactUpdate,
   ServerError,
+  UpdateCallEventBridgeRequest,
 } from ".";
 import { calendarEventsSchema, contactsSchema } from "../schemas";
 import { anonymizeKey } from "../util/anonymize-key";
@@ -21,6 +22,7 @@ import { validate } from "../util/validate";
 import { APIContact } from "./api-contact.model";
 import { CacheItemStateType } from "./cache-item-state.model";
 import { CalendarFilterOptions } from "./calendar-filter-options.model";
+import { errorLogger, infoLogger } from "../util/logger.util";
 
 const CONTACT_FETCH_TIMEOUT: number = 3000;
 
@@ -50,22 +52,22 @@ export class Controller {
     res: Response,
     next: NextFunction
   ): Promise<void> {
-    const { providerConfig: { apiKey = "", locale = "" } = {} } = req;
-    const anonKey = anonymizeKey(apiKey);
+    const { providerConfig } = req;
+
     try {
+      if (!providerConfig) {
+        throw new ServerError(400, "Missing parameters");
+      }
+
       const fetchContacts = async (): Promise<Contact[]> => {
         if (!this.adapter.getContacts) {
           throw new ServerError(501, "Fetching contacts is not implemented");
         }
 
-        if (!req.providerConfig) {
-          throw new ServerError(400, "Missing parameters");
-        }
-
-        console.log(`[${anonKey}] Fetching contacts`);
+        infoLogger(providerConfig, `Fetching contacts…`);
 
         const fetchedContacts: Contact[] = await this.adapter.getContacts(
-          req.providerConfig
+          providerConfig
         );
 
         if (!validate(this.ajv, contactsSchema, fetchedContacts)) {
@@ -73,12 +75,12 @@ export class Controller {
         }
 
         return fetchedContacts.map((contact) =>
-          sanitizeContact(contact, locale)
+          sanitizeContact(contact, providerConfig.locale)
         );
       };
 
       const fetcherPromise = this.contactCache
-        ? this.contactCache.get(apiKey, fetchContacts)
+        ? this.contactCache.get(providerConfig.apiKey, fetchContacts)
         : fetchContacts();
 
       const timeoutPromise: Promise<"TIMEOUT"> = new Promise((resolve) =>
@@ -87,7 +89,7 @@ export class Controller {
 
       const raceResult = await Promise.race([fetcherPromise, timeoutPromise]);
       if (raceResult === "TIMEOUT") {
-        console.log(`[${anonKey}] fetching too slow, returning empty array`);
+        infoLogger(providerConfig, `Fetching too slow, returning empty array.`);
       }
 
       const responseContacts: Contact[] = Array.isArray(raceResult)
@@ -96,7 +98,7 @@ export class Controller {
 
       const contactsCount = responseContacts.length;
 
-      console.log(`[${anonKey}] Found ${contactsCount} cached contacts`);
+      infoLogger(providerConfig, `Found ${contactsCount} cached contacts.`);
 
       if (
         !Array.isArray(raceResult) &&
@@ -113,7 +115,11 @@ export class Controller {
 
       res.status(200).send(responseContacts);
     } catch (error) {
-      console.error("Could not get contacts:", error || "Unknown");
+      errorLogger(
+        providerConfig,
+        "Could not get contacts:",
+        error || "Unknown"
+      );
       next(error);
     }
   }
@@ -450,36 +456,40 @@ export class Controller {
     res: Response,
     next: NextFunction
   ): Promise<void> {
-    const { providerConfig: { apiKey = "" } = {} } = req;
+    const { providerConfig } = req;
+
     try {
+      if (!providerConfig) {
+        throw new ServerError(400, "Missing config parameters");
+      }
+
       if (!this.adapter.handleCallEvent) {
         throw new ServerError(501, "Handling call event is not implemented");
       }
 
-      if (!req.providerConfig) {
-        throw new ServerError(400, "Missing config parameters");
-      }
-
       if (shouldSkipCallEvent(req.body as CallEvent)) {
-        console.log(
-          `[${anonymizeKey(apiKey)}] skipping call event for call id ${
-            req.body.id
-          }`
+        infoLogger(
+          providerConfig,
+          `Skipping call event for call id ${req.body.id}`
         );
         res.status(200).send("Skipping call event");
         return;
       }
 
-      console.log(`[${anonymizeKey(apiKey)}] Handling call event for key`);
+      infoLogger(providerConfig, `Handling call event`);
 
       const integrationCallEventRef = await this.adapter.handleCallEvent(
-        req.providerConfig,
+        providerConfig,
         req.body as CallEvent
       );
 
       res.status(200).send(integrationCallEventRef);
     } catch (error) {
-      console.error("Could not handle call event:", error || "Unknown");
+      errorLogger(
+        providerConfig,
+        "Could not handle call event:",
+        error || "Unknown"
+      );
       next(error);
     }
   }
@@ -514,11 +524,11 @@ export class Controller {
   }
 
   public async updateCallEvent(
-    req: BridgeRequest,
+    req: UpdateCallEventBridgeRequest,
     res: Response,
     next: NextFunction
   ): Promise<void> {
-    const { providerConfig: { apiKey = "" } = {} } = req;
+    const { providerConfig: { apiKey = "" } = {}, body, params } = req;
 
     try {
       if (!this.adapter.updateCallEvent) {
@@ -531,12 +541,7 @@ export class Controller {
 
       console.log(`[${anonymizeKey(apiKey)}] Updating call event`);
 
-      //maybe return updated state obj
-      await this.adapter.updateCallEvent(
-        req.providerConfig,
-        req.params.id,
-        req.body as CallEvent
-      );
+      await this.adapter.updateCallEvent(req.providerConfig, params.id, body);
       res.status(200).send();
     } catch (error) {
       console.error("Could not update call event:", error || "Unknown");
