@@ -13,17 +13,30 @@ import {
 
 export interface Adapter {
   getToken?: (config: Config) => Promise<{ apiKey: string }>;
-  getContacts?: (config: Config) => Promise<Contact[]>;
+  getContacts?: (
+    config: Config,
+    req?: Request,
+    res?: Response
+  ) => Promise<Contact[]>;
   createContact?: (
     config: Config,
-    contact: ContactTemplate
+    contact: ContactTemplate,
+    req?: Request,
+    res?: Response
   ) => Promise<Contact>;
   updateContact?: (
     config: Config,
     id: string,
-    contact: ContactUpdate
+    contact: ContactUpdate,
+    req?: Request,
+    res?: Response
   ) => Promise<Contact>;
-  deleteContact?: (config: Config, id: string) => Promise<void>;
+  deleteContact?: (
+    config: Config,
+    id: string,
+    req?: Request,
+    res?: Response
+  ) => Promise<void>;
   getCalendarEvents?: (
     config: Config,
     options?: CalendarFilterOptions | null

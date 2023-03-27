@@ -67,7 +67,9 @@ export class Controller {
         infoLogger(`Fetching contacts…`, providerConfig);
 
         const fetchedContacts: Contact[] = await this.adapter.getContacts(
-          providerConfig
+          providerConfig,
+          req,
+          res
         );
 
         if (!validate(this.ajv, contactsSchema, fetchedContacts)) {
@@ -143,7 +145,9 @@ export class Controller {
 
       const contact: Contact = await this.adapter.createContact(
         req.providerConfig,
-        req.body as ContactTemplate
+        req.body as ContactTemplate,
+        req,
+        res
       );
 
       const valid = validate(this.ajv, contactsSchema, [contact]);
@@ -199,7 +203,9 @@ export class Controller {
       const contact: Contact = await this.adapter.updateContact(
         req.providerConfig,
         req.params.id,
-        req.body as ContactUpdate
+        req.body as ContactUpdate,
+        req,
+        res
       );
 
       const valid = validate(this.ajv, contactsSchema, [contact]);
@@ -252,7 +258,7 @@ export class Controller {
       console.log(`Deleting contact for key "${anonymizeKey(apiKey)}"`);
 
       const contactId: string = req.params.id;
-      await this.adapter.deleteContact(req.providerConfig, contactId);
+      await this.adapter.deleteContact(req.providerConfig, contactId, req, res);
 
       if (this.adapter.getToken && req.providerConfig) {
         const { apiKey } = await this.adapter.getToken(req.providerConfig);
