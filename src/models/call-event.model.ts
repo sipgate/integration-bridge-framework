@@ -1,5 +1,11 @@
 import { CallDirection } from "./";
 
+/**
+ * The type of the call participant.
+ * The remote party is the party that is not the user.
+ * Unless you really need the local party,
+ *  you should use the remote party since it also contains the correct phone number of the call.
+ */
 export enum CallParticipantType {
   LOCAL = "local",
   REMOTE = "remote",
