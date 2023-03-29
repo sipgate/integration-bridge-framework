@@ -22,6 +22,7 @@ import { APIContact } from "./api-contact.model";
 import { CacheItemStateType } from "./cache-item-state.model";
 import { CalendarFilterOptions } from "./calendar-filter-options.model";
 import { errorLogger, infoLogger } from "../util/logger.util";
+import { IntegrationErrorType } from "./integration-error.model";
 
 const CONTACT_FETCH_TIMEOUT: number = 3000;
 
@@ -114,6 +115,15 @@ export class Controller {
 
       res.status(200).send(responseContacts);
     } catch (error) {
+      // prevent logging of refresh errors
+      if (
+        error instanceof ServerError &&
+        error.message === IntegrationErrorType.INTEGRATION_REFRESH_ERROR
+      ) {
+        next(error);
+        return;
+      }
+
       errorLogger(
         "Could not get contacts:",
         providerConfig,
@@ -170,6 +180,15 @@ export class Controller {
         }
       }
     } catch (error) {
+      // prevent logging of refresh errors
+      if (
+        error instanceof ServerError &&
+        error.message === IntegrationErrorType.INTEGRATION_REFRESH_ERROR
+      ) {
+        next(error);
+        return;
+      }
+
       console.error(
         `[${anonymizeKey(apiKey)}] Could not create contact`,
         error || "Unknown"
@@ -228,6 +247,15 @@ export class Controller {
         }
       }
     } catch (error) {
+      // prevent logging of refresh errors
+      if (
+        error instanceof ServerError &&
+        error.message === IntegrationErrorType.INTEGRATION_REFRESH_ERROR
+      ) {
+        next(error);
+        return;
+      }
+
       console.error("Could not update contact:", error || "Unknown");
       next(error);
     }
@@ -269,6 +297,15 @@ export class Controller {
         }
       }
     } catch (error) {
+      // prevent logging of refresh errors
+      if (
+        error instanceof ServerError &&
+        error.message === IntegrationErrorType.INTEGRATION_REFRESH_ERROR
+      ) {
+        next(error);
+        return;
+      }
+
       console.error("Could not delete contact:", error || "Unknown");
       next(error);
     }
