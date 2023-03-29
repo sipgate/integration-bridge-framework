@@ -12,7 +12,6 @@ import {
   ContactTemplate,
   ContactUpdate,
   ServerError,
-  UpdateCallEventBridgeRequest,
 } from ".";
 import { calendarEventsSchema, contactsSchema } from "../schemas";
 import { anonymizeKey } from "../util/anonymize-key";
@@ -524,7 +523,7 @@ export class Controller {
   }
 
   public async updateCallEvent(
-    req: UpdateCallEventBridgeRequest,
+    req: BridgeRequest,
     res: Response,
     next: NextFunction
   ): Promise<void> {

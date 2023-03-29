@@ -8,7 +8,6 @@ import {
   Contact,
   ContactTemplate,
   ContactUpdate,
-  UpdateCallEventBody,
 } from ".";
 
 export interface Adapter {
