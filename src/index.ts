@@ -33,16 +33,6 @@ export function start(
 
   const controller: Controller = new Controller(adapter, cache);
 
-  // Enabling CORS preflight across the board
-  app.options(
-    "*",
-    cors({
-      credentials: true,
-      origin: true,
-      allowedHeaders: "*",
-    })
-  );
-
   app.get("/contacts", (req, res, next) =>
     controller.getContacts(req, res, next)
   );
