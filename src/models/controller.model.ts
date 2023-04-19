@@ -3,7 +3,6 @@ import { NextFunction, Request, Response } from "express";
 import { stringify } from "querystring";
 import {
   Adapter,
-  BridgeRequest,
   CalendarEvent,
   CalendarEventTemplate,
   CallEvent,
@@ -16,12 +15,16 @@ import {
 import { calendarEventsSchema, contactsSchema } from "../schemas";
 import { anonymizeKey } from "../util/anonymize-key";
 import { shouldSkipCallEvent } from "../util/call-event.util";
+import { errorLogger, infoLogger } from "../util/logger.util";
 import { parsePhoneNumber } from "../util/phone-number-utils";
 import { validate } from "../util/validate";
 import { APIContact } from "./api-contact.model";
+import {
+  BridgeRequest,
+  IntegrationEntityBridgeRequest,
+} from "./bridge-request.model";
 import { CacheItemStateType } from "./cache-item-state.model";
 import { CalendarFilterOptions } from "./calendar-filter-options.model";
-import { errorLogger, infoLogger } from "../util/logger.util";
 import { IntegrationErrorType } from "./integration-error.model";
 
 const CONTACT_FETCH_TIMEOUT: number = 3000;
@@ -581,6 +584,36 @@ export class Controller {
       res.status(200).send();
     } catch (error) {
       console.error("Could not update call event:", error || "Unknown");
+      next(error);
+    }
+  }
+
+  public async getEntity(
+    req: IntegrationEntityBridgeRequest,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    const { providerConfig } = req;
+    try {
+      if (!providerConfig) {
+        throw new ServerError(400, "Missing parameters");
+      }
+
+      if (!this.adapter.getEntity) {
+        throw new ServerError(501, "Fetching Entity is not implemented");
+      }
+
+      const fetchedEntity = await this.adapter.getEntity(
+        providerConfig,
+        req.params.id,
+        req.params.type
+      );
+
+      infoLogger(`[${fetchedEntity}] `, providerConfig);
+
+      res.status(200).send(fetchedEntity);
+    } catch (error) {
+      errorLogger("Could not get entity:", providerConfig, error);
       next(error);
     }
   }

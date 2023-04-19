@@ -4,7 +4,12 @@ import cors from "cors";
 import express from "express";
 import { Server } from "http";
 import { errorHandlerMiddleware, extractHeaderMiddleware } from "./middlewares";
-import { Adapter, ContactCache, Controller } from "./models";
+import {
+  Adapter,
+  ContactCache,
+  Controller,
+  IntegrationEntityBridgeRequest,
+} from "./models";
 import { CustomRouter } from "./models/custom-router.model";
 import { getContactCache } from "./util/get-contact-cache";
 
@@ -32,7 +37,6 @@ export function start(
   cache = getContactCache();
 
   const controller: Controller = new Controller(adapter, cache);
-
   app.get("/contacts", (req, res, next) =>
     controller.getContacts(req, res, next)
   );
@@ -44,6 +48,11 @@ export function start(
   );
   app.delete("/contacts/:id", (req, res, next) =>
     controller.deleteContact(req, res, next)
+  );
+  app.get(
+    "/entity/:type/:id",
+    (req: IntegrationEntityBridgeRequest, res, next) =>
+      controller.getEntity(req, res, next)
   );
   app.get("/calendar", (req, res, next) =>
     controller.getCalendarEvents(req, res, next)

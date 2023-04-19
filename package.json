@@ -8,16 +8,6 @@
     "dist"
   ],
   "repository": "github:sipgate/integration-bridge",
-  "contributors": [
-    {
-      "name": "Benjamin Kluck",
-      "email": "ben@fug.lu"
-    },
-    {
-      "name": "Felix Gladisch",
-      "email": "felix@felixgladisch.de"
-    }
-  ],
   "bugs": {
     "url": "https://github.com/sipgate/integration-bridge/issues"
   },
@@ -28,17 +18,17 @@
   ],
   "license": "UNLICENSED",
   "scripts": {
+    "dev": "npm run build && npm link && tsc --watch",
     "prepare": "husky install",
     "test": "jest",
     "compile": "tsc",
     "build": "npm test && rimraf dist && npm run compile",
     "precommit": "lint-staged",
     "prepublishOnly": "npm run build",
-    "format": "prettier --write '**/*.ts'",
-    "link": "npm link"
+    "format": "prettier --write '**/*.ts'"
   },
   "lint-staged": {
-    "*.{ts}": [
+    "*.ts": [
       "prettier --write",
       "git add"
     ]
