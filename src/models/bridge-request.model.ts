@@ -12,5 +12,5 @@ export interface UpdateCallEventBridgeRequest extends BridgeRequest {
 }
 
 export interface IntegrationEntityBridgeRequest extends BridgeRequest {
-  body: { baseEntityType: IntegrationEntityType };
+  params: { id: string; etype: IntegrationEntityType };
 }

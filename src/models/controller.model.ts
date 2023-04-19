@@ -25,7 +25,6 @@ import {
 } from "./bridge-request.model";
 import { CacheItemStateType } from "./cache-item-state.model";
 import { CalendarFilterOptions } from "./calendar-filter-options.model";
-import { IntegrationEntity } from "./integration-entity.model";
 import { IntegrationErrorType } from "./integration-error.model";
 
 const CONTACT_FETCH_TIMEOUT: number = 3000;
@@ -55,24 +54,32 @@ export class Controller {
     req: IntegrationEntityBridgeRequest,
     res: Response,
     next: NextFunction
-  ): Promise<IntegrationEntity[]> {
+  ): Promise<void> {
     const { providerConfig } = req;
 
     try {
+      if (!providerConfig) {
+        throw new ServerError(400, "Missing parameters");
+      }
+
+      if (!this.adapter.getRelationsForEntity) {
+        throw new ServerError(501, "Fetching relations is not implemented");
+      }
+
       const fetchedRelations = await this.adapter.getRelationsForEntity(
-        req.providerConfig,
+        providerConfig,
         req.params.id,
-        req.body.baseEntityType
+        req.params.etype
       );
 
       infoLogger(`[${fetchedRelations}] `, providerConfig);
 
-      return [];
+      res.status(200).send(fetchedRelations);
     } catch (error) {
       errorLogger("Could not get entitys:", providerConfig, error);
       next(error);
     } finally {
-      return [];
+      return;
     }
   }
 
