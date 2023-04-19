@@ -14,3 +14,7 @@ export interface IdBridgeRequest<BodyType> extends BridgeRequest<BodyType> {
 export interface IntegrationEntityBridgeRequest extends BridgeRequest<unknown> {
   params: { id: string; type: IntegrationEntityType };
 }
+
+export interface IntegrationEntityBridgeRequest extends BridgeRequest<unknown> {
+  params: { id: string; type: IntegrationEntityType };
+}

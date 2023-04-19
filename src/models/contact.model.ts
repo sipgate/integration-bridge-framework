@@ -3,6 +3,7 @@ import {
   IntegrationEntityType,
 } from "./integration-entity.model";
 
+
 export enum PhoneNumberLabel {
   WORK = "WORK",
   MOBILE = "MOBILE",
