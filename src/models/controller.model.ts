@@ -3,7 +3,6 @@ import { NextFunction, Request, Response } from "express";
 import { stringify } from "querystring";
 import {
   Adapter,
-  BridgeRequest,
   CalendarEvent,
   CalendarEventTemplate,
   CallEvent,
@@ -16,12 +15,17 @@ import {
 import { calendarEventsSchema, contactsSchema } from "../schemas";
 import { anonymizeKey } from "../util/anonymize-key";
 import { shouldSkipCallEvent } from "../util/call-event.util";
+import { errorLogger, infoLogger } from "../util/logger.util";
 import { parsePhoneNumber } from "../util/phone-number-utils";
 import { validate } from "../util/validate";
 import { APIContact } from "./api-contact.model";
+import {
+  BridgeRequest,
+  IntegrationEntityBridgeRequest,
+} from "./bridge-request.model";
 import { CacheItemStateType } from "./cache-item-state.model";
 import { CalendarFilterOptions } from "./calendar-filter-options.model";
-import { errorLogger, infoLogger } from "../util/logger.util";
+import { IntegrationEntity } from "./integration-entity.model";
 import { IntegrationErrorType } from "./integration-error.model";
 
 const CONTACT_FETCH_TIMEOUT: number = 3000;
@@ -45,6 +49,31 @@ export class Controller {
     this.adapter = adapter;
     this.contactCache = contactCache;
     this.ajv = new Ajv();
+  }
+
+  public async getRelationsForEntity(
+    req: IntegrationEntityBridgeRequest,
+    res: Response,
+    next: NextFunction
+  ): Promise<IntegrationEntity[]> {
+    const { providerConfig } = req;
+
+    try {
+      const fetchedRelations = await this.adapter.getRelationsForEntity(
+        req.providerConfig,
+        req.params.id,
+        req.body.baseEntityType
+      );
+
+      infoLogger(`[${fetchedRelations}] `, providerConfig);
+
+      return [];
+    } catch (error) {
+      errorLogger("Could not get entitys:", providerConfig, error);
+      next(error);
+    } finally {
+      return [];
+    }
   }
 
   public async getContacts(

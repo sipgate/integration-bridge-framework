@@ -32,7 +32,6 @@ export function start(
   cache = getContactCache();
 
   const controller: Controller = new Controller(adapter, cache);
-
   app.get("/contacts", (req, res, next) =>
     controller.getContacts(req, res, next)
   );
@@ -44,6 +43,9 @@ export function start(
   );
   app.delete("/contacts/:id", (req, res, next) =>
     controller.deleteContact(req, res, next)
+  );
+  app.get("/entity/:id/relations", (req, res, next) =>
+    controller.getRelationsForEntity(req, res, next)
   );
   app.get("/calendar", (req, res, next) =>
     controller.getCalendarEvents(req, res, next)

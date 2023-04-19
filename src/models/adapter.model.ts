@@ -9,8 +9,14 @@ import {
   ContactTemplate,
   ContactUpdate,
 } from ".";
+import { IntegrationEntityType } from "./integration-entity.model";
 
 export interface Adapter {
+  getRelationsForEntity(
+    providerConfig: Config | undefined,
+    id: string,
+    type: IntegrationEntityType
+  ): unknown;
   getToken?: (config: Config) => Promise<{ apiKey: string }>;
   getContacts?: (config: Config) => Promise<Contact[]>;
   createContact?: (

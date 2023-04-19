@@ -1,3 +1,4 @@
+import { IntegrationEntityType } from "./integration-entity.model";
 import { Request } from "express";
 import { Config } from "./config.model";
 import { UpdateCallEventBody } from "./call-event.model";
@@ -8,4 +9,8 @@ export interface BridgeRequest extends Request {
 
 export interface UpdateCallEventBridgeRequest extends BridgeRequest {
   body: UpdateCallEventBody;
+}
+
+export interface IntegrationEntityBridgeRequest extends BridgeRequest {
+  body: { baseEntityType: IntegrationEntityType };
 }
