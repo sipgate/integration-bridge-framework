@@ -9,6 +9,6 @@ export type LabeledIntegrationEntity = IntegrationEntity & {
 };
 
 export enum IntegrationEntityType {
-  DEAL = "deals",
-  COMPANY = "companies",
+  DEALS = "deals",
+  COMPANIES = "companies",
 }
