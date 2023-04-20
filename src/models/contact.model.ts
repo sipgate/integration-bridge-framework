@@ -39,7 +39,7 @@ export type ContactResult = {
   contactUrl: string | null;
   avatarUrl: string | null;
   readonly?: boolean;
-  relatesTo?: Partial<IntegrationEntity>[];
+  relatesTo?: IntegrationEntity[];
 };
 
 export type ContactTemplate = BaseContact & {

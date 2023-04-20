@@ -1,8 +1,15 @@
 export type IntegrationEntity = {
   id: string;
-  name: string;
   type: IntegrationEntityType;
   source: string;
 };
 
-export type IntegrationEntityType = "deal" | "contact" | "company";
+export type LabeledIntegrationEntity = IntegrationEntity & {
+  label: string;
+};
+
+export enum IntegrationEntityType {
+  DEAL = "deal",
+  CONTACT = "contact",
+  COMPANY = "company",
+}

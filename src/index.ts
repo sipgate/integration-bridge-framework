@@ -50,9 +50,9 @@ export function start(
     controller.deleteContact(req, res, next)
   );
   app.get(
-    "/entity/:etype/:id/relations",
+    "/entity/:type/:id",
     (req: IntegrationEntityBridgeRequest, res, next) =>
-      controller.getRelationsForEntity(req, res, next)
+      controller.getEntity(req, res, next)
   );
   app.get("/calendar", (req, res, next) =>
     controller.getCalendarEvents(req, res, next)

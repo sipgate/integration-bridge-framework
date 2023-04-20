@@ -8,18 +8,11 @@ import {
   Contact,
   ContactTemplate,
   ContactUpdate,
+  LabeledIntegrationEntity,
 } from ".";
-import {
-  IntegrationEntity,
-  IntegrationEntityType,
-} from "./integration-entity.model";
+import { IntegrationEntityType } from "./integration-entity.model";
 
 export interface Adapter {
-  getRelationsForEntity?: (
-    providerConfig: Config,
-    id: string,
-    type: IntegrationEntityType
-  ) => Promise<IntegrationEntity[]>;
   getToken?: (config: Config) => Promise<{ apiKey: string }>;
   getContacts?: (config: Config) => Promise<Contact[]>;
   createContact?: (
@@ -52,6 +45,11 @@ export interface Adapter {
   ) => Promise<void>;
   deleteCalendarEvent?: (config: Config, id: string) => Promise<void>;
   handleCallEvent?: (config: Config, event: CallEvent) => Promise<string>;
+  getEntity?: (
+    providerConfig: Config,
+    id: string,
+    type: IntegrationEntityType
+  ) => Promise<LabeledIntegrationEntity>;
   handleConnectedEvent?: (config: Config) => Promise<void>;
   getHealth?: () => Promise<void>;
   getOAuth2RedirectUrl?: (req?: Request, res?: Response) => Promise<string>;

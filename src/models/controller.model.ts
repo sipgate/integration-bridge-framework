@@ -50,39 +50,6 @@ export class Controller {
     this.ajv = new Ajv();
   }
 
-  public async getRelationsForEntity(
-    req: IntegrationEntityBridgeRequest,
-    res: Response,
-    next: NextFunction
-  ): Promise<void> {
-    const { providerConfig } = req;
-
-    try {
-      if (!providerConfig) {
-        throw new ServerError(400, "Missing parameters");
-      }
-
-      if (!this.adapter.getRelationsForEntity) {
-        throw new ServerError(501, "Fetching relations is not implemented");
-      }
-
-      const fetchedRelations = await this.adapter.getRelationsForEntity(
-        providerConfig,
-        req.params.id,
-        req.params.etype
-      );
-
-      infoLogger(`[${fetchedRelations}] `, providerConfig);
-
-      res.status(200).send(fetchedRelations);
-    } catch (error) {
-      errorLogger("Could not get entitys:", providerConfig, error);
-      next(error);
-    } finally {
-      return;
-    }
-  }
-
   public async getContacts(
     req: BridgeRequest,
     res: Response,
@@ -617,6 +584,36 @@ export class Controller {
       res.status(200).send();
     } catch (error) {
       console.error("Could not update call event:", error || "Unknown");
+      next(error);
+    }
+  }
+
+  public async getEntity(
+    req: IntegrationEntityBridgeRequest,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    const { providerConfig } = req;
+    try {
+      if (!providerConfig) {
+        throw new ServerError(400, "Missing parameters");
+      }
+
+      if (!this.adapter.getEntity) {
+        throw new ServerError(501, "Fetching Entity is not implemented");
+      }
+
+      const fetchedEntity = await this.adapter.getEntity(
+        providerConfig,
+        req.params.id,
+        req.params.type
+      );
+
+      infoLogger(`[${fetchedEntity}] `, providerConfig);
+
+      res.status(200).send(fetchedEntity);
+    } catch (error) {
+      errorLogger("Could not get entity:", providerConfig, error);
       next(error);
     }
   }
