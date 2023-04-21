@@ -4,7 +4,7 @@ import { BridgeRequest } from "../models";
 const DEFAULT_LOCALE = "en-GB";
 
 export function extractHeaderMiddleware(
-  req: BridgeRequest,
+  req: BridgeRequest<any>,
   res: Response,
   next: NextFunction
 ): void {

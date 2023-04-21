@@ -7,7 +7,9 @@ import {
 } from "node-mocks-http";
 import {
   CalendarEvent,
+  CalendarEventTemplate,
   CallDirection,
+  CallEvent,
   CallParticipantType,
   CallState,
   Contact,
@@ -127,7 +129,7 @@ console.log = jest.fn();
 jest.useFakeTimers();
 
 describe("getContacts", () => {
-  let request: MockRequest<BridgeRequest>;
+  let request: MockRequest<BridgeRequest<unknown>>;
   let response: MockResponse<Response>;
   let next: jest.Mock;
 
@@ -230,7 +232,7 @@ describe("getContacts", () => {
 });
 
 describe("getCalendarEvents", () => {
-  let request: MockRequest<BridgeRequest>;
+  let request: MockRequest<BridgeRequest<unknown>>;
   let response: MockResponse<Response>;
   let next: jest.Mock;
 
@@ -298,7 +300,7 @@ describe("getCalendarEvents", () => {
 });
 
 describe("createCalendarEvent", () => {
-  let request: MockRequest<BridgeRequest>;
+  let request: MockRequest<BridgeRequest<CalendarEventTemplate>>;
   let response: MockResponse<Response>;
   let next: jest.Mock;
 
@@ -366,7 +368,7 @@ describe("createCalendarEvent", () => {
 });
 
 describe("updateCalendarEvent", () => {
-  let request: MockRequest<BridgeRequest>;
+  let request: MockRequest<BridgeRequest<CalendarEventTemplate>>;
   let response: MockResponse<Response>;
   let next: jest.Mock;
 
@@ -434,7 +436,7 @@ describe("updateCalendarEvent", () => {
 });
 
 describe("deleteCalendarEvent", () => {
-  let request: MockRequest<BridgeRequest>;
+  let request: MockRequest<BridgeRequest<unknown>>;
   let response: MockResponse<Response>;
   let next: jest.Mock;
 
@@ -481,7 +483,7 @@ describe("deleteCalendarEvent", () => {
 });
 
 describe("getOAuth2RedirectUrl", () => {
-  let request: MockRequest<BridgeRequest>;
+  let request: MockRequest<BridgeRequest<unknown>>;
   let response: MockResponse<Response>;
   let next: jest.Mock;
 
@@ -544,7 +546,7 @@ describe("getOAuth2RedirectUrl", () => {
 });
 
 describe("getHealth", () => {
-  let request: MockRequest<BridgeRequest>;
+  let request: MockRequest<BridgeRequest<unknown>>;
   let response: MockResponse<Response>;
   let next: jest.Mock;
 
@@ -604,7 +606,7 @@ describe("getHealth", () => {
 });
 
 describe("handleCallEvent", () => {
-  let request: MockRequest<BridgeRequest>;
+  let request: MockRequest<BridgeRequest<CallEvent>>;
   let response: MockResponse<Response>;
   let next: jest.Mock;
 
@@ -729,7 +731,7 @@ describe("handleCallEvent", () => {
 });
 
 describe("updateCallEvent", () => {
-  let request: MockRequest<BridgeRequest>;
+  let request: MockRequest<BridgeRequest<CallEvent>>;
   let response: MockResponse<Response>;
   let next: jest.Mock;
 

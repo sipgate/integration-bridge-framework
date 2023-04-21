@@ -2,10 +2,11 @@ import { IntegrationEntityType } from "./integration-entity.model";
 import { Request } from "express";
 import { Config } from "./config.model";
 
-export interface BridgeRequest extends Request {
+export interface BridgeRequest<BodyType> extends Request {
   providerConfig?: Config;
+  body: BodyType;
 }
 
-export interface IntegrationEntityBridgeRequest extends BridgeRequest {
+export interface IntegrationEntityBridgeRequest extends BridgeRequest<unknown> {
   params: { id: string; type: IntegrationEntityType };
 }
