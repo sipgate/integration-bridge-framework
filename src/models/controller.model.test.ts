@@ -18,7 +18,7 @@ import {
 import { StorageCache } from "../cache";
 import { MemoryStorageAdapter } from "../cache/storage";
 import { APIContact } from "./api-contact.model";
-import { BridgeRequest } from "./bridge-request.model";
+import { BridgeRequest, IdBridgeRequest } from "./bridge-request.model";
 import { PhoneNumberLabel, PhoneNumberType } from "./contact.model";
 
 const contactsMock: APIContact[] = [
@@ -368,7 +368,7 @@ describe("createCalendarEvent", () => {
 });
 
 describe("updateCalendarEvent", () => {
-  let request: MockRequest<BridgeRequest<CalendarEventTemplate>>;
+  let request: MockRequest<IdBridgeRequest<CalendarEventTemplate>>;
   let response: MockResponse<Response>;
   let next: jest.Mock;
 
@@ -436,7 +436,7 @@ describe("updateCalendarEvent", () => {
 });
 
 describe("deleteCalendarEvent", () => {
-  let request: MockRequest<BridgeRequest<unknown>>;
+  let request: MockRequest<IdBridgeRequest<unknown>>;
   let response: MockResponse<Response>;
   let next: jest.Mock;
 

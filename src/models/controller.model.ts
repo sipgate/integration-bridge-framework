@@ -21,6 +21,7 @@ import { validate } from "../util/validate";
 import { APIContact } from "./api-contact.model";
 import {
   BridgeRequest,
+  IdBridgeRequest,
   IntegrationEntityBridgeRequest,
 } from "./bridge-request.model";
 import { CacheItemStateType } from "./cache-item-state.model";
@@ -201,7 +202,7 @@ export class Controller {
   }
 
   public async updateContact(
-    req: BridgeRequest<ContactUpdate>,
+    req: IdBridgeRequest<ContactUpdate>,
     res: Response,
     next: NextFunction
   ): Promise<void> {
@@ -265,7 +266,7 @@ export class Controller {
   }
 
   public async deleteContact(
-    req: BridgeRequest<unknown>,
+    req: IdBridgeRequest<unknown>,
     res: Response,
     next: NextFunction
   ): Promise<void> {
@@ -281,7 +282,7 @@ export class Controller {
 
       console.log(`Deleting contact for key "${anonymizeKey(apiKey)}"`);
 
-      const contactId: string = req.params.id;
+      const contactId = req.params.id;
       await this.adapter.deleteContact(req.providerConfig, contactId);
 
       if (this.adapter.getToken && req.providerConfig) {
@@ -414,7 +415,7 @@ export class Controller {
   }
 
   public async updateCalendarEvent(
-    req: BridgeRequest<CalendarEventTemplate>,
+    req: IdBridgeRequest<CalendarEventTemplate>,
     res: Response,
     next: NextFunction
   ): Promise<void> {
@@ -460,7 +461,7 @@ export class Controller {
   }
 
   public async deleteCalendarEvent(
-    req: BridgeRequest<unknown>,
+    req: IdBridgeRequest<unknown>,
     res: Response,
     next: NextFunction
   ): Promise<void> {
