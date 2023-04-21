@@ -517,7 +517,7 @@ export class Controller {
 
       const integrationCallEventRef = await this.adapter.handleCallEvent(
         providerConfig,
-        req.body as CallEvent
+        req.body
       );
 
       res.status(200).send(integrationCallEventRef);
