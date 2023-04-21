@@ -51,7 +51,7 @@ export class Controller {
   }
 
   public async getContacts(
-    req: BridgeRequest,
+    req: BridgeRequest<unknown>,
     res: Response,
     next: NextFunction
   ): Promise<void> {
@@ -137,7 +137,7 @@ export class Controller {
   }
 
   public async createContact(
-    req: BridgeRequest,
+    req: BridgeRequest<ContactTemplate>,
     res: Response,
     next: NextFunction
   ): Promise<void> {
@@ -155,7 +155,7 @@ export class Controller {
 
       const contact: Contact = await this.adapter.createContact(
         req.providerConfig,
-        req.body as ContactTemplate
+        req.body
       );
 
       const valid = validate(this.ajv, contactsSchema, [contact]);
@@ -201,7 +201,7 @@ export class Controller {
   }
 
   public async updateContact(
-    req: BridgeRequest,
+    req: BridgeRequest<ContactUpdate>,
     res: Response,
     next: NextFunction
   ): Promise<void> {
@@ -220,7 +220,7 @@ export class Controller {
       const contact: Contact = await this.adapter.updateContact(
         req.providerConfig,
         req.params.id,
-        req.body as ContactUpdate
+        req.body
       );
 
       const valid = validate(this.ajv, contactsSchema, [contact]);
@@ -265,7 +265,7 @@ export class Controller {
   }
 
   public async deleteContact(
-    req: BridgeRequest,
+    req: BridgeRequest<unknown>,
     res: Response,
     next: NextFunction
   ): Promise<void> {
@@ -315,7 +315,7 @@ export class Controller {
   }
 
   public async getCalendarEvents(
-    req: BridgeRequest,
+    req: BridgeRequest<unknown>,
     res: Response,
     next: NextFunction
   ): Promise<void> {
@@ -372,7 +372,7 @@ export class Controller {
   }
 
   public async createCalendarEvent(
-    req: BridgeRequest,
+    req: BridgeRequest<CalendarEventTemplate>,
     res: Response,
     next: NextFunction
   ): Promise<void> {
@@ -392,10 +392,7 @@ export class Controller {
       console.log(`[${anonymizeKey(apiKey)}] Creating calendar event`);
 
       const calendarEvent: CalendarEvent =
-        await this.adapter.createCalendarEvent(
-          req.providerConfig,
-          req.body as CalendarEventTemplate
-        );
+        await this.adapter.createCalendarEvent(req.providerConfig, req.body);
 
       const valid = validate(this.ajv, calendarEventsSchema, [calendarEvent]);
       if (!valid) {
@@ -417,7 +414,7 @@ export class Controller {
   }
 
   public async updateCalendarEvent(
-    req: BridgeRequest,
+    req: BridgeRequest<CalendarEventTemplate>,
     res: Response,
     next: NextFunction
   ): Promise<void> {
@@ -440,7 +437,7 @@ export class Controller {
         await this.adapter.updateCalendarEvent(
           req.providerConfig,
           req.params.id,
-          req.body as CalendarEventTemplate
+          req.body
         );
 
       const valid = validate(this.ajv, calendarEventsSchema, [calendarEvent]);
@@ -463,7 +460,7 @@ export class Controller {
   }
 
   public async deleteCalendarEvent(
-    req: BridgeRequest,
+    req: BridgeRequest<unknown>,
     res: Response,
     next: NextFunction
   ): Promise<void> {
@@ -491,7 +488,7 @@ export class Controller {
   }
 
   public async handleCallEvent(
-    req: BridgeRequest,
+    req: BridgeRequest<CallEvent>,
     res: Response,
     next: NextFunction
   ): Promise<void> {
@@ -506,7 +503,7 @@ export class Controller {
         throw new ServerError(501, "Handling call event is not implemented");
       }
 
-      if (shouldSkipCallEvent(req.body as CallEvent)) {
+      if (shouldSkipCallEvent(req.body)) {
         infoLogger(
           `Skipping call event for call id ${req.body.id}`,
           providerConfig
@@ -534,7 +531,7 @@ export class Controller {
   }
 
   public async handleConnectedEvent(
-    req: BridgeRequest,
+    req: BridgeRequest<unknown>,
     res: Response,
     next: NextFunction
   ): Promise<void> {
@@ -563,7 +560,7 @@ export class Controller {
   }
 
   public async updateCallEvent(
-    req: BridgeRequest,
+    req: BridgeRequest<CallEvent>,
     res: Response,
     next: NextFunction
   ): Promise<void> {
@@ -619,7 +616,7 @@ export class Controller {
   }
 
   public async getHealth(
-    req: BridgeRequest,
+    req: BridgeRequest<unknown>,
     res: Response,
     next: NextFunction
   ): Promise<void> {
