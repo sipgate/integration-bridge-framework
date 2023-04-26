@@ -6,6 +6,7 @@ import {
   CalendarEvent,
   CalendarEventTemplate,
   CallEvent,
+  CallEventWithIntegrationEntities,
   Contact,
   ContactCache,
   ContactTemplate,
@@ -524,6 +525,47 @@ export class Controller {
     } catch (error) {
       errorLogger(
         "Could not handle call event:",
+        providerConfig,
+        error || "Unknown"
+      );
+      next(error);
+    }
+  }
+
+  public async createCallLogForEntities(
+    req: BridgeRequest<CallEventWithIntegrationEntities>,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    const { providerConfig } = req;
+
+    try {
+      if (!providerConfig) {
+        throw new ServerError(400, "Missing config parameters");
+      }
+
+      if (!this.adapter.createCallLogsForEntities) {
+        throw new ServerError(501, "Creating call log is not implemented");
+      }
+
+      if (shouldSkipCallEvent(req.body)) {
+        infoLogger(
+          `Skipping call log for call id ${req.body.id}`,
+          providerConfig
+        );
+        res.status(200).send("Skipping call log");
+        return;
+      }
+
+      infoLogger(`Creating call Logs…`, providerConfig);
+
+      const entitiesWithCallLogReferences =
+        await this.adapter.createCallLogsForEntities(providerConfig, req.body);
+
+      res.status(200).send(entitiesWithCallLogReferences);
+    } catch (error) {
+      errorLogger(
+        "Could not create call logs:",
         providerConfig,
         error || "Unknown"
       );

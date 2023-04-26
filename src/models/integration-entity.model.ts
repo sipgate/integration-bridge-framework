@@ -8,7 +8,12 @@ export type LabeledIntegrationEntity = IntegrationEntity & {
   label: string;
 };
 
+export type IntegrationEntityWithReference = IntegrationEntity & {
+  referenceId: string;
+};
+
 export enum IntegrationEntityType {
   DEALS = "deals",
   COMPANIES = "companies",
+  CONTACTS = "contacts",
 }
