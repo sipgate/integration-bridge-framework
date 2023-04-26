@@ -8,8 +8,8 @@ export type LabeledIntegrationEntity = IntegrationEntity & {
   label: string;
 };
 
-export type IntegrationEntityWithReference = IntegrationEntity & {
-  referenceId: string;
+export type LoggedIntegrationEntity = IntegrationEntity & {
+  logId: string; // ID of CallLog-Object in CRM (can be present in several integration entities)
 };
 
 export enum IntegrationEntityType {

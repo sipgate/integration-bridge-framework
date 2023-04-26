@@ -11,6 +11,7 @@ import {
   ContactUpdate,
   IntegrationEntityWithReference,
   LabeledIntegrationEntity,
+  LoggedIntegrationEntity,
 } from ".";
 import { IntegrationEntityType } from "./integration-entity.model";
 
@@ -50,7 +51,7 @@ export interface Adapter {
   createCallLogsForEntities?: (
     config: Config,
     event: CallEventWithIntegrationEntities
-  ) => Promise<IntegrationEntityWithReference[]>;
+  ) => Promise<LoggedIntegrationEntity[]>;
   getEntity?: (
     providerConfig: Config,
     id: string,
