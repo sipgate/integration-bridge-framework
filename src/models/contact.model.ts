@@ -35,6 +35,7 @@ export type BaseContact = {
   lastName: string | null;
   email: string | null;
   organization: string | null;
+  type?: IntegrationEntityType;
 };
 
 export type ContactResult = {
@@ -42,7 +43,6 @@ export type ContactResult = {
   contactUrl: string | null;
   avatarUrl: string | null;
   readonly?: boolean;
-  type?: IntegrationEntityType;
   relatesTo?: IntegrationEntity[];
 };
 
