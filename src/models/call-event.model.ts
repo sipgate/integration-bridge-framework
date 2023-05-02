@@ -1,4 +1,4 @@
-import { CallDirection } from "./";
+import { CallDirection, IntegrationEntity } from "./";
 
 /**
  * The type of the call participant.
@@ -31,6 +31,10 @@ export interface CallEvent {
   participants: CallParticipant[];
   note: string;
   state: CallState;
+}
+
+export interface CallEventWithIntegrationEntities extends CallEvent {
+  integrationEntities: IntegrationEntity[];
 }
 
 export interface UpdateCallEventBody {

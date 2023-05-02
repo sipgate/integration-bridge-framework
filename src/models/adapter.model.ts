@@ -4,11 +4,13 @@ import {
   CalendarEventTemplate,
   CalendarFilterOptions,
   CallEvent,
+  CallEventWithIntegrationEntities,
   Config,
   Contact,
   ContactTemplate,
   ContactUpdate,
   LabeledIntegrationEntity,
+  LoggedIntegrationEntity,
 } from ".";
 import { IntegrationEntityType } from "./integration-entity.model";
 
@@ -45,6 +47,10 @@ export interface Adapter {
   ) => Promise<void>;
   deleteCalendarEvent?: (config: Config, id: string) => Promise<void>;
   handleCallEvent?: (config: Config, event: CallEvent) => Promise<string>;
+  createCallLogsForEntities?: (
+    config: Config,
+    event: CallEventWithIntegrationEntities
+  ) => Promise<LoggedIntegrationEntity[]>;
   getEntity?: (
     providerConfig: Config,
     id: string,
