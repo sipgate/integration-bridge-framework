@@ -9,6 +9,12 @@ export type LabeledIntegrationEntity = IntegrationEntity & {
 };
 
 export enum IntegrationEntityType {
+  CONTACTS = "contacts",
+  // hubspot specific
   DEALS = "deals",
   COMPANIES = "companies",
+  // salesforces specific
+  LEADS = "leads",
+  ACCOUNTS = "accounts",
+  OPPORTUNITIES = "opportunities",
 }
