@@ -8,6 +8,10 @@ export type LabeledIntegrationEntity = IntegrationEntity & {
   label: string;
 };
 
+export type LoggedIntegrationEntity = IntegrationEntity & {
+  logId: string;
+};
+
 export enum IntegrationEntityType {
   CONTACTS = "contacts",
   // hubspot specific
