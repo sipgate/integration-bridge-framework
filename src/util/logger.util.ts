@@ -1,5 +1,4 @@
 import { anonymizeKey } from "./anonymize-key";
-import { Config } from "../models";
 
 export const infoLogger = (
   source: string,

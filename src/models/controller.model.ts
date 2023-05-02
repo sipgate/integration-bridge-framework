@@ -14,7 +14,6 @@ import {
   ServerError,
 } from ".";
 import { calendarEventsSchema, contactsSchema } from "../schemas";
-import { anonymizeKey } from "../util/anonymize-key";
 import { shouldSkipCallEvent } from "../util/call-event.util";
 import { errorLogger, infoLogger } from "../util/logger.util";
 import { parsePhoneNumber } from "../util/phone-number-utils";
@@ -96,7 +95,10 @@ export class Controller {
 
       const raceResult = await Promise.race([fetcherPromise, timeoutPromise]);
       if (raceResult === "TIMEOUT") {
-        infoLogger(`Fetching too slow, returning empty array.`, providerConfig);
+        infoLogger(
+          `Fetching too slow, returning empty array.`,
+          providerConfig.apiKey
+        );
       }
 
       const responseContacts: Contact[] = Array.isArray(raceResult)
@@ -153,6 +155,8 @@ export class Controller {
   ): Promise<void> {
     const { providerConfig: { apiKey = "", locale = "" } = {} } = req;
     try {
+      infoLogger("createContact", "START", apiKey);
+
       if (!this.adapter.createContact) {
         throw new ServerError(501, "Creating contacts is not implemented");
       }
@@ -160,8 +164,7 @@ export class Controller {
       if (!req.providerConfig) {
         throw new ServerError(400, "Missing config parameters");
       }
-
-      console.log(`[${anonymizeKey(apiKey)}] Creating contact`);
+      infoLogger("createContact", "Creating contact", apiKey);
 
       const contact: Contact = await this.adapter.createContact(
         req.providerConfig,
@@ -171,8 +174,10 @@ export class Controller {
       const valid = validate(this.ajv, contactsSchema, [contact]);
 
       if (!valid) {
-        console.error(
+        errorLogger(
+          "createContact",
           "Invalid contact provided by adapter",
+          apiKey,
           this.ajv.errorsText()
         );
         throw new ServerError(400, "Invalid contact provided by adapter");
@@ -192,6 +197,8 @@ export class Controller {
           await this.contactCache.set(apiKey, [...contacts, sanitizedContact]);
         }
       }
+
+      infoLogger("createContact", "END", apiKey);
     } catch (error) {
       // prevent logging of refresh errors
       if (
@@ -202,8 +209,10 @@ export class Controller {
         return;
       }
 
-      console.error(
-        `[${anonymizeKey(apiKey)}] Could not create contact`,
+      errorLogger(
+        "createContact",
+        "Could not create contact:",
+        apiKey,
         error || "Unknown"
       );
       next(error);
@@ -225,7 +234,7 @@ export class Controller {
         throw new ServerError(400, "Missing config parameters");
       }
 
-      console.log(`Updating contact for key "${anonymizeKey(apiKey)}"`);
+      infoLogger("updateContact", "Updating contact", apiKey);
 
       const contact: Contact = await this.adapter.updateContact(
         req.providerConfig,
@@ -235,8 +244,10 @@ export class Controller {
 
       const valid = validate(this.ajv, contactsSchema, [contact]);
       if (!valid) {
-        console.error(
+        errorLogger(
+          "updateContact",
           "Invalid contact provided by adapter",
+          apiKey,
           this.ajv.errorsText()
         );
         throw new ServerError(400, "Invalid contact provided by adapter");
@@ -259,6 +270,8 @@ export class Controller {
           await this.contactCache.set(apiKey, updatedCache);
         }
       }
+
+      infoLogger("updateContacts", "END", apiKey);
     } catch (error) {
       // prevent logging of refresh errors
       if (
@@ -269,7 +282,12 @@ export class Controller {
         return;
       }
 
-      console.error("Could not update contact:", error || "Unknown");
+      errorLogger(
+        "updateContact",
+        "Could not update contact:",
+        apiKey,
+        error || "Unknown"
+      );
       next(error);
     }
   }
@@ -281,6 +299,8 @@ export class Controller {
   ): Promise<void> {
     const { providerConfig: { apiKey = "" } = {} } = req;
     try {
+      infoLogger("deleteContact", "START", apiKey);
+
       if (!this.adapter.deleteContact) {
         throw new ServerError(501, "Deleting contacts is not implemented");
       }
@@ -289,7 +309,7 @@ export class Controller {
         throw new ServerError(400, "Missing config parameters");
       }
 
-      console.log(`Deleting contact for key "${anonymizeKey(apiKey)}"`);
+      infoLogger("deleteContact", "Deleting contact", apiKey);
 
       const contactId = req.params.id;
       await this.adapter.deleteContact(req.providerConfig, contactId);
@@ -309,6 +329,8 @@ export class Controller {
           await this.contactCache.set(apiKey, updatedCache);
         }
       }
+
+      infoLogger("deleteContact", "END", apiKey);
     } catch (error) {
       // prevent logging of refresh errors
       if (
@@ -319,7 +341,12 @@ export class Controller {
         return;
       }
 
-      console.error("Could not delete contact:", error || "Unknown");
+      errorLogger(
+        "deleteContact",
+        "Could not delete contact:",
+        apiKey,
+        error || "Unknown"
+      );
       next(error);
     }
   }
@@ -334,6 +361,8 @@ export class Controller {
       query: { start, end },
     } = req;
     try {
+      infoLogger("getCalendarEvents", "START", apiKey);
+
       if (!this.adapter.getCalendarEvents) {
         throw new ServerError(
           501,
@@ -342,11 +371,11 @@ export class Controller {
       }
 
       if (!req.providerConfig) {
-        console.error("Missing config parameters");
+        errorLogger("getCalendarEvents", "Missing config parameters", apiKey);
         throw new ServerError(400, "Missing config parameters");
       }
 
-      console.log(`[${anonymizeKey(apiKey)}] Fetching calendar events`);
+      infoLogger("getCalendarEvents", "Fetching calendar events", apiKey);
 
       const filter: CalendarFilterOptions | null =
         typeof start === "string" && typeof end === "string"
@@ -361,8 +390,10 @@ export class Controller {
 
       const valid = validate(this.ajv, calendarEventsSchema, calendarEvents);
       if (!valid) {
-        console.error(
-          "Invalid calendar events provided by adapter",
+        errorLogger(
+          "getCalendarEvents",
+          `Invalid calendar events provided by adapter`,
+          apiKey,
           this.ajv.errorsText()
         );
         throw new ServerError(
@@ -371,12 +402,20 @@ export class Controller {
         );
       }
 
-      console.log(
-        `[${anonymizeKey(apiKey)}] Found ${calendarEvents.length} events`
+      infoLogger(
+        "getCalendarEvents",
+        `Found ${calendarEvents.length} events`,
+        apiKey
       );
       res.status(200).send(calendarEvents);
+      infoLogger("getCalendarEvents", `END`, apiKey);
     } catch (error) {
-      console.error("Could not get calendar events:", error || "Unknown");
+      errorLogger(
+        "getCalendarEvents",
+        `Could not get calendar events:`,
+        apiKey,
+        error || "Unknown"
+      );
       next(error);
     }
   }
@@ -388,6 +427,8 @@ export class Controller {
   ): Promise<void> {
     const { providerConfig: { apiKey = "" } = {} } = req;
     try {
+      infoLogger("createCalendarEvent", `START`, apiKey);
+
       if (!this.adapter.createCalendarEvent) {
         throw new ServerError(
           501,
@@ -399,15 +440,17 @@ export class Controller {
         throw new ServerError(400, "Missing config parameters");
       }
 
-      console.log(`[${anonymizeKey(apiKey)}] Creating calendar event`);
+      infoLogger("createCalendarEvent", `Creating calendar event`, apiKey);
 
       const calendarEvent: CalendarEvent =
         await this.adapter.createCalendarEvent(req.providerConfig, req.body);
 
       const valid = validate(this.ajv, calendarEventsSchema, [calendarEvent]);
       if (!valid) {
-        console.error(
+        errorLogger(
+          "createCalendarEvent",
           "Invalid calendar event provided by adapter",
+          apiKey,
           this.ajv.errorsText()
         );
         throw new ServerError(
@@ -415,10 +458,15 @@ export class Controller {
           "Invalid calendar event provided by adapter"
         );
       }
-
+      infoLogger("createCalendarEvent", `END`, apiKey);
       res.status(200).send(calendarEvent);
     } catch (error) {
-      console.error("Could not create calendar event:", error || "Unknown");
+      errorLogger(
+        "createCalendarEvent",
+        "Could not create calendar event:",
+        apiKey,
+        error || "Unknown"
+      );
       next(error);
     }
   }
@@ -430,6 +478,7 @@ export class Controller {
   ): Promise<void> {
     const { providerConfig: { apiKey = "" } = {} } = req;
     try {
+      infoLogger("updateCalendarEvent", `START`, apiKey);
       if (!this.adapter.updateCalendarEvent) {
         throw new ServerError(
           501,
@@ -440,8 +489,7 @@ export class Controller {
       if (!req.providerConfig) {
         throw new ServerError(400, "Missing config parameters");
       }
-
-      console.log(`Updating calendar event for key "${anonymizeKey(apiKey)}"`);
+      infoLogger("updateCalendarEvent", `Updating calendar event`, apiKey);
 
       const calendarEvent: CalendarEvent =
         await this.adapter.updateCalendarEvent(
@@ -452,8 +500,10 @@ export class Controller {
 
       const valid = validate(this.ajv, calendarEventsSchema, [calendarEvent]);
       if (!valid) {
-        console.error(
-          "Invalid calendar event provided by adapter",
+        errorLogger(
+          "updateCalendarEvent",
+          `Invalid calendar event provided by adapter`,
+          apiKey,
           this.ajv.errorsText()
         );
         throw new ServerError(
@@ -461,10 +511,16 @@ export class Controller {
           "Invalid calendar event provided by adapter"
         );
       }
+      infoLogger("updateCalendarEvent", `END`, apiKey);
 
       res.status(200).send(calendarEvent);
     } catch (error) {
-      console.error("Could not update calendar event:", error || "Unknown");
+      errorLogger(
+        "updateCalendarEvent",
+        `Could not update calendar event:`,
+        apiKey,
+        error || "Unknown"
+      );
       next(error);
     }
   }
@@ -476,6 +532,8 @@ export class Controller {
   ): Promise<void> {
     const { providerConfig: { apiKey = "" } = {} } = req;
     try {
+      infoLogger("deleteCalendarEvent", `START`, apiKey);
+
       if (!this.adapter.deleteCalendarEvent) {
         throw new ServerError(
           501,
@@ -486,13 +544,17 @@ export class Controller {
       if (!req.providerConfig) {
         throw new ServerError(400, "Missing config parameters");
       }
-
-      console.log(`[${anonymizeKey(apiKey)}] Deleting calendar event`);
-
+      infoLogger("deleteCalendarEvent", `Deleting calendar event`, apiKey);
       await this.adapter.deleteCalendarEvent(req.providerConfig, req.params.id);
+      infoLogger("deleteCalendarEvent", `END`, apiKey);
       res.status(200).send();
     } catch (error) {
-      console.error("Could not delete calendar event:", error || "Unknown");
+      errorLogger(
+        "deleteCalendarEvent",
+        `Could not delete calendar event:`,
+        apiKey,
+        error || "Unknown"
+      );
       next(error);
     }
   }
@@ -505,6 +567,7 @@ export class Controller {
     const { providerConfig } = req;
 
     try {
+      infoLogger("handleCallEvent", `START`, providerConfig?.apiKey);
       if (!providerConfig) {
         throw new ServerError(400, "Missing config parameters");
       }
@@ -515,25 +578,32 @@ export class Controller {
 
       if (shouldSkipCallEvent(req.body)) {
         infoLogger(
+          "handleCallEvent",
           `Skipping call event for call id ${req.body.id}`,
-          providerConfig
+          providerConfig.apiKey
         );
         res.status(200).send("Skipping call event");
         return;
       }
 
-      infoLogger(`Handling call event`, providerConfig);
+      infoLogger(
+        "handleCallEvent",
+        `Handling call event`,
+        providerConfig.apiKey
+      );
 
       const integrationCallEventRef = await this.adapter.handleCallEvent(
         providerConfig,
         req.body
       );
 
+      infoLogger("handleCallEvent", `END`, providerConfig.apiKey);
       res.status(200).send(integrationCallEventRef);
     } catch (error) {
       errorLogger(
+        "handleCallEvent",
         "Could not handle call event:",
-        providerConfig,
+        providerConfig?.apiKey,
         error || "Unknown"
       );
       next(error);
@@ -548,6 +618,8 @@ export class Controller {
     const { providerConfig } = req;
 
     try {
+      infoLogger("createCallLogForEntities", `START`, providerConfig?.apiKey);
+
       if (!providerConfig) {
         throw new ServerError(400, "Missing config parameters");
       }
@@ -558,23 +630,30 @@ export class Controller {
 
       if (shouldSkipCallEvent(req.body)) {
         infoLogger(
+          "createCallLogForEntities",
           `Skipping call log for call id ${req.body.id}`,
-          providerConfig
+          providerConfig.apiKey
         );
         res.status(200).send("Skipping call log");
         return;
       }
 
-      infoLogger(`Creating call Logs…`, providerConfig);
+      infoLogger(
+        "createCallLogForEntities",
+        `Creating call Logs…`,
+        providerConfig.apiKey
+      );
 
       const entitiesWithCallLogReferences =
         await this.adapter.createCallLogsForEntities(providerConfig, req.body);
 
+      infoLogger("createCallLogForEntities", `END`, providerConfig?.apiKey);
       res.status(200).send(entitiesWithCallLogReferences);
     } catch (error) {
       errorLogger(
+        "createCallLogForEntities",
         "Could not create call logs:",
-        providerConfig,
+        providerConfig?.apiKey,
         error || "Unknown"
       );
       next(error);
@@ -588,6 +667,8 @@ export class Controller {
   ): Promise<void> {
     const { providerConfig: { apiKey = "" } = {} } = req;
     try {
+      infoLogger("handleConnectedEvent", `START`, apiKey);
+
       if (!this.adapter.handleConnectedEvent) {
         throw new ServerError(
           501,
@@ -598,14 +679,19 @@ export class Controller {
       if (!req.providerConfig) {
         throw new ServerError(400, "Missing config parameters");
       }
-
-      console.log(`[${anonymizeKey(apiKey)}] Handling connected event`);
+      infoLogger("handleConnectedEvent", `Handling connected event`, apiKey);
 
       await this.adapter.handleConnectedEvent(req.providerConfig);
 
+      infoLogger("handleConnectedEvent", `END`, apiKey);
       res.status(200).send();
     } catch (error) {
-      console.error("Could not handle connected event:", error || "Unknown");
+      errorLogger(
+        "handleConnectedEvent",
+        `Could not handle connected event:`,
+        apiKey,
+        error || "Unknown"
+      );
       next(error);
     }
   }
@@ -618,6 +704,7 @@ export class Controller {
     const { providerConfig: { apiKey = "" } = {}, body, params } = req;
 
     try {
+      infoLogger("updateCallEvent", `START`, apiKey);
       if (!this.adapter.updateCallEvent) {
         throw new ServerError(501, "Updating contacts is not implemented");
       }
@@ -625,13 +712,18 @@ export class Controller {
       if (!req.providerConfig) {
         throw new ServerError(400, "Missing config parameters");
       }
-
-      console.log(`[${anonymizeKey(apiKey)}] Updating call event`);
+      infoLogger("updateCallEvent", `Updating call event`, apiKey);
 
       await this.adapter.updateCallEvent(req.providerConfig, params.id, body);
+      infoLogger("updateCallEvent", `END`, apiKey);
       res.status(200).send();
     } catch (error) {
-      console.error("Could not update call event:", error || "Unknown");
+      errorLogger(
+        "updateCallEvent",
+        `Could not update call event:`,
+        apiKey,
+        error || "Unknown"
+      );
       next(error);
     }
   }
@@ -643,6 +735,8 @@ export class Controller {
   ): Promise<void> {
     const { providerConfig } = req;
     try {
+      infoLogger("getEntity", `START`, providerConfig?.apiKey);
+
       if (!providerConfig) {
         throw new ServerError(400, "Missing parameters");
       }
@@ -657,11 +751,16 @@ export class Controller {
         req.params.type
       );
 
-      infoLogger(`[${fetchedEntity}] `, providerConfig);
-
+      infoLogger("getEntity", `[${fetchedEntity}] `, providerConfig.apiKey);
+      infoLogger("getEntity", `END`, providerConfig?.apiKey);
       res.status(200).send(fetchedEntity);
     } catch (error) {
-      errorLogger("Could not get entity:", providerConfig, error);
+      errorLogger(
+        "getEntity",
+        "Could not get entity:",
+        providerConfig?.apiKey,
+        error
+      );
       next(error);
     }
   }
@@ -677,7 +776,7 @@ export class Controller {
       }
       res.sendStatus(200);
     } catch (error) {
-      console.error("Health check failed:", error || "Unknown");
+      errorLogger("getHealth", "Health check failed:", "", error || "Unknown");
       next(error || "Internal Server Error");
     }
   }
@@ -696,7 +795,12 @@ export class Controller {
 
       res.status(200).send({ redirectUrl });
     } catch (error) {
-      console.error("Could not get OAuth2 redirect URL:", error || "Unknown");
+      errorLogger(
+        "oAuth2Redirect",
+        "Could not get OAuth2 redirect URL:",
+        "",
+        error || "Unknown"
+      );
       next(error);
     }
   }
@@ -708,7 +812,7 @@ export class Controller {
     } = process.env;
 
     if (!redirectUrl) {
-      console.error("OAuth2 Redirect URL not configured!");
+      errorLogger("oAuth2Callback", "OAuth2 Redirect URL not configured!", "");
       res.status(500).send("OAuth2 Redirect URL not configured!");
       return;
     }
@@ -731,7 +835,12 @@ export class Controller {
 
       res.redirect(`${redirectUrl}?${params}`);
     } catch (error) {
-      console.error("Unable to save OAuth2 token:", error || "Unknown");
+      errorLogger(
+        "oAuth2Callback",
+        "Unable to save OAuth2 token:",
+        "",
+        error || "Unknown"
+      );
       res.redirect(redirectUrl);
     }
   }
