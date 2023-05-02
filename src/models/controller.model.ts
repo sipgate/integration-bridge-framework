@@ -59,17 +59,19 @@ export class Controller {
   ): Promise<void> {
     const { providerConfig } = req;
 
+    if (!providerConfig) {
+      throw new ServerError(400, "Missing parameters");
+    }
+
     try {
-      if (!providerConfig) {
-        throw new ServerError(400, "Missing parameters");
-      }
+      infoLogger("getContacts", "START", providerConfig.apiKey);
 
       const fetchContacts = async (): Promise<Contact[]> => {
         if (!this.adapter.getContacts) {
           throw new ServerError(501, "Fetching contacts is not implemented");
         }
 
-        infoLogger(`Fetching contacts…`, providerConfig);
+        infoLogger("getContacts", `Fetching contacts…`, providerConfig.apiKey);
 
         const fetchedContacts: Contact[] = await this.adapter.getContacts(
           providerConfig
@@ -103,7 +105,11 @@ export class Controller {
 
       const contactsCount = responseContacts.length;
 
-      infoLogger(`Found ${contactsCount} cached contacts.`, providerConfig);
+      infoLogger(
+        "getContacts",
+        `Found ${contactsCount} cached contacts`,
+        providerConfig.apiKey
+      );
 
       if (
         !Array.isArray(raceResult) &&
@@ -118,8 +124,9 @@ export class Controller {
         res.header("X-Provider-Key", apiKey);
       }
 
+      infoLogger("getContacts", "END", providerConfig.apiKey);
       res.status(200).send(responseContacts);
-    } catch (error) {
+    } catch (error: any) {
       // prevent logging of refresh errors
       if (
         error instanceof ServerError &&
@@ -130,9 +137,10 @@ export class Controller {
       }
 
       errorLogger(
+        "getContacts",
         "Could not get contacts:",
-        providerConfig,
-        error || "Unknown"
+        providerConfig.apiKey,
+        error
       );
       next(error);
     }

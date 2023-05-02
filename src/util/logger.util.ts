@@ -2,49 +2,78 @@ import { anonymizeKey } from "./anonymize-key";
 import { Config } from "../models";
 
 export const infoLogger = (
+  source: string,
   message: string,
-  config?: Config,
+  apiKey?: string,
   ...args: unknown[]
 ): void => {
   // eslint-disable-next-line no-console
-  if (config) {
+  if (apiKey) {
     console.log(
-      `${`[${anonymizeKey(config.apiKey)}]`}: ${message}`,
-      args && args.length ? args : ""
+      constructLogMessage(
+        `[${anonymizeKey(apiKey)}]`,
+        `[${source.toUpperCase()}]`,
+        message,
+        args
+      )
     );
   } else {
-    console.log(message, args && args.length ? args : "");
+    console.log(
+      constructLogMessage(`[${source.toUpperCase()}]`, message, args)
+    );
   }
 };
 
 export const errorLogger = (
+  source: string,
   message: string,
-  config?: Config,
+  apiKey?: string,
   ...args: unknown[]
 ): void => {
   // eslint-disable-next-line no-console
-  if (config?.apiKey) {
+  if (apiKey) {
     console.error(
-      `[${anonymizeKey(config.apiKey)}] ${message}`,
-      args && args.length ? args : ""
+      constructLogMessage(
+        `[${anonymizeKey(apiKey)}]`,
+        `[${source.toUpperCase()}]`,
+        message,
+        args
+      )
     );
   } else {
-    console.error(message, args && args.length ? args : "");
+    console.error(
+      constructLogMessage(`[${source.toUpperCase()}]`, message, args)
+    );
   }
 };
 
 export const warnLogger = (
+  source: string,
   message: string,
-  config?: Config,
+  apiKey?: string,
   ...args: unknown[]
 ): void => {
   // eslint-disable-next-line no-console
-  if (config?.apiKey) {
+  if (apiKey) {
     console.warn(
-      `[${anonymizeKey(config.apiKey)}] ${message}`,
-      args && args.length ? args : ""
+      constructLogMessage(
+        `[${anonymizeKey(apiKey)}]`,
+        `[${source.toUpperCase()}]`,
+        message,
+        args
+      )
     );
   } else {
-    console.warn(message, args && args.length ? args : "");
+    console.warn(
+      constructLogMessage(`[${source.toUpperCase()}]`, message, args)
+    );
   }
 };
+
+const constructLogMessage = (...args: unknown[]): string =>
+  `${args
+    .flat()
+    .map((item: unknown) =>
+      typeof item !== "string" ? JSON.stringify(item) : item
+    )
+    .join(" ")}`;
