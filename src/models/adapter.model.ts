@@ -55,7 +55,7 @@ export interface Adapter {
     providerConfig: Config,
     id: string,
     type: IntegrationEntityType
-  ) => Promise<LabeledIntegrationEntity>;
+  ) => Promise<LabeledIntegrationEntity | null>;
   handleConnectedEvent?: (config: Config) => Promise<void>;
   getHealth?: () => Promise<void>;
   getOAuth2RedirectUrl?: (req?: Request, res?: Response) => Promise<string>;
