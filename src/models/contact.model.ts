@@ -1,4 +1,7 @@
-import { IntegrationEntity } from "./integration-entity.model";
+import {
+  IntegrationEntity,
+  IntegrationEntityType,
+} from "./integration-entity.model";
 
 export enum PhoneNumberLabel {
   WORK = "WORK",
@@ -39,6 +42,7 @@ export type ContactResult = {
   contactUrl: string | null;
   avatarUrl: string | null;
   readonly?: boolean;
+  type?: IntegrationEntityType;
   relatesTo?: IntegrationEntity[];
 };
 
