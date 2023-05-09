@@ -1,6 +1,7 @@
 export enum IntegrationErrorType {
   INTEGRATION_INVALID_URL = "integration/invalid-url",
   INTEGRATION_REFRESH_ERROR = "integration/refresh-error",
+  INTEGRATION_ACCOUNT_EXPIRED_ERROR = "integration/account-expired-error",
   CONTACT_CREATE_ERROR_CONFLICT = "contact/create-error/conflict",
   CONTACT_CREATE_ERROR_EMAIL_CONFLICT = "contact/create-error/email-conflict",
   CONTACT_ERROR_TOO_MANY_NUMBERS = "contact/error/too-many-numbers",

@@ -120,10 +120,13 @@ export class Controller {
 
       res.status(200).send(responseContacts);
     } catch (error) {
-      // prevent logging of refresh errors
+      // prevent logging of expected errors
       if (
         error instanceof ServerError &&
-        error.message === IntegrationErrorType.INTEGRATION_REFRESH_ERROR
+        error.message in
+          Object.keys(IntegrationErrorType).map(
+            (key) => IntegrationErrorType[key]
+          )
       ) {
         next(error);
         return;
@@ -185,10 +188,13 @@ export class Controller {
         }
       }
     } catch (error) {
-      // prevent logging of refresh errors
+      // prevent logging of expected errors
       if (
         error instanceof ServerError &&
-        error.message === IntegrationErrorType.INTEGRATION_REFRESH_ERROR
+        error.message in
+          Object.keys(IntegrationErrorType).map(
+            (key) => IntegrationErrorType[key]
+          )
       ) {
         next(error);
         return;
@@ -252,10 +258,13 @@ export class Controller {
         }
       }
     } catch (error) {
-      // prevent logging of refresh errors
+      // prevent logging of expected errors
       if (
         error instanceof ServerError &&
-        error.message === IntegrationErrorType.INTEGRATION_REFRESH_ERROR
+        error.message in
+          Object.keys(IntegrationErrorType).map(
+            (key) => IntegrationErrorType[key]
+          )
       ) {
         next(error);
         return;
@@ -302,10 +311,13 @@ export class Controller {
         }
       }
     } catch (error) {
-      // prevent logging of refresh errors
+      // prevent logging of expected errors
       if (
         error instanceof ServerError &&
-        error.message === IntegrationErrorType.INTEGRATION_REFRESH_ERROR
+        error.message in
+          Object.keys(IntegrationErrorType).map(
+            (key) => IntegrationErrorType[key]
+          )
       ) {
         next(error);
         return;
