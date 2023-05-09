@@ -123,10 +123,9 @@ export class Controller {
       // prevent logging of expected errors
       if (
         error instanceof ServerError &&
-        error.message in
-          Object.keys(IntegrationErrorType).map(
-            (key) => IntegrationErrorType[key]
-          )
+        Object.keys(IntegrationErrorType)
+          .map((key) => IntegrationErrorType[key])
+          .indexOf(error.message) > -1
       ) {
         next(error);
         return;
@@ -191,10 +190,9 @@ export class Controller {
       // prevent logging of expected errors
       if (
         error instanceof ServerError &&
-        error.message in
-          Object.keys(IntegrationErrorType).map(
-            (key) => IntegrationErrorType[key]
-          )
+        Object.keys(IntegrationErrorType)
+          .map((key) => IntegrationErrorType[key])
+          .indexOf(error.message) > -1
       ) {
         next(error);
         return;
@@ -261,10 +259,9 @@ export class Controller {
       // prevent logging of expected errors
       if (
         error instanceof ServerError &&
-        error.message in
-          Object.keys(IntegrationErrorType).map(
-            (key) => IntegrationErrorType[key]
-          )
+        Object.keys(IntegrationErrorType)
+          .map((key) => IntegrationErrorType[key])
+          .indexOf(error.message) > -1
       ) {
         next(error);
         return;
@@ -314,10 +311,9 @@ export class Controller {
       // prevent logging of expected errors
       if (
         error instanceof ServerError &&
-        error.message in
-          Object.keys(IntegrationErrorType).map(
-            (key) => IntegrationErrorType[key]
-          )
+        Object.keys(IntegrationErrorType)
+          .map((key) => IntegrationErrorType[key])
+          .indexOf(error.message) > -1
       ) {
         next(error);
         return;
