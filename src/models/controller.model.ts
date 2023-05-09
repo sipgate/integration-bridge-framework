@@ -128,6 +128,14 @@ export class Controller {
         next(error);
         return;
       }
+      // prevent logging of expired Account errors
+      else if (
+        error instanceof ServerError &&
+        error.message === IntegrationErrorType.INTEGRATION_ACCOUNT_EXPIRED_ERROR
+      ) {
+        next(error);
+        return;
+      }
 
       errorLogger(
         "Could not get contacts:",
@@ -193,7 +201,14 @@ export class Controller {
         next(error);
         return;
       }
-
+      // prevent logging of expired Account errors
+      else if (
+        error instanceof ServerError &&
+        error.message === IntegrationErrorType.INTEGRATION_ACCOUNT_EXPIRED_ERROR
+      ) {
+        next(error);
+        return;
+      }
       console.error(
         `[${anonymizeKey(apiKey)}] Could not create contact`,
         error || "Unknown"
@@ -260,7 +275,14 @@ export class Controller {
         next(error);
         return;
       }
-
+      // prevent logging of expired Account errors
+      else if (
+        error instanceof ServerError &&
+        error.message === IntegrationErrorType.INTEGRATION_ACCOUNT_EXPIRED_ERROR
+      ) {
+        next(error);
+        return;
+      }
       console.error("Could not update contact:", error || "Unknown");
       next(error);
     }
@@ -310,7 +332,14 @@ export class Controller {
         next(error);
         return;
       }
-
+      // prevent logging of expired Account errors
+      else if (
+        error instanceof ServerError &&
+        error.message === IntegrationErrorType.INTEGRATION_ACCOUNT_EXPIRED_ERROR
+      ) {
+        next(error);
+        return;
+      }
       console.error("Could not delete contact:", error || "Unknown");
       next(error);
     }
