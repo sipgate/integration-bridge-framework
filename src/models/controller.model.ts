@@ -120,10 +120,10 @@ export class Controller {
 
       res.status(200).send(responseContacts);
     } catch (error) {
-      // prevent logging of refresh errors
+      // prevent logging of integration errors that are forwarded to the client
       if (
         error instanceof ServerError &&
-        error.message === IntegrationErrorType.INTEGRATION_REFRESH_ERROR
+        error.message in IntegrationErrorType
       ) {
         next(error);
         return;
@@ -185,17 +185,18 @@ export class Controller {
         }
       }
     } catch (error) {
-      // prevent logging of refresh errors
+      // prevent logging of integration errors that are forwarded to the client
       if (
         error instanceof ServerError &&
-        error.message === IntegrationErrorType.INTEGRATION_REFRESH_ERROR
+        error.message in IntegrationErrorType
       ) {
         next(error);
         return;
       }
 
-      console.error(
+      errorLogger(
         `[${anonymizeKey(apiKey)}] Could not create contact`,
+        req.providerConfig,
         error || "Unknown"
       );
       next(error);
@@ -252,16 +253,20 @@ export class Controller {
         }
       }
     } catch (error) {
-      // prevent logging of refresh errors
+      // prevent logging of integration errors that are forwarded to the client
       if (
         error instanceof ServerError &&
-        error.message === IntegrationErrorType.INTEGRATION_REFRESH_ERROR
+        error.message in IntegrationErrorType
       ) {
         next(error);
         return;
       }
 
-      console.error("Could not update contact:", error || "Unknown");
+      errorLogger(
+        "Could not update contact:",
+        req.providerConfig,
+        error || "Unknown"
+      );
       next(error);
     }
   }
@@ -302,16 +307,20 @@ export class Controller {
         }
       }
     } catch (error) {
-      // prevent logging of refresh errors
+      // prevent logging of integration errors that are forwarded to the client
       if (
         error instanceof ServerError &&
-        error.message === IntegrationErrorType.INTEGRATION_REFRESH_ERROR
+        error.message in IntegrationErrorType
       ) {
         next(error);
         return;
       }
 
-      console.error("Could not delete contact:", error || "Unknown");
+      errorLogger(
+        "Could not delete contact:",
+        req.providerConfig,
+        error || "Unknown"
+      );
       next(error);
     }
   }
