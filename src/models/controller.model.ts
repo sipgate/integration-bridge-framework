@@ -183,6 +183,12 @@ export class Controller {
         throw new ServerError(400, "Invalid contact provided by adapter");
       }
 
+      infoLogger(
+        "createContact",
+        `Contact with id ${contact.id} created`,
+        apiKey
+      );
+
       const sanitizedContact: Contact = sanitizeContact(contact, locale);
 
       if (this.adapter.getToken && req.providerConfig) {
@@ -253,6 +259,12 @@ export class Controller {
         throw new ServerError(400, "Invalid contact provided by adapter");
       }
 
+      infoLogger(
+        "createContact",
+        `Contact with id ${contact.id} updated`,
+        apiKey
+      );
+
       const sanitizedContact: Contact = sanitizeContact(contact, locale);
 
       if (this.adapter.getToken && req.providerConfig) {
@@ -319,6 +331,12 @@ export class Controller {
         res.header("X-Provider-Key", apiKey);
       }
       res.status(200).send();
+
+      infoLogger(
+        "createContact",
+        `Contact with id ${contactId} deleted`,
+        apiKey
+      );
 
       if (this.contactCache) {
         const contacts = await this.contactCache.get(apiKey);
@@ -597,6 +615,12 @@ export class Controller {
         req.body
       );
 
+      infoLogger(
+        "handleCallEvent",
+        `CallEvent with refId ${integrationCallEventRef} created!`,
+        providerConfig.apiKey
+      );
+
       infoLogger("handleCallEvent", `END`, providerConfig.apiKey);
       res.status(200).send(integrationCallEventRef);
     } catch (error) {
@@ -646,6 +670,14 @@ export class Controller {
 
       const entitiesWithCallLogReferences =
         await this.adapter.createCallLogsForEntities(providerConfig, req.body);
+
+      entitiesWithCallLogReferences.forEach(({ id, logId }) =>
+        infoLogger(
+          "createCallLogForEntities",
+          `CallEvent with logId ${logId} created for id ${id}`,
+          providerConfig?.apiKey
+        )
+      );
 
       infoLogger("createCallLogForEntities", `END`, providerConfig?.apiKey);
       res.status(200).send(entitiesWithCallLogReferences);
