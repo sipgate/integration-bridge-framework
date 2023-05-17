@@ -15,7 +15,7 @@ import {
 } from ".";
 import { calendarEventsSchema, contactsSchema } from "../schemas";
 import { shouldSkipCallEvent } from "../util/call-event.util";
-import { errorLogger, infoLogger } from "../util/logger.util";
+import { errorLogger, infoLogger, warnLogger } from "../util/logger.util";
 import { parsePhoneNumber } from "../util/phone-number-utils";
 import { validate } from "../util/validate";
 import { APIContact } from "./api-contact.model";
@@ -260,7 +260,7 @@ export class Controller {
       }
 
       infoLogger(
-        "createContact",
+        "updateContact",
         `Contact with id ${contact.id} updated`,
         apiKey
       );
@@ -333,7 +333,7 @@ export class Controller {
       res.status(200).send();
 
       infoLogger(
-        "createContact",
+        "deleteContact",
         `Contact with id ${contactId} deleted`,
         apiKey
       );
@@ -615,11 +615,18 @@ export class Controller {
         req.body
       );
 
-      infoLogger(
-        "handleCallEvent",
-        `CallEvent with refId ${integrationCallEventRef} created!`,
-        providerConfig.apiKey
-      );
+      if (integrationCallEventRef != "")
+        infoLogger(
+          "handleCallEvent",
+          `CallEvent with refId ${integrationCallEventRef} created!`,
+          providerConfig.apiKey
+        );
+      else
+        warnLogger(
+          "handleCallEvent",
+          `Did not create callEvent`,
+          providerConfig.apiKey
+        );
 
       infoLogger("handleCallEvent", `END`, providerConfig.apiKey);
       res.status(200).send(integrationCallEventRef);
