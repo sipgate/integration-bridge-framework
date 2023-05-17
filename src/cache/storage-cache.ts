@@ -155,8 +155,6 @@ export class StorageCache implements ContactCache {
     key: string,
     getFreshValue: (key: string) => Promise<Contact[]>
   ): Promise<Contact[]> {
-    infoLogger(LOG_PREFIX, `Setting cache state to FETCHING`, key);
-
     await this.setCacheState(
       key,
       CacheItemStateType.FETCHING,
@@ -167,8 +165,6 @@ export class StorageCache implements ContactCache {
       const freshValue = await getFreshValue(key);
 
       await this.set(key, freshValue);
-      infoLogger(LOG_PREFIX, `Setting cache state to CACHED`, key);
-
       await this.setCacheState(key, CacheItemStateType.CACHED);
 
       return freshValue;
