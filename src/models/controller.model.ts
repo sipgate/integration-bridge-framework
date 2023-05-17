@@ -283,7 +283,7 @@ export class Controller {
         }
       }
 
-      infoLogger("updateContacts", "END", apiKey);
+      infoLogger("updateContact", "END", apiKey);
     } catch (error) {
       // prevent logging of refresh errors
       if (
