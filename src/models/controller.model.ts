@@ -745,7 +745,7 @@ export class Controller {
     try {
       infoLogger("updateCallEvent", `START`, apiKey);
       if (!this.adapter.updateCallEvent) {
-        throw new ServerError(501, "Updating contacts is not implemented");
+        throw new ServerError(501, "Updating call events is not implemented");
       }
 
       if (!req.providerConfig) {
