@@ -12,6 +12,7 @@ import {
   ContactTemplate,
   ContactUpdate,
   ServerError,
+  UpdateCallLogBody,
 } from ".";
 import { calendarEventsSchema, contactsSchema } from "../schemas";
 import { shouldSkipCallEvent } from "../util/call-event.util";
@@ -692,6 +693,49 @@ export class Controller {
       errorLogger(
         "createCallLogForEntities",
         "Could not create call logs:",
+        providerConfig?.apiKey,
+        error || "Unknown"
+      );
+      next(error);
+    }
+  }
+
+  public async updateCallLogForEntities(
+    req: BridgeRequest<UpdateCallLogBody>,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    const { providerConfig } = req;
+
+    try {
+      infoLogger("updateCallLoGForEntities", `START`, providerConfig?.apiKey);
+
+      if (!providerConfig) {
+        throw new ServerError(400, "Missing config parameters");
+      }
+
+      if (!this.adapter.updateCallLogsForEntities) {
+        throw new ServerError(
+          501,
+          "Updating call log with entities is not implemented"
+        );
+      }
+
+      infoLogger(
+        "updateCallLogForEntities",
+        `Creating call Logs…`,
+        providerConfig?.apiKey
+      );
+
+      const entitiesWithCallLogReferences =
+        await this.adapter.updateCallLogsForEntities(providerConfig, req.body);
+
+      infoLogger("updateCallLoGForEntities", `END`, providerConfig?.apiKey);
+      res.status(200).send(entitiesWithCallLogReferences);
+    } catch (error) {
+      errorLogger(
+        "updateCallLogForEntities",
+        "Could not update call logs with entities:",
         providerConfig?.apiKey,
         error || "Unknown"
       );

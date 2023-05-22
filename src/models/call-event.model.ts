@@ -1,4 +1,4 @@
-import { CallDirection, IntegrationEntity } from "./";
+import { CallDirection, IntegrationEntity, LoggedIntegrationEntity } from "./";
 
 /**
  * The type of the call participant.
@@ -34,9 +34,13 @@ export interface CallEvent {
 }
 
 export interface CallEventWithIntegrationEntities extends CallEvent {
-  integrationEntities: IntegrationEntity[];
+  integrationEntities?: IntegrationEntity[];
 }
 
+export interface UpdateCallLogBody {
+  updatedProperties: { note: string };
+  loggedIntegrationEntities: LoggedIntegrationEntity[];
+}
 export interface UpdateCallEventBody {
   note: string;
 }

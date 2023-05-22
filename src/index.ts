@@ -72,6 +72,9 @@ export function start(
   app.post("/call-log", (req, res, next) =>
     controller.createCallLogForEntities(req, res, next)
   );
+  app.put("/call-log", (req, res, next) =>
+    controller.updateCallLogForEntities(req, res, next)
+  );
   app.put("/events/calls/:id", (req, res, next) =>
     controller.updateCallEvent(req, res, next)
   );
