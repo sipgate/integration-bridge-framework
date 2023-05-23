@@ -222,6 +222,7 @@ export class Controller {
         apiKey,
         error || "Unknown"
       );
+      errorLogger("createContact", "Entity", apiKey, req.body);
       next(error);
     }
   }
@@ -301,6 +302,7 @@ export class Controller {
         apiKey,
         error || "Unknown"
       );
+      errorLogger("updateContact", "Entity", apiKey, req.body);
       next(error);
     }
   }
@@ -486,6 +488,7 @@ export class Controller {
         apiKey,
         error || "Unknown"
       );
+      errorLogger("createCalendarEvent", "Entity", apiKey, req.body);
       next(error);
     }
   }
@@ -540,6 +543,7 @@ export class Controller {
         apiKey,
         error || "Unknown"
       );
+      errorLogger("updateCalendarEvent", "Entity", apiKey, req.body);
       next(error);
     }
   }
@@ -638,6 +642,12 @@ export class Controller {
         providerConfig?.apiKey,
         error || "Unknown"
       );
+      errorLogger(
+        "handleCallEvent",
+        "Entity",
+        providerConfig?.apiKey,
+        req.body
+      );
       next(error);
     }
   }
@@ -695,6 +705,12 @@ export class Controller {
         "Could not create call logs:",
         providerConfig?.apiKey,
         error || "Unknown"
+      );
+      errorLogger(
+        "createCallLogForEntities",
+        "Entity",
+        providerConfig?.apiKey,
+        req.body
       );
       next(error);
     }
@@ -775,6 +791,7 @@ export class Controller {
         apiKey,
         error || "Unknown"
       );
+      errorLogger("handleConnectedEvent", "Entity", apiKey, req.body);
       next(error);
     }
   }
@@ -807,6 +824,7 @@ export class Controller {
         apiKey,
         error || "Unknown"
       );
+      errorLogger("updateCallEvent", "Entity", apiKey, req.body);
       next(error);
     }
   }
