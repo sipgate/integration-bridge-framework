@@ -6,6 +6,7 @@
     "sourceMap": true,
     "declaration": true,
     "noImplicitAny": true,
+    "useUnknownInCatchVariables": true,
     "noUnusedLocals": true,
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,

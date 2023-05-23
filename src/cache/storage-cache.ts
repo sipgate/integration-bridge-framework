@@ -89,8 +89,8 @@ export class StorageCache implements ContactCache {
 
           // we don't return the fresh value here because we don't want to wait on the result.
           // We return the old value instead, the fresh value is returned the next time it is requested
-          this.getRefreshed(key, getFreshValue).catch((error) => {
-            errorLogger(LOG_PREFIX, `Unable to get fresh contacts`, error);
+          this.getRefreshed(key, getFreshValue).catch((error: unknown) => {
+            errorLogger(LOG_PREFIX, `Unable to get fresh contacts`, key, error);
           });
         }
 
