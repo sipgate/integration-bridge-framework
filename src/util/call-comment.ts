@@ -1,7 +1,7 @@
 import { CallDirection, CallState } from "../models";
 import moment from "moment";
 
-export function getCommentTitle(
+export function getCommentSubject(
   state: CallState,
   direction: CallDirection,
   locale: string,
