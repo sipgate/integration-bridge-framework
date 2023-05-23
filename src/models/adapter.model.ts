@@ -11,7 +11,6 @@ import {
   ContactUpdate,
   LabeledIntegrationEntity,
   LoggedIntegrationEntity,
-  UpdateCallLogBody,
 } from ".";
 import { IntegrationEntityType } from "./integration-entity.model";
 
@@ -51,13 +50,9 @@ export interface Adapter {
    * Please do no longer implement handleCallEvent in new bridges.
    * */
   handleCallEvent?: (config: Config, event: CallEvent) => Promise<string>;
-  createCallLogsForEntities?: (
+  createOrUpdateCallLogForEntities?: (
     config: Config,
-    event: CallEventWithIntegrationEntities
-  ) => Promise<LoggedIntegrationEntity[]>;
-  updateCallLogsForEntities?: (
-    config: Config,
-    body: UpdateCallLogBody
+    body: CallEventWithIntegrationEntities
   ) => Promise<LoggedIntegrationEntity[]>;
   getEntity?: (
     providerConfig: Config,

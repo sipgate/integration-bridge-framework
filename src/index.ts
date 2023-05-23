@@ -69,17 +69,14 @@ export function start(
   app.post("/events/calls", (req, res, next) =>
     controller.handleCallEvent(req, res, next)
   );
-  app.post("/call-log", (req, res, next) =>
-    controller.createCallLogForEntities(req, res, next)
-  );
-  app.put("/call-log", (req, res, next) =>
-    controller.updateCallLogForEntities(req, res, next)
-  );
   app.put("/events/calls/:id", (req, res, next) =>
     controller.updateCallEvent(req, res, next)
   );
   app.post("/events/connected", (req, res, next) =>
     controller.handleConnectedEvent(req, res, next)
+  );
+  app.put("/call-log", (req, res, next) =>
+    controller.createOrUpdateCallLogForEntities(req, res, next)
   );
   app.get("/health", (req, res, next) => controller.getHealth(req, res, next));
   app.get("/oauth2/redirect", (req, res, next) =>

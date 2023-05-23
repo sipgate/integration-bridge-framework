@@ -12,7 +12,6 @@ import {
   ContactTemplate,
   ContactUpdate,
   ServerError,
-  UpdateCallLogBody,
 } from ".";
 import { calendarEventsSchema, contactsSchema } from "../schemas";
 import { shouldSkipCallEvent } from "../util/call-event.util";
@@ -652,113 +651,6 @@ export class Controller {
     }
   }
 
-  public async createCallLogForEntities(
-    req: BridgeRequest<CallEventWithIntegrationEntities>,
-    res: Response,
-    next: NextFunction
-  ): Promise<void> {
-    const { providerConfig } = req;
-
-    try {
-      infoLogger("createCallLogForEntities", `START`, providerConfig?.apiKey);
-
-      if (!providerConfig) {
-        throw new ServerError(400, "Missing config parameters");
-      }
-
-      if (!this.adapter.createCallLogsForEntities) {
-        throw new ServerError(501, "Creating call log is not implemented");
-      }
-
-      if (shouldSkipCallEvent(req.body)) {
-        infoLogger(
-          "createCallLogForEntities",
-          `Skipping call log for call id ${req.body.id}`,
-          providerConfig.apiKey
-        );
-        res.status(200).send("Skipping call log");
-        return;
-      }
-
-      infoLogger(
-        "createCallLogForEntities",
-        `Creating call Logs…`,
-        providerConfig.apiKey
-      );
-
-      const entitiesWithCallLogReferences =
-        await this.adapter.createCallLogsForEntities(providerConfig, req.body);
-
-      entitiesWithCallLogReferences.forEach(({ id, logId }) =>
-        infoLogger(
-          "createCallLogForEntities",
-          `CallEvent with logId ${logId} created for id ${id}`,
-          providerConfig?.apiKey
-        )
-      );
-
-      infoLogger("createCallLogForEntities", `END`, providerConfig?.apiKey);
-      res.status(200).send(entitiesWithCallLogReferences);
-    } catch (error) {
-      errorLogger(
-        "createCallLogForEntities",
-        "Could not create call logs:",
-        providerConfig?.apiKey,
-        error || "Unknown"
-      );
-      errorLogger(
-        "createCallLogForEntities",
-        "Entity",
-        providerConfig?.apiKey,
-        req.body
-      );
-      next(error);
-    }
-  }
-
-  public async updateCallLogForEntities(
-    req: BridgeRequest<UpdateCallLogBody>,
-    res: Response,
-    next: NextFunction
-  ): Promise<void> {
-    const { providerConfig } = req;
-
-    try {
-      infoLogger("updateCallLoGForEntities", `START`, providerConfig?.apiKey);
-
-      if (!providerConfig) {
-        throw new ServerError(400, "Missing config parameters");
-      }
-
-      if (!this.adapter.updateCallLogsForEntities) {
-        throw new ServerError(
-          501,
-          "Updating call log with entities is not implemented"
-        );
-      }
-
-      infoLogger(
-        "updateCallLogForEntities",
-        `Creating call Logs…`,
-        providerConfig?.apiKey
-      );
-
-      const entitiesWithCallLogReferences =
-        await this.adapter.updateCallLogsForEntities(providerConfig, req.body);
-
-      infoLogger("updateCallLoGForEntities", `END`, providerConfig?.apiKey);
-      res.status(200).send(entitiesWithCallLogReferences);
-    } catch (error) {
-      errorLogger(
-        "updateCallLogForEntities",
-        "Could not update call logs with entities:",
-        providerConfig?.apiKey,
-        error || "Unknown"
-      );
-      next(error);
-    }
-  }
-
   public async handleConnectedEvent(
     req: BridgeRequest<unknown>,
     res: Response,
@@ -825,6 +717,70 @@ export class Controller {
         error || "Unknown"
       );
       errorLogger("updateCallEvent", "Entity", apiKey, req.body);
+      next(error);
+    }
+  }
+
+  public async createOrUpdateCallLogForEntities(
+    req: BridgeRequest<CallEventWithIntegrationEntities>,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    const { providerConfig } = req;
+
+    try {
+      infoLogger(
+        "createOrUpdateCallLogForEntities",
+        `START`,
+        providerConfig?.apiKey
+      );
+
+      if (!providerConfig) {
+        throw new ServerError(400, "Missing config parameters");
+      }
+
+      if (!this.adapter.createOrUpdateCallLogForEntities) {
+        throw new ServerError(
+          501,
+          "Updating call log with entities is not implemented"
+        );
+      }
+
+      if (shouldSkipCallEvent(req.body)) {
+        infoLogger(
+          "createOrUpdateCallLogForEntities",
+          `Skipping call log for call id ${req.body.id}`,
+          providerConfig.apiKey
+        );
+        res.status(200).send("Skipping call log");
+        return;
+      }
+
+      infoLogger(
+        "createOrUpdateCallLogForEntities",
+        `Creating and updating call Logs…`,
+        providerConfig.apiKey
+      );
+
+      const entitiesWithCallLogReferences =
+        await this.adapter.createOrUpdateCallLogForEntities(
+          providerConfig,
+          req.body
+        );
+
+      infoLogger(
+        "createOrUpdateCallLogForEntities",
+        `END`,
+        providerConfig.apiKey
+      );
+      res.status(200).send(entitiesWithCallLogReferences);
+    } catch (error) {
+      errorLogger(
+        "createOrUpdateCallLogForEntities",
+        "Could not update call logs with entities:",
+        providerConfig?.apiKey,
+        error || "Unknown"
+      );
       next(error);
     }
   }
