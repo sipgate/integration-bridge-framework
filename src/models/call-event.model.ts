@@ -39,8 +39,5 @@ export interface CallEventWithIntegrationEntities extends CallEvent {
 
 export interface UpdateCallLogBody {
   updatedProperties: { note: string };
-  loggedIntegrationEntities: LoggedIntegrationEntity[];
-}
-export interface UpdateCallEventBody {
-  note: string;
+  loggedIntegrationEntities: (IntegrationEntity | LoggedIntegrationEntity)[];
 }
