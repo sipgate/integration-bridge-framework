@@ -8,6 +8,12 @@ it("anonymizes valid key correctly", () => {
 
 it("anonymizes empty key correctly", () => {
   const originalKey = "";
-  const anonymizedKey = "***";
+  const anonymizedKey = "UNKNOWN";
+  expect(anonymizeKey(originalKey)).toEqual(anonymizedKey);
+});
+
+it("anonymizes not-string key correctly", () => {
+  const originalKey = {};
+  const anonymizedKey = "UNKNOWN";
   expect(anonymizeKey(originalKey)).toEqual(anonymizedKey);
 });
