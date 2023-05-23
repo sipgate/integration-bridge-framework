@@ -41,13 +41,13 @@ export function getCommentTitle(
   }
 }
 
-function createCallEventCommentHeader(locale: string) {
+export function getCommentHeader(locale: string) {
   const isGerman = locale.startsWith("de");
   return `<h1>${isGerman ? "Notizen" : "Note"} (CLINQ):</h1>`;
 }
 
 export function getCommentContent(note: string, locale: string) {
-  return `${createCallEventCommentHeader(locale)}${note}`;
+  return `${getCommentHeader(locale)}${note}`;
 }
 
 export function getCallDuration(
