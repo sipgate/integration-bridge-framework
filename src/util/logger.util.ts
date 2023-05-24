@@ -13,19 +13,7 @@ export const infoLogger = (
   apiKey?: string,
   ...args: unknown[]
 ): void => {
-  // eslint-disable-next-line no-console
-  if (apiKey) {
-    console.log(
-      constructLogMessage(
-        `[${anonymizeKey(apiKey)}]`,
-        `[${source}]`,
-        message,
-        args
-      )
-    );
-  } else {
-    console.log(constructLogMessage(`[${source}]`, message, args));
-  }
+  logger(console.info, source, message, apiKey, args);
 };
 
 /**
@@ -41,19 +29,7 @@ export const errorLogger = (
   apiKey?: string,
   ...args: unknown[]
 ): void => {
-  // eslint-disable-next-line no-console
-  if (apiKey) {
-    console.error(
-      constructLogMessage(
-        `[${anonymizeKey(apiKey)}]`,
-        `[${source}]`,
-        message,
-        args
-      )
-    );
-  } else {
-    console.error(constructLogMessage(`[${source}]`, message, args));
-  }
+  logger(console.error, source, message, apiKey, args);
 };
 
 /**
@@ -69,9 +45,19 @@ export const warnLogger = (
   apiKey?: string,
   ...args: unknown[]
 ): void => {
+  logger(console.warn, source, message, apiKey, args);
+};
+
+const logger = (
+  loggerType: (message?: any, ...optionalParams: any[]) => void,
+  source: string,
+  message: string,
+  apiKey?: string,
+  ...args: unknown[]
+): void => {
   // eslint-disable-next-line no-console
   if (apiKey) {
-    console.warn(
+    loggerType(
       constructLogMessage(
         `[${anonymizeKey(apiKey)}]`,
         `[${source}]`,
@@ -80,7 +66,7 @@ export const warnLogger = (
       )
     );
   } else {
-    console.warn(constructLogMessage(`[${source}]`, message, args));
+    loggerType(constructLogMessage(`[${source}]`, message, args));
   }
 };
 
