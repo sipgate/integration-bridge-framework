@@ -54,6 +54,10 @@ export interface Adapter {
     config: Config,
     body: CallEventWithIntegrationEntities
   ) => Promise<LoggedIntegrationEntity[]>;
+  createCallLogForPhoneNumber?: (
+    config: Config,
+    body: CallEvent
+  ) => Promise<LoggedIntegrationEntity[]>;
   getEntity?: (
     providerConfig: Config,
     id: string,

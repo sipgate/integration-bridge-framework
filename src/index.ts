@@ -76,7 +76,11 @@ export function start(
     controller.handleConnectedEvent(req, res, next)
   );
   app.put("/call-log", (req, res, next) =>
-    controller.createOrUpdateCallLogForEntities(req, res, next)
+    controller.createOrUpdateCallLogsForEntities(req, res, next)
+  );
+  //todo: rename this path
+  app.put("/call-log/phoneNumber", (req, res, next) =>
+    controller.createCallLogForPhoneNumber(req, res, next)
   );
   app.get("/health", (req, res, next) => controller.getHealth(req, res, next));
   app.get("/oauth2/redirect", (req, res, next) =>
