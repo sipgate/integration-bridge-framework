@@ -46,7 +46,7 @@ export interface Adapter {
     event: CallEvent
   ) => Promise<void>;
   deleteCalendarEvent?: (config: Config, id: string) => Promise<void>;
-  /** @deprecated handleCallEvent should be replaced by createCallLogsForEntities.
+  /** @deprecated handleCallEvent should be replaced by createOrUpdateCallLogForEntities.
    * Please do no longer implement handleCallEvent in new bridges.
    * */
   handleCallEvent?: (config: Config, event: CallEvent) => Promise<string>;
@@ -57,7 +57,7 @@ export interface Adapter {
   createCallLogForPhoneNumber?: (
     config: Config,
     body: CallEvent
-  ) => Promise<LoggedIntegrationEntity[]>;
+  ) => Promise<LoggedIntegrationEntity>;
   getEntity?: (
     providerConfig: Config,
     id: string,

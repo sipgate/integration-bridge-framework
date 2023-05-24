@@ -78,7 +78,6 @@ export function start(
   app.put("/call-log", (req, res, next) =>
     controller.createOrUpdateCallLogsForEntities(req, res, next)
   );
-  //todo: rename this path
   app.put("/call-log/phoneNumber", (req, res, next) =>
     controller.createCallLogForPhoneNumber(req, res, next)
   );

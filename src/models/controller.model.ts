@@ -582,7 +582,7 @@ export class Controller {
   }
 
   /**
-   * @deprecated Use createOrUpdateCalendarEvent instead
+   * @deprecated Use createOrUpdateCallLogForEntities instead
    * @param req
    * @param res
    * @param next
@@ -695,7 +695,7 @@ export class Controller {
   }
 
   /**
-   * @deprecated Use createOrUpdateCallEvent instead
+   * @deprecated Use createOrUpdateCallLogForEntities instead
    * @param req
    * @param res
    * @param next
