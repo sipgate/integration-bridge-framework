@@ -49,7 +49,7 @@ export const warnLogger = (
 };
 
 const logger = (
-  loggerType: (message?: any, ...optionalParams: any[]) => void,
+  logFn: (message?: any, ...optionalParams: any[]) => void,
   source: string,
   message: string,
   apiKey?: string,
@@ -57,7 +57,7 @@ const logger = (
 ): void => {
   // eslint-disable-next-line no-console
   if (apiKey) {
-    loggerType(
+    logFn(
       constructLogMessage(
         `[${anonymizeKey(apiKey)}]`,
         `[${source}]`,
@@ -66,7 +66,7 @@ const logger = (
       )
     );
   } else {
-    loggerType(constructLogMessage(`[${source}]`, message, args));
+    logFn(constructLogMessage(`[${source}]`, message, args));
   }
 };
 
