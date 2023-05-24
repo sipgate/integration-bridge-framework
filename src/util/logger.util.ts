@@ -62,18 +62,19 @@ const logger = (
         `[${anonymizeKey(apiKey)}]`,
         `[${source}]`,
         message,
-        args
+        ...args
       )
     );
   } else {
-    logFn(constructLogMessage(`[${source}]`, message, args));
+    logFn(constructLogMessage(`[${source}]`, message, ...args));
   }
 };
 
 const constructLogMessage = (...args: unknown[]): string =>
   `${args
     .flat()
-    .map((item: unknown) =>
-      typeof item !== "string" ? JSON.stringify(item) : item
-    )
+    .map((item: unknown) => {
+      if (Array.isArray(item) && item.length == 0) return;
+      return typeof item !== "string" ? JSON.stringify(item) : item;
+    })
     .join(" ")}`;
