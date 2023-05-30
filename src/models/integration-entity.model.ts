@@ -17,6 +17,7 @@ export enum IntegrationEntityType {
   // hubspot specific
   DEALS = "deals",
   COMPANIES = "companies",
+  TICKETS = "tickets",
   // salesforces specific
   LEADS = "leads",
   ACCOUNTS = "accounts",
