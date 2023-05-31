@@ -632,7 +632,7 @@ export class Controller {
           providerConfig.apiKey
         );
       else
-        warnLogger(
+        infoLogger(
           "handleCallEvent",
           `Did not create callEvent`,
           providerConfig.apiKey
