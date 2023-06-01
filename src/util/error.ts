@@ -4,15 +4,21 @@ import {
   IntegrationErrorType,
   ServerError,
 } from "../models";
+import { errorLogger } from "./logger.util";
 
-export const generateError = (
+export const throwAndDelegateError = (
   error: Error | AxiosError,
-  intentMessage: string
+  source: string,
+  apiKey?: string
 ) => {
-  if (error instanceof AxiosError) {
-    const message = error.response?.data
-      ? JSON.stringify(error.response?.data)
+  const message =
+    error instanceof AxiosError
+      ? error.response?.data
+        ? JSON.stringify(error.response?.data)
+        : error.message
       : error.message;
+  errorLogger(source, message, apiKey);
+  if (error instanceof AxiosError) {
     const status = error.response?.status || 500;
     var errorType: IntegrationErrorType;
     switch (status) {
@@ -31,7 +37,7 @@ export const generateError = (
         errorType = IntegrationErrorType.INTEGRATION_ERROR_UNAVAILABLE;
         break;
       default:
-        throw new ServerError(status, `${intentMessage} (${message})`);
+        throw new ServerError(status, `${source} (${message})`);
     }
     throw new ServerError(DELEGATE_TO_FRONTEND_CODE, errorType);
   }
