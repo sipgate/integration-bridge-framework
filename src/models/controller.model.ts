@@ -15,7 +15,7 @@ import {
 } from ".";
 import { calendarEventsSchema, contactsSchema } from "../schemas";
 import { shouldSkipCallEvent } from "../util/call-event.util";
-import { errorLogger, infoLogger, warnLogger } from "../util/logger.util";
+import { errorLogger, infoLogger } from "../util/logger.util";
 import { parsePhoneNumber } from "../util/phone-number-utils";
 import { validate } from "../util/validate";
 import { APIContact } from "./api-contact.model";
@@ -633,7 +633,7 @@ export class Controller {
           providerConfig.apiKey
         );
       else
-        warnLogger(
+        infoLogger(
           "handleCallEvent",
           `Did not create callEvent`,
           providerConfig.apiKey
