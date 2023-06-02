@@ -9,15 +9,22 @@ import { errorLogger } from "./logger.util";
 export const throwAndDelegateError = (
   error: Error | AxiosError,
   source: string,
-  apiKey?: string
+  apiKey?: string,
+  logMessage?: string
 ) => {
-  const message =
+  const errorMessage =
     error instanceof AxiosError
       ? error.response?.data
         ? JSON.stringify(error.response?.data)
         : error.message
       : error.message;
-  errorLogger(source, message, apiKey);
+
+  if (logMessage) {
+    errorLogger(source, logMessage, apiKey, errorMessage);
+  } else {
+    errorLogger(source, errorMessage, apiKey);
+  }
+
   if (error instanceof AxiosError) {
     const status = error.response?.status || 500;
     var errorType: IntegrationErrorType;
@@ -37,7 +44,7 @@ export const throwAndDelegateError = (
         errorType = IntegrationErrorType.INTEGRATION_ERROR_UNAVAILABLE;
         break;
       default:
-        throw new ServerError(status, `${source} (${message})`);
+        throw new ServerError(status, `${source} (${errorMessage})`);
     }
     throw new ServerError(DELEGATE_TO_FRONTEND_CODE, errorType);
   }
