@@ -28,7 +28,8 @@ export class StorageCache implements ContactCache {
       LOG_PREFIX,
       `Initialized storage cache with maximum refresh interval of ${
         this.cacheRefreshIntervalMs / 1000
-      }s.`
+      }s.`,
+      undefined
     );
   }
 
