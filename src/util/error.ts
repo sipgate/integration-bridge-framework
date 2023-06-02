@@ -12,12 +12,11 @@ export const throwAndDelegateError = (
   apiKey: string | undefined,
   logMessage?: string
 ) => {
-  const errorMessage =
-    error instanceof AxiosError
-      ? error.response?.data
-        ? JSON.stringify(error.response?.data)
-        : error.message
-      : error.message;
+  const errorMessage = axios.isAxiosError(error)
+    ? error.response?.data
+      ? JSON.stringify(error.response?.data)
+      : error.message
+    : error.message;
 
   if (logMessage) {
     errorLogger(source, logMessage, apiKey, errorMessage);
@@ -43,12 +42,9 @@ export const throwAndDelegateError = (
         errorType = IntegrationErrorType.INTEGRATION_ERROR_UNAVAILABLE;
         break;
       default:
-        console.log("bin default weil status= ", status);
         throw new ServerError(status, `${source} (${errorMessage})`);
     }
-    console.log("bin außerhalb vom switch weil status= ", status);
     throw new ServerError(DELEGATE_TO_FRONTEND_CODE, errorType);
   }
-  console.log("kein axios");
   throw new ServerError(500, "An internal error occurred");
 };
