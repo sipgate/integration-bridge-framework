@@ -9,7 +9,7 @@ import { errorLogger } from "./logger.util";
 export const throwAndDelegateError = (
   error: Error | AxiosError,
   source: string,
-  apiKey?: string,
+  apiKey: string | undefined,
   logMessage?: string
 ) => {
   const errorMessage =

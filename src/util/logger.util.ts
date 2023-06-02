@@ -10,7 +10,7 @@ import { anonymizeKey } from "./anonymize-key";
 export const infoLogger = (
   source: string,
   message: string,
-  apiKey?: string,
+  apiKey: string | undefined,
   ...args: unknown[]
 ): void => {
   logger(console.info, source, message, apiKey, args);
@@ -26,7 +26,7 @@ export const infoLogger = (
 export const errorLogger = (
   source: string,
   message: string,
-  apiKey?: string,
+  apiKey: string | undefined,
   ...args: unknown[]
 ): void => {
   logger(console.error, source, message, apiKey, args);
@@ -52,7 +52,7 @@ const logger = (
   logFn: (message?: any, ...optionalParams: any[]) => void,
   source: string,
   message: string,
-  apiKey?: string,
+  apiKey: string | undefined,
   ...args: unknown[]
 ): void => {
   // eslint-disable-next-line no-console

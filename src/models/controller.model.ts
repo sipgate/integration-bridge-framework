@@ -96,6 +96,7 @@ export class Controller {
       const raceResult = await Promise.race([fetcherPromise, timeoutPromise]);
       if (raceResult === "TIMEOUT") {
         infoLogger(
+          "getContacts",
           `Fetching too slow, returning empty array.`,
           providerConfig.apiKey
         );
