@@ -58,14 +58,22 @@ const logger = (
   // eslint-disable-next-line no-console
   const anonymizedApiKey = apiKey ? anonymizeKey(apiKey) : undefined;
 
-  logFn(
-    constructLogMessage(
-      anonymizedApiKey ? `[${anonymizedApiKey}]` : undefined,
-      `[${source}]`,
-      message
-    ),
-    ...args
+  const formatedMessage = constructLogMessage(
+    anonymizedApiKey ? `[${anonymizedApiKey}]` : undefined,
+    `[${source}]`,
+    message
   );
+
+  if (process.env.NODE_ENV == "development") {
+    logFn(formatedMessage, ...args);
+  } else {
+    logFn(
+      JSON.stringify({
+        message: formatedMessage,
+        data: args,
+      })
+    );
+  }
 };
 
 const constructLogMessage = (...args: unknown[]): string =>
