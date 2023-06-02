@@ -13,7 +13,7 @@ export const infoLogger = (
   apiKey: string | undefined,
   ...args: unknown[]
 ): void => {
-  logger(console.info, source, message, apiKey, args);
+  logger(console.info, source, message, apiKey, ...args);
 };
 
 /**
@@ -29,7 +29,7 @@ export const errorLogger = (
   apiKey: string | undefined,
   ...args: unknown[]
 ): void => {
-  logger(console.error, source, message, apiKey, args);
+  logger(console.error, source, message, apiKey, ...args);
 };
 
 /**
@@ -45,7 +45,7 @@ export const warnLogger = (
   apiKey?: string,
   ...args: unknown[]
 ): void => {
-  logger(console.warn, source, message, apiKey, args);
+  logger(console.warn, source, message, apiKey, ...args);
 };
 
 const logger = (
@@ -56,23 +56,22 @@ const logger = (
   ...args: unknown[]
 ): void => {
   // eslint-disable-next-line no-console
-  if (apiKey) {
-    logFn(
-      constructLogMessage(
-        `[${anonymizeKey(apiKey)}]`,
-        `[${source}]`,
-        message,
-        ...args
-      )
-    );
-  } else {
-    logFn(constructLogMessage(`[${source}]`, message, ...args));
-  }
+  const anonymizedApiKey = apiKey ? anonymizeKey(apiKey) : undefined;
+
+  logFn(
+    constructLogMessage(
+      anonymizedApiKey ? `[${anonymizedApiKey}]` : undefined,
+      `[${source}]`,
+      message
+    ),
+    ...args
+  );
 };
 
 const constructLogMessage = (...args: unknown[]): string =>
   `${args
     .flat()
+    .filter((item) => item != undefined)
     .map((item: unknown) => {
       if (Array.isArray(item) && item.length == 0) return;
       return typeof item !== "string" ? JSON.stringify(item) : item;

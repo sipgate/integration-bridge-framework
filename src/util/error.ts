@@ -1,4 +1,4 @@
-import { AxiosError } from "axios";
+import axios, { AxiosError } from "axios";
 import {
   DELEGATE_TO_FRONTEND_CODE,
   IntegrationErrorType,
@@ -7,7 +7,7 @@ import {
 import { errorLogger } from "./logger.util";
 
 export const throwAndDelegateError = (
-  error: Error | AxiosError,
+  error: AxiosError | Error,
   source: string,
   apiKey: string | undefined,
   logMessage?: string
@@ -24,8 +24,7 @@ export const throwAndDelegateError = (
   } else {
     errorLogger(source, errorMessage, apiKey);
   }
-
-  if (error instanceof AxiosError) {
+  if (axios.isAxiosError(error)) {
     const status = error.response?.status || 500;
     var errorType: IntegrationErrorType;
     switch (status) {
@@ -44,9 +43,12 @@ export const throwAndDelegateError = (
         errorType = IntegrationErrorType.INTEGRATION_ERROR_UNAVAILABLE;
         break;
       default:
+        console.log("bin default weil status= ", status);
         throw new ServerError(status, `${source} (${errorMessage})`);
     }
+    console.log("bin außerhalb vom switch weil status= ", status);
     throw new ServerError(DELEGATE_TO_FRONTEND_CODE, errorType);
   }
+  console.log("kein axios");
   throw new ServerError(500, "An internal error occurred");
 };
