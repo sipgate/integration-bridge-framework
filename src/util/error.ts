@@ -24,7 +24,8 @@ export const throwAndDelegateError = (
     errorLogger(source, errorMessage, apiKey);
   }
   if (axios.isAxiosError(error)) {
-    const status = error.response?.status || 500;
+    const status =
+      error.response?.status || (error.code ? parseInt(error.code) : 500);
     var errorType: IntegrationErrorType;
     switch (status) {
       case 401:
