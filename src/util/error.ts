@@ -7,7 +7,7 @@ import {
 import { errorLogger } from "./logger.util";
 
 export const throwAndDelegateError = (
-  error: AxiosError | Error,
+  error: AxiosError | ServerError | Error,
   source: string,
   apiKey: string | undefined,
   logMessage?: string
@@ -23,9 +23,12 @@ export const throwAndDelegateError = (
   } else {
     errorLogger(source, errorMessage, apiKey);
   }
-  if (axios.isAxiosError(error)) {
+
+  const err = error as any;
+  if (err.code || err.response?.status) {
     const status =
-      error.response?.status || (error.code ? parseInt(error.code) : 500);
+      err.response?.status || (err.code ? parseInt(err.code) : 500);
+
     var errorType: IntegrationErrorType;
     switch (status) {
       case 401:
