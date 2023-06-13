@@ -7,6 +7,7 @@ export enum IntegrationErrorType {
   INTEGRATION_ERROR_UNAVAILABLE = "integration/error/unavailable",
 
   ENTITY_ERROR_CONFLICT = "entity/error/conflict",
+  ENTITY_NOT_FOUND = "entity/not-found",
 
   CONTACT_CREATE_ERROR_CONFLICT = "contact/create-error/conflict",
   CONTACT_CREATE_ERROR_EMAIL_CONFLICT = "contact/create-error/email-conflict",

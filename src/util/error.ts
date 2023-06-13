@@ -34,6 +34,9 @@ export const throwAndDelegateError = (
       case 403:
         errorType = IntegrationErrorType.INTEGRATION_ERROR_FORBIDDEN;
         break;
+      case 404:
+        errorType = IntegrationErrorType.ENTITY_NOT_FOUND;
+        break;
       case 409:
         errorType = IntegrationErrorType.ENTITY_ERROR_CONFLICT;
         break;
