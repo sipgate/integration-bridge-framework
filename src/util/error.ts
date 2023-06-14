@@ -1,10 +1,10 @@
 import axios, { AxiosError } from "axios";
+import { ServerError } from "../models";
+import { errorLogger } from "./logger.util";
 import {
   DELEGATE_TO_FRONTEND_CODE,
   IntegrationErrorType,
-  ServerError,
-} from "../models";
-import { errorLogger } from "./logger.util";
+} from "@sipgate/clinq-types";
 
 export const throwAndDelegateError = (
   error: AxiosError | ServerError | Error,
