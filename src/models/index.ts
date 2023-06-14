@@ -11,5 +11,4 @@ export * from "./controller.model";
 export * from "./custom-router.model";
 export * from "./server-error.model";
 export * from "./user.model";
-export * from "./integration-error.model";
 export * from "./integration-entity.model";
