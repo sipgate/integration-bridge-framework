@@ -19,9 +19,9 @@ export const throwAndDelegateError = (
     : error.message;
 
   if (logMessage) {
-    errorLogger(source, logMessage, apiKey, errorMessage);
+    errorLogger(source, logMessage, apiKey, { message: errorMessage, error });
   } else {
-    errorLogger(source, errorMessage, apiKey);
+    errorLogger(source, errorMessage, apiKey, { error });
   }
 
   const err = error as any;
