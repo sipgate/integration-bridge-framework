@@ -70,14 +70,6 @@ export class Controller {
           throw new ServerError(501, "Fetching contacts is not implemented");
         }
 
-        if (this.adapter.getToken && req.providerConfig) {
-          infoLogger("getToken", `Fetching token…`, providerConfig.apiKey);
-          const { apiKey } = await this.adapter.getToken(req.providerConfig);
-          providerConfig.apiKey = apiKey;
-          infoLogger("getToken", `Fetched new token…`, providerConfig.apiKey);
-          res.header("X-Provider-Key", apiKey);
-        }
-
         infoLogger("getContacts", `Fetching contacts…`, providerConfig.apiKey);
 
         const fetchedContacts: Contact[] = await this.adapter.getContacts(
@@ -130,6 +122,11 @@ export class Controller {
         res.header("X-Fetching-State", "pending");
       }
 
+      if (this.adapter.getToken && req.providerConfig) {
+        const { apiKey } = await this.adapter.getToken(req.providerConfig);
+        res.header("X-Provider-Key", apiKey);
+      }
+
       infoLogger("getContacts", "END", providerConfig.apiKey);
       res.status(200).send(responseContacts);
     } catch (error: any) {
@@ -157,31 +154,21 @@ export class Controller {
     res: Response,
     next: NextFunction
   ): Promise<void> {
-    const { providerConfig } = req;
-
-    if (!providerConfig) {
-      throw new ServerError(400, "Missing config parameters");
-    }
-
+    const { providerConfig: { apiKey = "", locale = "" } = {} } = req;
     try {
-      infoLogger("createContact", "START", providerConfig.apiKey);
+      infoLogger("createContact", "START", apiKey);
 
       if (!this.adapter.createContact) {
         throw new ServerError(501, "Creating contacts is not implemented");
       }
 
-      if (this.adapter.getToken && req.providerConfig) {
-        infoLogger("getToken", `Fetching token…`, providerConfig.apiKey);
-        const { apiKey } = await this.adapter.getToken(req.providerConfig);
-        providerConfig.apiKey = apiKey;
-        infoLogger("getToken", `Fetched new token…`, providerConfig.apiKey);
-        res.header("X-Provider-Key", apiKey);
+      if (!req.providerConfig) {
+        throw new ServerError(400, "Missing config parameters");
       }
-
-      infoLogger("createContact", "Creating contact", providerConfig.apiKey);
+      infoLogger("createContact", "Creating contact", apiKey);
 
       const contact: Contact = await this.adapter.createContact(
-        providerConfig,
+        req.providerConfig,
         req.body
       );
 
@@ -191,7 +178,7 @@ export class Controller {
         errorLogger(
           "createContact",
           "Invalid contact provided by adapter",
-          providerConfig.apiKey,
+          apiKey,
           this.ajv.errorsText()
         );
         throw new ServerError(400, "Invalid contact provided by adapter");
@@ -200,26 +187,25 @@ export class Controller {
       infoLogger(
         "createContact",
         `Contact with id ${contact.id} created`,
-        providerConfig.apiKey
+        apiKey
       );
 
-      const sanitizedContact: Contact = sanitizeContact(
-        contact,
-        providerConfig.locale
-      );
+      const sanitizedContact: Contact = sanitizeContact(contact, locale);
+
+      if (this.adapter.getToken && req.providerConfig) {
+        const { apiKey } = await this.adapter.getToken(req.providerConfig);
+        res.header("X-Provider-Key", apiKey);
+      }
       res.status(200).send(sanitizedContact);
 
       if (this.contactCache) {
-        const contacts = await this.contactCache.get(providerConfig.apiKey);
+        const contacts = await this.contactCache.get(apiKey);
         if (Array.isArray(contacts)) {
-          await this.contactCache.set(providerConfig.apiKey, [
-            ...contacts,
-            sanitizedContact,
-          ]);
+          await this.contactCache.set(apiKey, [...contacts, sanitizedContact]);
         }
       }
 
-      infoLogger("createContact", "END", providerConfig.apiKey);
+      infoLogger("createContact", "END", apiKey);
     } catch (error) {
       // prevent logging of refresh errors
       if (
@@ -233,10 +219,10 @@ export class Controller {
       errorLogger(
         "createContact",
         "Could not create contact:",
-        providerConfig.apiKey,
+        apiKey,
         error || "Unknown"
       );
-      errorLogger("createContact", "Entity", providerConfig.apiKey, req.body);
+      errorLogger("createContact", "Entity", apiKey, req.body);
       next(error);
     }
   }
@@ -246,28 +232,20 @@ export class Controller {
     res: Response,
     next: NextFunction
   ): Promise<void> {
-    const { providerConfig } = req;
-    if (!providerConfig) {
-      throw new ServerError(400, "Missing config parameters");
-    }
-
+    const { providerConfig: { apiKey = "", locale = "" } = {} } = req;
     try {
       if (!this.adapter.updateContact) {
         throw new ServerError(501, "Updating contacts is not implemented");
       }
 
-      if (this.adapter.getToken && req.providerConfig) {
-        infoLogger("getToken", `Fetching token…`, providerConfig.apiKey);
-        const { apiKey } = await this.adapter.getToken(req.providerConfig);
-        providerConfig.apiKey = apiKey;
-        infoLogger("getToken", `Fetched new token…`, providerConfig.apiKey);
-        res.header("X-Provider-Key", apiKey);
+      if (!req.providerConfig) {
+        throw new ServerError(400, "Missing config parameters");
       }
 
-      infoLogger("updateContact", "Updating contact", providerConfig.apiKey);
+      infoLogger("updateContact", "Updating contact", apiKey);
 
       const contact: Contact = await this.adapter.updateContact(
-        providerConfig,
+        req.providerConfig,
         req.params.id,
         req.body
       );
@@ -277,7 +255,7 @@ export class Controller {
         errorLogger(
           "updateContact",
           "Invalid contact provided by adapter",
-          providerConfig.apiKey,
+          apiKey,
           this.ajv.errorsText()
         );
         throw new ServerError(400, "Invalid contact provided by adapter");
@@ -286,26 +264,28 @@ export class Controller {
       infoLogger(
         "updateContact",
         `Contact with id ${contact.id} updated`,
-        providerConfig.apiKey
+        apiKey
       );
 
-      const sanitizedContact: Contact = sanitizeContact(
-        contact,
-        providerConfig.locale
-      );
+      const sanitizedContact: Contact = sanitizeContact(contact, locale);
+
+      if (this.adapter.getToken && req.providerConfig) {
+        const { apiKey } = await this.adapter.getToken(req.providerConfig);
+        res.header("X-Provider-Key", apiKey);
+      }
       res.status(200).send(sanitizedContact);
 
       if (this.contactCache) {
-        const contacts = await this.contactCache.get(providerConfig.apiKey);
+        const contacts = await this.contactCache.get(apiKey);
         if (Array.isArray(contacts)) {
           const updatedCache: Contact[] = contacts.map((entry) =>
             entry.id === sanitizedContact.id ? sanitizedContact : entry
           );
-          await this.contactCache.set(providerConfig.apiKey, updatedCache);
+          await this.contactCache.set(apiKey, updatedCache);
         }
       }
 
-      infoLogger("updateContact", "END", providerConfig.apiKey);
+      infoLogger("updateContact", "END", apiKey);
     } catch (error) {
       // prevent logging of refresh errors
       if (
@@ -319,10 +299,10 @@ export class Controller {
       errorLogger(
         "updateContact",
         "Could not update contact:",
-        providerConfig.apiKey,
+        apiKey,
         error || "Unknown"
       );
-      errorLogger("updateContact", "Entity", providerConfig.apiKey, req.body);
+      errorLogger("updateContact", "Entity", apiKey, req.body);
       next(error);
     }
   }
@@ -332,50 +312,46 @@ export class Controller {
     res: Response,
     next: NextFunction
   ): Promise<void> {
-    const { providerConfig } = req;
-
-    if (!providerConfig) {
-      throw new ServerError(400, "Missing config parameters");
-    }
-
+    const { providerConfig: { apiKey = "" } = {} } = req;
     try {
-      infoLogger("deleteContact", "START", providerConfig.apiKey);
+      infoLogger("deleteContact", "START", apiKey);
 
       if (!this.adapter.deleteContact) {
         throw new ServerError(501, "Deleting contacts is not implemented");
       }
 
-      if (this.adapter.getToken && req.providerConfig) {
-        infoLogger("getToken", `Fetching token…`, providerConfig.apiKey);
-        const { apiKey } = await this.adapter.getToken(req.providerConfig);
-        providerConfig.apiKey = apiKey;
-        infoLogger("getToken", `Fetched new token…`, providerConfig.apiKey);
-        res.header("X-Provider-Key", apiKey);
+      if (!req.providerConfig) {
+        throw new ServerError(400, "Missing config parameters");
       }
 
-      infoLogger("deleteContact", "Deleting contact", providerConfig.apiKey);
+      infoLogger("deleteContact", "Deleting contact", apiKey);
 
       const contactId = req.params.id;
-      await this.adapter.deleteContact(providerConfig, contactId);
+      await this.adapter.deleteContact(req.providerConfig, contactId);
+
+      if (this.adapter.getToken && req.providerConfig) {
+        const { apiKey } = await this.adapter.getToken(req.providerConfig);
+        res.header("X-Provider-Key", apiKey);
+      }
       res.status(200).send();
 
       infoLogger(
         "deleteContact",
         `Contact with id ${contactId} deleted`,
-        providerConfig.apiKey
+        apiKey
       );
 
       if (this.contactCache) {
-        const contacts = await this.contactCache.get(providerConfig.apiKey);
+        const contacts = await this.contactCache.get(apiKey);
         if (Array.isArray(contacts)) {
           const updatedCache: Contact[] = contacts.filter(
             (entry) => entry.id !== contactId
           );
-          await this.contactCache.set(providerConfig.apiKey, updatedCache);
+          await this.contactCache.set(apiKey, updatedCache);
         }
       }
 
-      infoLogger("deleteContact", "END", providerConfig.apiKey);
+      infoLogger("deleteContact", "END", apiKey);
     } catch (error) {
       // prevent logging of refresh errors
       if (
@@ -389,7 +365,7 @@ export class Controller {
       errorLogger(
         "deleteContact",
         "Could not delete contact:",
-        providerConfig.apiKey,
+        apiKey,
         error || "Unknown"
       );
       next(error);
