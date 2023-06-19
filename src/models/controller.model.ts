@@ -26,7 +26,7 @@ import {
 } from "./bridge-request.model";
 import { CacheItemStateType } from "./cache-item-state.model";
 import { CalendarFilterOptions } from "./calendar-filter-options.model";
-import { IntegrationErrorType } from "@sipgate/clinq-types";
+import { IntegrationErrorType } from "./integration-error.model";
 
 const CONTACT_FETCH_TIMEOUT: number = 3000;
 
