@@ -11,7 +11,9 @@ import {
   IntegrationEntityBridgeRequest,
 } from "./models";
 import { CustomRouter } from "./models/custom-router.model";
+import { CustomRoute } from "./models/custom-routes.model";
 import { getContactCache } from "./util/get-contact-cache";
+import { errorLogger, infoLogger } from "./util";
 
 const PORT: number = Number(process.env.PORT) || 8080;
 
@@ -32,7 +34,8 @@ let cache: ContactCache | null = null;
 
 export function start(
   adapter: Adapter,
-  customRouters: CustomRouter[] = []
+  customRouters: CustomRouter[] = [],
+  customRoutes: CustomRoute[] = []
 ): Server {
   cache = getContactCache();
 
@@ -92,6 +95,46 @@ export function start(
   app.use(errorHandlerMiddleware);
 
   customRouters.forEach(({ path, router }) => app.use(path, router));
+
+  customRoutes.forEach(({ requestType, path, handler: customHandler }) => {
+    infoLogger("start", `CustomRoute ${path} added.`, undefined);
+
+    const handler = (req: any, res: any, next: any) => {
+      try {
+        infoLogger(path, "START", undefined);
+
+        customHandler(req, res, next);
+
+        infoLogger(path, "END", undefined);
+      } catch (error) {
+        errorLogger(
+          path,
+          "Error while executing custom route",
+          undefined,
+          error ?? undefined
+        );
+        next(error);
+      }
+    };
+
+    switch (requestType) {
+      case "get":
+        app.get(path, handler);
+        break;
+      case "post":
+        app.post(path, handler);
+        break;
+      case "put":
+        app.put(path, handler);
+        break;
+      case "delete":
+        app.delete(path, handler);
+        break;
+
+      default:
+        throw `CustomRoute requestType ${requestType} not implemented!`;
+    }
+  });
 
   return app.listen(PORT, () => console.log(`Listening on port ${PORT}`));
 }
