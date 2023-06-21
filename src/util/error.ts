@@ -25,9 +25,11 @@ export const throwAndDelegateError = (
   }
 
   const err = error as any;
-  if (err.code || err.response?.status) {
+  if (err.code || err.status || err.response?.status) {
     const status =
-      err.response?.status || (err.code ? parseInt(err.code) : 500);
+      err.status ||
+      err.response?.status ||
+      (err.code ? parseInt(err.code) : 500);
 
     var errorType: IntegrationErrorType;
     switch (status) {
