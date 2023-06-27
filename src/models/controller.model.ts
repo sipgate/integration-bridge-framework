@@ -24,11 +24,9 @@ import {
   IdBridgeRequest,
   IntegrationEntityBridgeRequest,
 } from "./bridge-request.model";
-import { CacheItemStateType } from "./cache-item-state.model";
 import { CalendarFilterOptions } from "./calendar-filter-options.model";
 import { IntegrationErrorType } from "./integration-error.model";
-
-const CONTACT_FETCH_TIMEOUT: number = 3000;
+import { PubSubClient } from "./pubsub-client.model";
 
 function sanitizeContact(contact: Contact, locale: string): Contact {
   const result: APIContact = {
@@ -44,11 +42,23 @@ export class Controller {
   private adapter: Adapter;
   private contactCache: ContactCache | null;
   private ajv: Ajv;
+  private pubSubClient: PubSubClient | null = null;
 
   constructor(adapter: Adapter, contactCache: ContactCache | null) {
     this.adapter = adapter;
     this.contactCache = contactCache;
     this.ajv = new Ajv();
+
+    const { PUBSUB_TOPIC_NAME: topicName } = process.env;
+
+    if (!topicName) {
+      throw new Error("No pubsub topic name provided.");
+    }
+    this.pubSubClient = new PubSubClient(topicName);
+    infoLogger(
+      "Controller",
+      `Initialized PubSub client with topic ${topicName}`
+    );
   }
 
   public async getContacts(
@@ -65,62 +75,54 @@ export class Controller {
     try {
       infoLogger("getContacts", "START", providerConfig.apiKey);
 
-      const fetchContacts = async (): Promise<Contact[]> => {
+      const fetchContacts = async () => {
         if (!this.adapter.getContacts) {
           throw new ServerError(501, "Fetching contacts is not implemented");
         }
 
-        infoLogger("getContacts", `Fetching contacts…`, providerConfig.apiKey);
+        const iterator = this.adapter.getContacts(providerConfig);
 
-        const fetchedContacts: Contact[] = await this.adapter.getContacts(
-          providerConfig
-        );
+        const timestamp = Date.now();
 
-        if (!validate(this.ajv, contactsSchema, fetchedContacts)) {
-          throw new ServerError(500, "Invalid contacts received");
+        let result = await iterator.next();
+
+        while (!result.done) {
+          const { value: contacts } = result;
+
+          try {
+            if (!validate(this.ajv, contactsSchema, contacts)) {
+              throw new Error("Invalid contacts received");
+            }
+
+            const page = {
+              timestamp,
+              contacts: contacts.map((contact) =>
+                sanitizeContact(contact, providerConfig.locale)
+              ),
+            };
+
+            await this.pubSubClient?.publishMessage(page);
+          } catch (error) {
+            errorLogger(
+              "getContacts",
+              "Could not publish contacts",
+              providerConfig.apiKey,
+              error
+            );
+          } finally {
+            result = await iterator.next();
+          }
         }
-
-        return fetchedContacts.map((contact) =>
-          sanitizeContact(contact, providerConfig.locale)
-        );
       };
 
-      const fetcherPromise = this.contactCache
-        ? this.contactCache.get(providerConfig.apiKey, fetchContacts)
-        : fetchContacts();
-
-      const timeoutPromise: Promise<"TIMEOUT"> = new Promise((resolve) =>
-        setTimeout(() => resolve("TIMEOUT"), CONTACT_FETCH_TIMEOUT)
-      );
-
-      const raceResult = await Promise.race([fetcherPromise, timeoutPromise]);
-      if (raceResult === "TIMEOUT") {
-        infoLogger(
+      fetchContacts().catch((error) =>
+        errorLogger(
           "getContacts",
-          `Fetching too slow, returning empty array.`,
-          providerConfig.apiKey
-        );
-      }
-
-      const responseContacts: Contact[] = Array.isArray(raceResult)
-        ? raceResult
-        : [];
-
-      const contactsCount = responseContacts.length;
-
-      infoLogger(
-        "getContacts",
-        `Found ${contactsCount} cached contacts`,
-        providerConfig.apiKey
+          "Could not get contacts",
+          providerConfig.apiKey,
+          error
+        )
       );
-
-      if (
-        !Array.isArray(raceResult) &&
-        (raceResult === "TIMEOUT" ||
-          raceResult.state === CacheItemStateType.FETCHING)
-      ) {
-        res.header("X-Fetching-State", "pending");
-      }
 
       if (this.adapter.getToken && req.providerConfig) {
         const { apiKey } = await this.adapter.getToken(req.providerConfig);
@@ -128,7 +130,8 @@ export class Controller {
       }
 
       infoLogger("getContacts", "END", providerConfig.apiKey);
-      res.status(200).send(responseContacts);
+
+      res.status(200).send("OK");
     } catch (error: any) {
       // prevent logging of refresh errors
       if (
