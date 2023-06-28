@@ -28,7 +28,10 @@ import { CacheItemStateType } from "./cache-item-state.model";
 import { CalendarFilterOptions } from "./calendar-filter-options.model";
 import { IntegrationErrorType } from "./integration-error.model";
 import { PubSubClient } from "./pubsub-client.model";
-import { PubSubContactsMessage } from "./pubsub-contacts-message.model";
+import {
+  PubSubContactsMessage,
+  PubSubContactsState,
+} from "./pubsub-contacts-message.model";
 
 const CONTACT_FETCH_TIMEOUT = 3000;
 
@@ -47,6 +50,7 @@ export class Controller {
   private contactCache: ContactCache | null;
   private ajv: Ajv;
   private pubSubClient: PubSubClient | null = null;
+  private integrationName: string = "UNKNOWN";
 
   constructor(adapter: Adapter, contactCache: ContactCache | null) {
     this.adapter = adapter;
@@ -54,12 +58,20 @@ export class Controller {
     this.ajv = new Ajv();
 
     if (this.adapter.streamContacts) {
-      const { PUBSUB_TOPIC_NAME: topicName } = process.env;
+      const {
+        PUBSUB_TOPIC_NAME: topicName,
+        INTEGRATION_NAME: integrationName,
+      } = process.env;
 
       if (!topicName) {
-        throw new Error("No pubsub topic name provided.");
+        throw new Error("No PUBSUB_TOPIC_NAME provided.");
       }
 
+      if (!integrationName) {
+        throw new Error("No INTEGRATION_NAME provided.");
+      }
+
+      this.integrationName = integrationName;
       this.pubSubClient = new PubSubClient(topicName);
       infoLogger(
         "Controller",
@@ -209,6 +221,8 @@ export class Controller {
               contacts: contacts.map((contact) =>
                 sanitizeContact(contact, providerConfig.locale)
               ),
+              state: PubSubContactsState.IN_PROGRESS,
+              integrationName: this.integrationName,
             };
 
             await this.pubSubClient?.publishMessage(message);
@@ -225,14 +239,24 @@ export class Controller {
         }
       };
 
-      streamContacts().catch((error) =>
-        errorLogger(
-          "streamContacts",
-          "Could not stream contacts",
-          providerConfig.apiKey,
-          error
+      streamContacts()
+        .catch((error) =>
+          errorLogger(
+            "streamContacts",
+            "Could not stream contacts",
+            providerConfig.apiKey,
+            error
+          )
         )
-      );
+        .finally(() =>
+          this.pubSubClient?.publishMessage({
+            userId: providerConfig.userId,
+            timestamp,
+            contacts: [],
+            state: PubSubContactsState.COMPLETE,
+            integrationName: this.integrationName,
+          })
+        );
 
       if (this.adapter.getToken && req.providerConfig) {
         const { apiKey } = await this.adapter.getToken(req.providerConfig);
