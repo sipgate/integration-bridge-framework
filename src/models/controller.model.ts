@@ -14,7 +14,6 @@ import {
   ServerError,
 } from ".";
 import { calendarEventsSchema, contactsSchema } from "../schemas";
-import { isProduction } from "../util";
 import { shouldSkipCallEvent } from "../util/call-event.util";
 import { errorLogger, infoLogger } from "../util/logger.util";
 import { parsePhoneNumber } from "../util/phone-number-utils";
@@ -54,12 +53,13 @@ export class Controller {
     this.contactCache = contactCache;
     this.ajv = new Ajv();
 
-    const { PUBSUB_TOPIC_NAME: topicName } = process.env;
+    if (this.adapter.streamContacts) {
+      const { PUBSUB_TOPIC_NAME: topicName } = process.env;
 
-    if (isProduction() && typeof this.adapter.streamContacts === "function") {
       if (!topicName) {
         throw new Error("No pubsub topic name provided.");
       }
+
       this.pubSubClient = new PubSubClient(topicName);
       infoLogger(
         "Controller",
@@ -215,7 +215,7 @@ export class Controller {
           } catch (error) {
             errorLogger(
               "streamContacts",
-              "Could not publish contacts",
+              `Could not publish contacts`,
               providerConfig.apiKey,
               error
             );
