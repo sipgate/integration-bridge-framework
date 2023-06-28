@@ -1,5 +1,6 @@
 import { PubSub } from "@google-cloud/pubsub";
 import { errorLogger, infoLogger } from "../util";
+import { PubSubContactsMessage } from "./pubsub-contacts-message.model";
 
 export class PubSubClient {
   private client: PubSub;
@@ -10,7 +11,7 @@ export class PubSubClient {
     this.topicName = topicName;
   }
 
-  async publishMessage(message: unknown) {
+  async publishMessage(message: PubSubContactsMessage) {
     try {
       if (!this.topicName) {
         throw new Error("No pubsub topic name provided.");
@@ -23,7 +24,7 @@ export class PubSubClient {
 
       infoLogger(
         PubSubClient.name,
-        `Published message ${json} to topic ${this.topicName}`
+        `Published ${message.contacts.length} contacts for user ${message.userId} to topic ${this.topicName}`
       );
     } catch (error) {
       console.error(error);

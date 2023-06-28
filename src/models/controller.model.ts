@@ -29,6 +29,7 @@ import { CacheItemStateType } from "./cache-item-state.model";
 import { CalendarFilterOptions } from "./calendar-filter-options.model";
 import { IntegrationErrorType } from "./integration-error.model";
 import { PubSubClient } from "./pubsub-client.model";
+import { PubSubContactsMessage } from "./pubsub-contacts-message.model";
 
 const CONTACT_FETCH_TIMEOUT = 3000;
 
@@ -55,7 +56,7 @@ export class Controller {
 
     const { PUBSUB_TOPIC_NAME: topicName } = process.env;
 
-    if (isProduction()) {
+    if (isProduction() && typeof this.adapter.streamContacts === "function") {
       if (!topicName) {
         throw new Error("No pubsub topic name provided.");
       }
@@ -202,7 +203,7 @@ export class Controller {
               throw new Error("Invalid contacts received");
             }
 
-            const message = {
+            const message: PubSubContactsMessage = {
               userId: providerConfig.userId,
               timestamp,
               contacts: contacts.map((contact) =>
