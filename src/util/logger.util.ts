@@ -10,7 +10,7 @@ import { anonymizeKey } from "./anonymize-key";
 export const infoLogger = (
   source: string,
   message: string,
-  apiKey: string | undefined,
+  apiKey?: string,
   ...args: unknown[]
 ): void => {
   logger(console.info, source, message, apiKey, ...args);
@@ -26,7 +26,7 @@ export const infoLogger = (
 export const errorLogger = (
   source: string,
   message: string,
-  apiKey: string | undefined,
+  apiKey?: string,
   ...args: unknown[]
 ): void => {
   logger(console.error, source, message, apiKey, ...args);

@@ -17,6 +17,7 @@ import { IntegrationEntityType } from "./integration-entity.model";
 export interface Adapter {
   getToken?: (config: Config) => Promise<{ apiKey: string }>;
   getContacts?: (config: Config) => Promise<Contact[]>;
+  streamContacts?: (config: Config) => AsyncGenerator<Contact[], void, unknown>;
   createContact?: (
     config: Config,
     contact: ContactTemplate

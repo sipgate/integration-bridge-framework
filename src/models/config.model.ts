@@ -1,4 +1,5 @@
 export interface Config {
+  userId: string;
   apiKey: string;
   apiUrl: string;
   locale: string;

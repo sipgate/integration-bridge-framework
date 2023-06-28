@@ -14,6 +14,7 @@ import {
   ServerError,
 } from ".";
 import { calendarEventsSchema, contactsSchema } from "../schemas";
+import { isProduction } from "../util";
 import { shouldSkipCallEvent } from "../util/call-event.util";
 import { errorLogger, infoLogger } from "../util/logger.util";
 import { parsePhoneNumber } from "../util/phone-number-utils";
@@ -27,8 +28,10 @@ import {
 import { CacheItemStateType } from "./cache-item-state.model";
 import { CalendarFilterOptions } from "./calendar-filter-options.model";
 import { IntegrationErrorType } from "./integration-error.model";
+import { PubSubClient } from "./pubsub-client.model";
+import { PubSubContactsMessage } from "./pubsub-contacts-message.model";
 
-const CONTACT_FETCH_TIMEOUT: number = 3000;
+const CONTACT_FETCH_TIMEOUT = 3000;
 
 function sanitizeContact(contact: Contact, locale: string): Contact {
   const result: APIContact = {
@@ -44,11 +47,25 @@ export class Controller {
   private adapter: Adapter;
   private contactCache: ContactCache | null;
   private ajv: Ajv;
+  private pubSubClient: PubSubClient | null = null;
 
   constructor(adapter: Adapter, contactCache: ContactCache | null) {
     this.adapter = adapter;
     this.contactCache = contactCache;
     this.ajv = new Ajv();
+
+    const { PUBSUB_TOPIC_NAME: topicName } = process.env;
+
+    if (isProduction() && typeof this.adapter.streamContacts === "function") {
+      if (!topicName) {
+        throw new Error("No pubsub topic name provided.");
+      }
+      this.pubSubClient = new PubSubClient(topicName);
+      infoLogger(
+        "Controller",
+        `Initialized PubSub client with topic ${topicName}`
+      );
+    }
   }
 
   public async getContacts(
@@ -142,6 +159,102 @@ export class Controller {
       errorLogger(
         "getContacts",
         "Could not get contacts:",
+        providerConfig.apiKey,
+        error
+      );
+      next(error);
+    }
+  }
+
+  public async streamContacts(
+    req: BridgeRequest<unknown>,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    const { providerConfig } = req;
+
+    if (!providerConfig) {
+      throw new ServerError(400, "Missing parameters");
+    }
+
+    const timestamp = Date.now();
+
+    try {
+      infoLogger(
+        "streamContacts",
+        `Starting contact streaming ${timestamp}`,
+        providerConfig.apiKey
+      );
+
+      const streamContacts = async () => {
+        if (!this.adapter.streamContacts) {
+          throw new ServerError(501, "Streaming contacts is not implemented");
+        }
+
+        const iterator = this.adapter.streamContacts(providerConfig);
+
+        let result = await iterator.next();
+
+        while (!result.done) {
+          const { value: contacts } = result;
+
+          try {
+            if (!validate(this.ajv, contactsSchema, contacts)) {
+              throw new Error("Invalid contacts received");
+            }
+
+            const message: PubSubContactsMessage = {
+              userId: providerConfig.userId,
+              timestamp,
+              contacts: contacts.map((contact) =>
+                sanitizeContact(contact, providerConfig.locale)
+              ),
+            };
+
+            await this.pubSubClient?.publishMessage(message);
+          } catch (error) {
+            errorLogger(
+              "streamContacts",
+              "Could not publish contacts",
+              providerConfig.apiKey,
+              error
+            );
+          } finally {
+            result = await iterator.next();
+          }
+        }
+      };
+
+      streamContacts().catch((error) =>
+        errorLogger(
+          "streamContacts",
+          "Could not stream contacts",
+          providerConfig.apiKey,
+          error
+        )
+      );
+
+      if (this.adapter.getToken && req.providerConfig) {
+        const { apiKey } = await this.adapter.getToken(req.providerConfig);
+        res.header("X-Provider-Key", apiKey);
+      }
+
+      infoLogger("streamContacts", "END", providerConfig.apiKey);
+
+      res.status(200).send({ timestamp });
+    } catch (error: any) {
+      // prevent logging of refresh errors
+      if (
+        error instanceof ServerError &&
+        error.message === IntegrationErrorType.INTEGRATION_REFRESH_ERROR
+      ) {
+        next(error);
+        return;
+      }
+
+      errorLogger(
+        "streamContacts",
+        "Could not stream contacts",
         providerConfig.apiKey,
         error
       );
