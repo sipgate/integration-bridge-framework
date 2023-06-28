@@ -14,6 +14,7 @@ import {
   ServerError,
 } from ".";
 import { calendarEventsSchema, contactsSchema } from "../schemas";
+import { isProduction } from "../util";
 import { shouldSkipCallEvent } from "../util/call-event.util";
 import { errorLogger, infoLogger } from "../util/logger.util";
 import { parsePhoneNumber } from "../util/phone-number-utils";
@@ -24,9 +25,12 @@ import {
   IdBridgeRequest,
   IntegrationEntityBridgeRequest,
 } from "./bridge-request.model";
+import { CacheItemStateType } from "./cache-item-state.model";
 import { CalendarFilterOptions } from "./calendar-filter-options.model";
 import { IntegrationErrorType } from "./integration-error.model";
 import { PubSubClient } from "./pubsub-client.model";
+
+const CONTACT_FETCH_TIMEOUT = 3000;
 
 function sanitizeContact(contact: Contact, locale: string): Contact {
   const result: APIContact = {
@@ -51,14 +55,16 @@ export class Controller {
 
     const { PUBSUB_TOPIC_NAME: topicName } = process.env;
 
-    if (!topicName) {
-      throw new Error("No pubsub topic name provided.");
+    if (isProduction()) {
+      if (!topicName) {
+        throw new Error("No pubsub topic name provided.");
+      }
+      this.pubSubClient = new PubSubClient(topicName);
+      infoLogger(
+        "Controller",
+        `Initialized PubSub client with topic ${topicName}`
+      );
     }
-    this.pubSubClient = new PubSubClient(topicName);
-    infoLogger(
-      "Controller",
-      `Initialized PubSub client with topic ${topicName}`
-    );
   }
 
   public async getContacts(
@@ -75,54 +81,62 @@ export class Controller {
     try {
       infoLogger("getContacts", "START", providerConfig.apiKey);
 
-      const fetchContacts = async () => {
+      const fetchContacts = async (): Promise<Contact[]> => {
         if (!this.adapter.getContacts) {
           throw new ServerError(501, "Fetching contacts is not implemented");
         }
 
-        const iterator = this.adapter.getContacts(providerConfig);
+        infoLogger("getContacts", `Fetching contacts…`, providerConfig.apiKey);
 
-        const timestamp = Date.now();
+        const fetchedContacts: Contact[] = await this.adapter.getContacts(
+          providerConfig
+        );
 
-        let result = await iterator.next();
-
-        while (!result.done) {
-          const { value: contacts } = result;
-
-          try {
-            if (!validate(this.ajv, contactsSchema, contacts)) {
-              throw new Error("Invalid contacts received");
-            }
-
-            const page = {
-              timestamp,
-              contacts: contacts.map((contact) =>
-                sanitizeContact(contact, providerConfig.locale)
-              ),
-            };
-
-            await this.pubSubClient?.publishMessage(page);
-          } catch (error) {
-            errorLogger(
-              "getContacts",
-              "Could not publish contacts",
-              providerConfig.apiKey,
-              error
-            );
-          } finally {
-            result = await iterator.next();
-          }
+        if (!validate(this.ajv, contactsSchema, fetchedContacts)) {
+          throw new ServerError(500, "Invalid contacts received");
         }
+
+        return fetchedContacts.map((contact) =>
+          sanitizeContact(contact, providerConfig.locale)
+        );
       };
 
-      fetchContacts().catch((error) =>
-        errorLogger(
-          "getContacts",
-          "Could not get contacts",
-          providerConfig.apiKey,
-          error
-        )
+      const fetcherPromise = this.contactCache
+        ? this.contactCache.get(providerConfig.apiKey, fetchContacts)
+        : fetchContacts();
+
+      const timeoutPromise: Promise<"TIMEOUT"> = new Promise((resolve) =>
+        setTimeout(() => resolve("TIMEOUT"), CONTACT_FETCH_TIMEOUT)
       );
+
+      const raceResult = await Promise.race([fetcherPromise, timeoutPromise]);
+      if (raceResult === "TIMEOUT") {
+        infoLogger(
+          "getContacts",
+          `Fetching too slow, returning empty array.`,
+          providerConfig.apiKey
+        );
+      }
+
+      const responseContacts: Contact[] = Array.isArray(raceResult)
+        ? raceResult
+        : [];
+
+      const contactsCount = responseContacts.length;
+
+      infoLogger(
+        "getContacts",
+        `Found ${contactsCount} cached contacts`,
+        providerConfig.apiKey
+      );
+
+      if (
+        !Array.isArray(raceResult) &&
+        (raceResult === "TIMEOUT" ||
+          raceResult.state === CacheItemStateType.FETCHING)
+      ) {
+        res.header("X-Fetching-State", "pending");
+      }
 
       if (this.adapter.getToken && req.providerConfig) {
         const { apiKey } = await this.adapter.getToken(req.providerConfig);
@@ -130,8 +144,7 @@ export class Controller {
       }
 
       infoLogger("getContacts", "END", providerConfig.apiKey);
-
-      res.status(200).send("OK");
+      res.status(200).send(responseContacts);
     } catch (error: any) {
       // prevent logging of refresh errors
       if (
@@ -145,6 +158,102 @@ export class Controller {
       errorLogger(
         "getContacts",
         "Could not get contacts:",
+        providerConfig.apiKey,
+        error
+      );
+      next(error);
+    }
+  }
+
+  public async streamContacts(
+    req: BridgeRequest<unknown>,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    const { providerConfig } = req;
+
+    if (!providerConfig) {
+      throw new ServerError(400, "Missing parameters");
+    }
+
+    const timestamp = Date.now();
+
+    try {
+      infoLogger(
+        "streamContacts",
+        `Starting contact streaming ${timestamp}`,
+        providerConfig.apiKey
+      );
+
+      const streamContacts = async () => {
+        if (!this.adapter.streamContacts) {
+          throw new ServerError(501, "Streaming contacts is not implemented");
+        }
+
+        const iterator = this.adapter.streamContacts(providerConfig);
+
+        let result = await iterator.next();
+
+        while (!result.done) {
+          const { value: contacts } = result;
+
+          try {
+            if (!validate(this.ajv, contactsSchema, contacts)) {
+              throw new Error("Invalid contacts received");
+            }
+
+            const message = {
+              userId: providerConfig.userId,
+              timestamp,
+              contacts: contacts.map((contact) =>
+                sanitizeContact(contact, providerConfig.locale)
+              ),
+            };
+
+            await this.pubSubClient?.publishMessage(message);
+          } catch (error) {
+            errorLogger(
+              "streamContacts",
+              "Could not publish contacts",
+              providerConfig.apiKey,
+              error
+            );
+          } finally {
+            result = await iterator.next();
+          }
+        }
+      };
+
+      streamContacts().catch((error) =>
+        errorLogger(
+          "streamContacts",
+          "Could not stream contacts",
+          providerConfig.apiKey,
+          error
+        )
+      );
+
+      if (this.adapter.getToken && req.providerConfig) {
+        const { apiKey } = await this.adapter.getToken(req.providerConfig);
+        res.header("X-Provider-Key", apiKey);
+      }
+
+      infoLogger("streamContacts", "END", providerConfig.apiKey);
+
+      res.status(200).send({ timestamp });
+    } catch (error: any) {
+      // prevent logging of refresh errors
+      if (
+        error instanceof ServerError &&
+        error.message === IntegrationErrorType.INTEGRATION_REFRESH_ERROR
+      ) {
+        next(error);
+        return;
+      }
+
+      errorLogger(
+        "streamContacts",
+        "Could not stream contacts",
         providerConfig.apiKey,
         error
       );

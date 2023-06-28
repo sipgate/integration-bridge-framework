@@ -153,9 +153,7 @@ describe("getContacts", () => {
   it("should handle contacts", async () => {
     const controller: Controller = new Controller(
       {
-        getContacts: async function* () {
-          return contactsMock;
-        },
+        getContacts: () => Promise.resolve(contactsMock),
       },
       new StorageCache(new MemoryStorageAdapter())
     );
@@ -171,9 +169,7 @@ describe("getContacts", () => {
   it("should handle readonly contacts", async () => {
     const controller: Controller = new Controller(
       {
-        getContacts: async function* () {
-          return contactsReadonlyMock;
-        },
+        getContacts: () => Promise.resolve(contactsReadonlyMock),
       },
       new StorageCache(new MemoryStorageAdapter())
     );
@@ -189,9 +185,7 @@ describe("getContacts", () => {
   it("should handle contacts with minimum fields", async () => {
     const controller: Controller = new Controller(
       {
-        getContacts: async function* () {
-          return contactsMinimumMock;
-        },
+        getContacts: () => Promise.resolve(contactsMinimumMock),
       },
       new StorageCache(new MemoryStorageAdapter())
     );
@@ -211,9 +205,7 @@ describe("getContacts", () => {
 
     const controller: Controller = new Controller(
       {
-        getContacts: async function* () {
-          return contactsBrokenMock;
-        },
+        getContacts: () => Promise.resolve(contactsBrokenMock),
       },
       new StorageCache(new MemoryStorageAdapter())
     );
@@ -228,9 +220,7 @@ describe("getContacts", () => {
 
     const controller: Controller = new Controller(
       {
-        getContacts: async function* () {
-          throw new Error(ERROR_MESSAGE);
-        },
+        getContacts: () => Promise.reject(ERROR_MESSAGE),
       },
       new StorageCache(new MemoryStorageAdapter())
     );
@@ -569,9 +559,7 @@ describe("getHealth", () => {
   it("should implement a default function", async () => {
     const controller: Controller = new Controller(
       {
-        getContacts: async function* () {
-          return contactsMock;
-        },
+        getContacts: () => Promise.resolve(contactsMock),
       },
       new StorageCache(new MemoryStorageAdapter())
     );
@@ -587,9 +575,7 @@ describe("getHealth", () => {
 
     const controller: Controller = new Controller(
       {
-        getContacts: async function* () {
-          return contactsMock;
-        },
+        getContacts: () => Promise.resolve(contactsMock),
         getHealth: getHealthMock,
       },
       new StorageCache(new MemoryStorageAdapter())
@@ -607,9 +593,7 @@ describe("getHealth", () => {
 
     const controller: Controller = new Controller(
       {
-        getContacts: async function* () {
-          throw new Error("Error");
-        },
+        getContacts: () => Promise.reject(),
         getHealth: () => Promise.reject(new Error("Error")),
       },
       new StorageCache(new MemoryStorageAdapter())
