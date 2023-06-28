@@ -53,6 +53,11 @@ export const throwAndDelegateError = (
       default:
         throw new ServerError(status, `${source} (${errorMessage})`);
     }
+    errorLogger(
+      "throwAndDelegateError",
+      `Delegating error to frontend with code ${DELEGATE_TO_FRONTEND_CODE} and type ${errorType}`,
+      apiKey
+    );
     throw new ServerError(DELEGATE_TO_FRONTEND_CODE, errorType);
   }
   throw new ServerError(500, "An internal error occurred");
