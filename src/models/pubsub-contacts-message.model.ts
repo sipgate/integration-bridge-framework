@@ -1,8 +1,8 @@
 import { Contact } from "./contact.model";
 
 export enum PubSubContactsState {
-  "IN_PROGRESS",
-  "COMPLETE",
+  IN_PROGRESS = "IN_PROGRESS",
+  COMPLETE = "COMPLETE",
 }
 
 export type PubSubContactsMessage = {
