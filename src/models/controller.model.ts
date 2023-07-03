@@ -870,6 +870,7 @@ export class Controller {
       next(error);
     }
   }
+
   public async createCallLogForPhoneNumber(
     req: BridgeRequest<CallEvent>,
     res: Response,
@@ -1016,7 +1017,11 @@ export class Controller {
         req.params.type
       );
 
-      infoLogger("getEntity", `[${fetchedEntity}] `, providerConfig.apiKey);
+      infoLogger(
+        "getEntity",
+        `[${JSON.stringify(fetchedEntity)}] `,
+        providerConfig.apiKey
+      );
       infoLogger("getEntity", `END`, providerConfig?.apiKey);
       res.status(200).send(fetchedEntity);
     } catch (error) {
