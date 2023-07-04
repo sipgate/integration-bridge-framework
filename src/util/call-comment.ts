@@ -18,8 +18,8 @@ export function getCommentSubject(
     ? "incoming"
     : "outgoing";
 
-  const titleEndGerman = `${directionString} Anruf (CLINQ)`;
-  const titleEndEnglish = `${directionString} Call (CLINQ)`;
+  const titleEndGerman = `${directionString} Anruf (${getProductName()})`;
+  const titleEndEnglish = `${directionString} Call (${getProductName()})`;
 
   switch (state) {
     case CallState.CONNECTED:
@@ -41,9 +41,14 @@ export function getCommentSubject(
   }
 }
 
+function getProductName() {
+  const productName = process.env.PRODUCT_NAME;
+  return productName || "CLINQ";
+}
+
 export function getCommentHeader(locale: string) {
   const isGerman = locale.startsWith("de");
-  return `<h1>${isGerman ? "Notizen" : "Note"} (CLINQ):</h1>`;
+  return `<h1>${isGerman ? "Notizen" : "Note"} (${getProductName()}):</h1>`;
 }
 
 export function getCommentContent(note: string, locale: string) {
