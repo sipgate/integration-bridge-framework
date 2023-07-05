@@ -33,7 +33,7 @@ import {
   PubSubContactsState,
 } from "./pubsub-contacts-message.model";
 
-const CONTACT_FETCH_TIMEOUT = 3000;
+const CONTACT_FETCH_TIMEOUT = 5000;
 
 function sanitizeContact(contact: Contact, locale: string): Contact {
   const result: APIContact = {
