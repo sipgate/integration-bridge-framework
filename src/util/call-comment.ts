@@ -42,7 +42,7 @@ export function getCommentSubject(
   }
 }
 
-function getProductName() {
+export function getProductName() {
   const productName = process.env.PRODUCT_NAME;
 
   if (!productName)
