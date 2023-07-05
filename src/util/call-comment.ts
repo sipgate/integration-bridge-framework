@@ -1,5 +1,6 @@
-import { CallDirection, CallState } from "../models";
 import moment from "moment";
+import { CallDirection, CallState } from "../models";
+import { errorLogger } from "./logger.util";
 
 export function getCommentSubject(
   state: CallState,
@@ -43,6 +44,12 @@ export function getCommentSubject(
 
 function getProductName() {
   const productName = process.env.PRODUCT_NAME;
+
+  if (!productName)
+    errorLogger(
+      "getProductName",
+      "Missing environment variable PRODUCT_NAME, using CLINQ."
+    );
   return productName || "CLINQ";
 }
 
