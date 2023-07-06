@@ -51,6 +51,7 @@ export class Controller {
   private ajv: Ajv;
   private pubSubClient: PubSubClient | null = null;
   private integrationName: string = "UNKNOWN";
+  private streamingPromises = new Map<string, Promise<void>>();
 
   constructor(adapter: Adapter, contactCache: ContactCache | null) {
     this.adapter = adapter;
@@ -189,6 +190,12 @@ export class Controller {
       throw new ServerError(400, "Missing parameters");
     }
 
+    const { userId } = providerConfig;
+
+    if (!userId) {
+      throw new ServerError(400, "Missing user ID");
+    }
+
     const timestamp = Date.now();
 
     try {
@@ -216,7 +223,7 @@ export class Controller {
             }
 
             const message: PubSubContactsMessage = {
-              userId: providerConfig.userId,
+              userId,
               timestamp,
               contacts: contacts.map((contact) =>
                 sanitizeContact(contact, providerConfig.locale)
@@ -239,7 +246,7 @@ export class Controller {
         }
       };
 
-      streamContacts()
+      const streamingPromise = streamContacts()
         .catch((error) =>
           errorLogger(
             "streamContacts",
@@ -248,15 +255,18 @@ export class Controller {
             error
           )
         )
-        .finally(() =>
+        .finally(() => {
           this.pubSubClient?.publishMessage({
             userId: providerConfig.userId,
             timestamp,
             contacts: [],
             state: PubSubContactsState.COMPLETE,
             integrationName: this.integrationName,
-          })
-        );
+          });
+          this.streamingPromises.delete(`${userId}:${timestamp}`);
+        });
+
+      this.streamingPromises.set(`${userId}:${timestamp}`, streamingPromise);
 
       if (this.adapter.getToken && req.providerConfig) {
         const { apiKey } = await this.adapter.getToken(req.providerConfig);
