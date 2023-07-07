@@ -7,7 +7,7 @@ import {
 import { errorLogger } from "./logger.util";
 
 export const throwAndDelegateError = (
-  error: AxiosError | ServerError | Error,
+  error: AxiosError | DelegateToFrontedError | ServerError | Error,
   source: string,
   apiKey: string | undefined,
   logMessage?: string
@@ -31,28 +31,35 @@ export const throwAndDelegateError = (
       err.response?.status ||
       (err.code ? parseInt(err.code) : 500);
 
-    var errorType: IntegrationErrorType;
-    switch (status) {
-      case 401:
-        errorType = IntegrationErrorType.INTEGRATION_REFRESH_ERROR;
-        break;
-      case 403:
-        errorType = IntegrationErrorType.INTEGRATION_ERROR_FORBIDDEN;
-        break;
-      case 404:
-        errorType = IntegrationErrorType.ENTITY_NOT_FOUND;
-        break;
-      case 409:
-        errorType = IntegrationErrorType.ENTITY_ERROR_CONFLICT;
-        break;
-      case 502:
-      case 503:
-      case 504:
-        errorType = IntegrationErrorType.INTEGRATION_ERROR_UNAVAILABLE;
-        break;
-      default:
-        throw new ServerError(status, `${source} (${errorMessage})`);
+    var errorType: IntegrationErrorType | string;
+
+    if (error instanceof DelegateToFrontedError) {
+      var delegateToFrontedError = error as DelegateToFrontedError;
+      errorType = delegateToFrontedError.errorType;
+    } else {
+      switch (status) {
+        case 401:
+          errorType = IntegrationErrorType.INTEGRATION_REFRESH_ERROR;
+          break;
+        case 403:
+          errorType = IntegrationErrorType.INTEGRATION_ERROR_FORBIDDEN;
+          break;
+        case 404:
+          errorType = IntegrationErrorType.ENTITY_NOT_FOUND;
+          break;
+        case 409:
+          errorType = IntegrationErrorType.ENTITY_ERROR_CONFLICT;
+          break;
+        case 502:
+        case 503:
+        case 504:
+          errorType = IntegrationErrorType.INTEGRATION_ERROR_UNAVAILABLE;
+          break;
+        default:
+          throw new ServerError(status, `${source} (${errorMessage})`);
+      }
     }
+
     errorLogger(
       "throwAndDelegateError",
       `Delegating error to frontend with code ${DELEGATE_TO_FRONTEND_CODE} and type ${errorType}`,
@@ -62,3 +69,13 @@ export const throwAndDelegateError = (
   }
   throw new ServerError(500, "An internal error occurred");
 };
+
+export class DelegateToFrontedError extends Error {
+  errorType: IntegrationErrorType;
+  constructor(errorType: IntegrationErrorType) {
+    super(errorType);
+
+    this.errorType = errorType;
+    this.name = "DelegateToFrontedError";
+  }
+}
