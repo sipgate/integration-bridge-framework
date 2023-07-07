@@ -5,6 +5,7 @@ export enum IntegrationErrorType {
   INTEGRATION_REFRESH_ERROR = "integration/refresh-error",
   INTEGRATION_ERROR_FORBIDDEN = "integration/error/forbidden",
   INTEGRATION_ERROR_UNAVAILABLE = "integration/error/unavailable",
+  INTEGRATION_ERROR_LICENSE_ACCESS_LIMITED = "integration/error/license-access-limited",
 
   ENTITY_ERROR_CONFLICT = "entity/error/conflict",
   ENTITY_NOT_FOUND = "entity/not-found",
