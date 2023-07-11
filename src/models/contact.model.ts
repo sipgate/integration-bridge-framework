@@ -1,6 +1,7 @@
 import {
   IntegrationEntity,
   IntegrationEntityType,
+  LabeledIntegrationEntity,
 } from "./integration-entity.model";
 
 export enum PhoneNumberLabel {
@@ -43,7 +44,7 @@ export type ContactResult = {
   contactUrl: string | null;
   avatarUrl: string | null;
   readonly?: boolean;
-  relatesTo?: IntegrationEntity[];
+  relatesTo?: IntegrationEntity[] | LabeledIntegrationEntity[];
 };
 
 export type ContactTemplate = BaseContact & {
