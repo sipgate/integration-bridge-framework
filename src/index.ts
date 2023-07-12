@@ -3,6 +3,7 @@ import compression from "compression";
 import cors from "cors";
 import express from "express";
 import { Server } from "http";
+import { TokenStorageCache } from "./cache";
 import { errorHandlerMiddleware, extractHeaderMiddleware } from "./middlewares";
 import {
   Adapter,
@@ -12,9 +13,10 @@ import {
 } from "./models";
 import { CustomRouter } from "./models/custom-router.model";
 import { CustomRoute } from "./models/custom-routes.model";
-import { errorLogger, infoLogger } from "./util";
+import { errorLogger, getTokenCache, infoLogger } from "./util";
 import { getContactCache } from "./util/get-contact-cache";
 
+export let tokenCache: TokenStorageCache;
 const PORT: number = Number(process.env.PORT) || 8080;
 
 const app: express.Application = express();
@@ -30,16 +32,17 @@ app.use(
 app.use(bodyParser.json());
 app.use(extractHeaderMiddleware);
 
-let cache: ContactCache | null = null;
+let contactCache: ContactCache | null = null;
 
 export function start(
   adapter: Adapter,
   customRouters: CustomRouter[] = [],
   customRoutes: CustomRoute[] = []
 ): Server {
-  cache = getContactCache();
+  contactCache = getContactCache();
+  tokenCache = getTokenCache();
+  const controller: Controller = new Controller(adapter, contactCache);
 
-  const controller: Controller = new Controller(adapter, cache);
   app.get("/contacts", (req, res, next) =>
     controller.getContacts(req, res, next)
   );
@@ -160,11 +163,11 @@ export function start(
 }
 
 export const deleteCacheItem = async (key: string) => {
-  await cache?.delete(key);
+  await contactCache?.delete(key);
 };
 
 export const getCacheItem = async (key: string) => {
-  return (await cache?.get(key)) || [];
+  return (await contactCache?.get(key)) || [];
 };
 
 export * from "./models";

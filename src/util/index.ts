@@ -20,3 +20,4 @@ export * from "./oauth";
 export * from "./env";
 
 export { Http, CallEventHelper, Security, Lang, GDPR, OAuth };
+export * from "./token-util";

@@ -1,9 +1,9 @@
 import { createClient, RedisClientType } from "redis";
 import { promisify } from "util";
 import {
+  InputType,
   deflate as nodeDeflate,
   inflate as nodeInflate,
-  InputType,
 } from "zlib";
 import { StorageAdapter } from "../../models/storage-adapter.model";
 
