@@ -5,3 +5,4 @@ export * from "./error";
 export * from "./integration-entity";
 export * from "./logger.util";
 export * from "./phone-number-utils";
+export * from "./token-util";

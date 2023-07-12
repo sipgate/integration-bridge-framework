@@ -50,6 +50,7 @@ export function getProductName() {
       "getProductName",
       "Missing environment variable PRODUCT_NAME, using CLINQ."
     );
+
   return productName || "CLINQ";
 }
 
