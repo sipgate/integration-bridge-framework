@@ -1,6 +1,5 @@
 import Ajv from "ajv";
 import { NextFunction, Request, Response } from "express";
-import { chunk } from "lodash";
 import { stringify } from "querystring";
 import {
   Adapter,
@@ -35,7 +34,6 @@ import {
 } from "./pubsub-contacts-message.model";
 
 const CONTACT_FETCH_TIMEOUT = 5000;
-const PUBSUB_CHUNK_SIZE = 10_000;
 
 function sanitizeContact(contact: Contact, locale: string): Contact {
   const result: APIContact = {
@@ -224,20 +222,17 @@ export class Controller {
               throw new Error("Invalid contacts received");
             }
 
-            const contactsChunks = chunk(contacts, PUBSUB_CHUNK_SIZE);
-            for (const contactsChunk of contactsChunks) {
-              const message: PubSubContactsMessage = {
-                userId,
-                timestamp,
-                contacts: contactsChunk.map((contact) =>
-                  sanitizeContact(contact, providerConfig.locale)
-                ),
-                state: PubSubContactsState.IN_PROGRESS,
-                integrationName: this.integrationName,
-              };
+            const message: PubSubContactsMessage = {
+              userId,
+              timestamp,
+              contacts: contacts.map((contact) =>
+                sanitizeContact(contact, providerConfig.locale)
+              ),
+              state: PubSubContactsState.IN_PROGRESS,
+              integrationName: this.integrationName,
+            };
 
-              await this.pubSubClient?.publishMessage(message);
-            }
+            await this.pubSubClient?.publishMessage(message);
           } catch (error) {
             errorLogger(
               "streamContacts",
