@@ -35,6 +35,7 @@ import {
 } from "./pubsub-contacts-message.model";
 
 const CONTACT_FETCH_TIMEOUT = 5000;
+const PUBSUB_CHUNK_SIZE = 10_000;
 
 function sanitizeContact(contact: Contact, locale: string): Contact {
   const result: APIContact = {
@@ -223,7 +224,7 @@ export class Controller {
               throw new Error("Invalid contacts received");
             }
 
-            const contactsChunks = chunk(contacts, 1000);
+            const contactsChunks = chunk(contacts, PUBSUB_CHUNK_SIZE);
             for (const contactsChunk of contactsChunks) {
               const message: PubSubContactsMessage = {
                 userId,
