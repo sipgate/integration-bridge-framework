@@ -1,5 +1,6 @@
 import Ajv from "ajv";
 import { NextFunction, Request, Response } from "express";
+import { chunk } from "lodash";
 import { stringify } from "querystring";
 import {
   Adapter,
@@ -222,17 +223,20 @@ export class Controller {
               throw new Error("Invalid contacts received");
             }
 
-            const message: PubSubContactsMessage = {
-              userId,
-              timestamp,
-              contacts: contacts.map((contact) =>
-                sanitizeContact(contact, providerConfig.locale)
-              ),
-              state: PubSubContactsState.IN_PROGRESS,
-              integrationName: this.integrationName,
-            };
+            const contactsChunks = chunk(contacts, 1000);
+            for (const contactsChunk of contactsChunks) {
+              const message: PubSubContactsMessage = {
+                userId,
+                timestamp,
+                contacts: contactsChunk.map((contact) =>
+                  sanitizeContact(contact, providerConfig.locale)
+                ),
+                state: PubSubContactsState.IN_PROGRESS,
+                integrationName: this.integrationName,
+              };
 
-            await this.pubSubClient?.publishMessage(message);
+              await this.pubSubClient?.publishMessage(message);
+            }
           } catch (error) {
             errorLogger(
               "streamContacts",
