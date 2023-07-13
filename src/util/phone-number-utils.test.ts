@@ -186,4 +186,21 @@ describe("convertPhoneNumberToE164", () => {
       ).e164
     ).toEqual("22");
   });
+  it("returns national number for localized if ignoreRegion flag is set", () => {
+    expect(
+      parsePhoneNumber(
+        { label: PhoneNumberLabel.WORK, phoneNumber: "+353 86 412 0894" },
+        "de-DE",
+        true
+      ).localized
+    ).toEqual("086 412 0894");
+  });
+  it("returns national number for localized if same region", () => {
+    expect(
+      parsePhoneNumber(
+        { label: PhoneNumberLabel.WORK, phoneNumber: "+353 86 412 0894" },
+        "en-IE"
+      ).localized
+    ).toEqual("086 412 0894");
+  });
 });
