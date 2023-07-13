@@ -186,4 +186,21 @@ describe("convertPhoneNumberToE164", () => {
       ).e164
     ).toEqual("22");
   });
+  it("returns national number for localized if ignoreRegion flag is set", () => {
+    expect(
+      parsePhoneNumber(
+        { label: PhoneNumberLabel.WORK, phoneNumber: "+35315790000200" },
+        "de-DE",
+        true
+      ).localized
+    ).toEqual("015790000200");
+  });
+  it("returns national number for localized if same region", () => {
+    expect(
+      parsePhoneNumber(
+        { label: PhoneNumberLabel.WORK, phoneNumber: "+35315790000200" },
+        "en-IE"
+      ).localized
+    ).toEqual("015790000200");
+  });
 });

@@ -9,7 +9,8 @@ export const normalizePhoneNumber = (phoneNumber: string) =>
 
 export const parsePhoneNumber = (
   { label, phoneNumber }: PhoneNumber,
-  locale: string
+  locale: string,
+  ignoreRegion = false
 ): APIPhoneNumber => {
   const isNumberDirectDial = isDirectDial(normalizePhoneNumber(phoneNumber));
   const type = isNumberDirectDial
@@ -20,16 +21,17 @@ export const parsePhoneNumber = (
     const parsedPhoneNumber = parse(phoneNumber, region);
     const phoneNumberRegion = parsedPhoneNumber.getRegionCode();
     const e164 = parsedPhoneNumber.getNumber("e164") ?? phoneNumber;
-    return {
+    let newVar = {
       label,
       type,
       e164: isNumberDirectDial ? phoneNumber : e164,
       localized:
-        region === phoneNumberRegion
-          ? parsedPhoneNumber.getNumber("national") ?? phoneNumber
+        ignoreRegion || region === phoneNumberRegion
+          ? `0${parsedPhoneNumber.getNumber("national")}` ?? phoneNumber
           : parsedPhoneNumber.getNumber("international") ?? phoneNumber,
       phoneNumber: e164,
     };
+    return newVar;
   } catch {
     return {
       label,
