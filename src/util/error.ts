@@ -25,18 +25,18 @@ export const throwAndDelegateError = (
   }
 
   const err = error as any;
-  if (err.code || err.status || err.response?.status) {
-    const status =
-      err.status ||
-      err.response?.status ||
-      (err.code ? parseInt(err.code) : 500);
+  var errorType: IntegrationErrorType | string | undefined = undefined;
 
-    var errorType: IntegrationErrorType | string;
+  if (error instanceof DelegateToFrontedError) {
+    var delegateToFrontedError = error as DelegateToFrontedError;
+    errorType = delegateToFrontedError.errorType;
+  } else {
+    if (err.code || err.status || err.response?.status) {
+      const status =
+        err.status ||
+        err.response?.status ||
+        (err.code ? parseInt(err.code) : 500);
 
-    if (error instanceof DelegateToFrontedError) {
-      var delegateToFrontedError = error as DelegateToFrontedError;
-      errorType = delegateToFrontedError.errorType;
-    } else {
       switch (status) {
         case 401:
           errorType = IntegrationErrorType.INTEGRATION_REFRESH_ERROR;
@@ -59,7 +59,9 @@ export const throwAndDelegateError = (
           throw new ServerError(status, `${source} (${errorMessage})`);
       }
     }
+  }
 
+  if (errorType !== undefined) {
     errorLogger(
       "throwAndDelegateError",
       `Delegating error to frontend with code ${DELEGATE_TO_FRONTEND_CODE} and type ${errorType}`,
