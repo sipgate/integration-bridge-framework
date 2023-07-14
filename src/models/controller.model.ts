@@ -912,7 +912,7 @@ export class Controller {
           `Skipping call log for call id ${req.body.id}`,
           providerConfig.apiKey
         );
-        res.status(200).send("Skipping call log");
+        res.status(200).send([]);
         return;
       }
 
@@ -971,7 +971,7 @@ export class Controller {
           `Skipping call log for call id ${req.body.id}`,
           providerConfig.apiKey
         );
-        res.status(200).send("Skipping call log");
+        res.status(200).send([]);
         return;
       }
 
