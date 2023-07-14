@@ -13,3 +13,4 @@ export * from "./server-error.model";
 export * from "./user.model";
 export * from "./integration-error.model";
 export * from "./integration-entity.model";
+export * from "./token.model";
