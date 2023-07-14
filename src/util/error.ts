@@ -72,10 +72,10 @@ export const throwAndDelegateError = (
   throw new ServerError(500, "An internal error occurred");
 };
 
-export class DelegateToFrontedError extends Error {
+export class DelegateToFrontedError extends ServerError {
   errorType: IntegrationErrorType;
   constructor(errorType: IntegrationErrorType) {
-    super(errorType);
+    super(DELEGATE_TO_FRONTEND_CODE, errorType);
 
     this.errorType = errorType;
     this.name = "DelegateToFrontedError";
