@@ -1,6 +1,6 @@
 {
   "name": "@sipgate/integration-bridge",
-  "version": "0.22.8",
+  "version": "0.22.9",
   "description": "sipgate Integration Bridge Framework",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
