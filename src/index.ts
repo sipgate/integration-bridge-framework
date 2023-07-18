@@ -162,11 +162,11 @@ export function start(
   return app.listen(PORT, () => console.log(`Listening on port ${PORT}`));
 }
 
-export const deleteCacheItem = async (key: string) => {
+export const deleteContactCacheItem = async (key: string) => {
   await contactCache?.delete(key);
 };
 
-export const getCacheItem = async (key: string) => {
+export const getContactCacheItem = async (key: string) => {
   return (await contactCache?.get(key)) || [];
 };
 
