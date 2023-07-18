@@ -30,7 +30,7 @@ export function getTokenCache() {
   console.log("[TOKEN CACHE] Using memory cache");
   const { TOKEN_CACHE_TTL } = process.env;
   return new TokenStorageCache(
-    new MemoryStorageAdapter(parseInt(TOKEN_CACHE_TTL || "60") * 1000)
+    new MemoryStorageAdapter(parseInt(TOKEN_CACHE_TTL || "60"))
   );
 }
 

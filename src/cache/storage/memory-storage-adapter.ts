@@ -6,14 +6,14 @@ export class MemoryStorageAdapter implements StorageAdapter {
   private cache: LRU<string, unknown>;
 
   constructor(ttl?: number) {
-    const { MEMORY_CACHE_TTL_MS } = process.env;
-    const cacheTtlMs: number =
-      Number(MEMORY_CACHE_TTL_MS) || 60 * 60 * 24 * 30 * 1000; // 30 days
+    const { MEMORY_CACHE_TTL_SECONDS } = process.env;
+    const cacheTtlInSeconds: number =
+      Number(MEMORY_CACHE_TTL_SECONDS) || 60 * 60 * 24 * 30; // 30 days
     const maxSizeBytes: number = 400 * 1024 * 1024; // 400mb
 
     this.cache = new LRU({
       maxSize: maxSizeBytes,
-      ttl: ttl || cacheTtlMs,
+      ttl: (ttl || cacheTtlInSeconds) * 1000,
       sizeCalculation: sizeof,
     });
 
