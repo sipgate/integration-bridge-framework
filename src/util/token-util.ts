@@ -1,6 +1,6 @@
 import { TokenStorageCache } from '../cache';
 import { MemoryStorageAdapter, RedisStorageAdapter } from '../cache/storage';
-import { Config } from '../models';
+import { Config, ServerError } from '../models';
 import { Token } from '../models/token.model';
 
 import { tokenCache } from '..';
@@ -20,10 +20,19 @@ function useCollection(value: string) {
 export type TokenRefreshFn = (config: Config) => Promise<Token>;
 
 export function getTokenCache() {
-  const { REDIS_URL } = process.env;
+  const { REDIS_URL, INTEGRATION_NAME } = process.env;
 
   if (REDIS_URL) {
-    console.log('[TOKEN CACHE] Using Redis cache');
+    if (!INTEGRATION_NAME)
+      throw new ServerError(
+        500,
+        'Missing INTEGRATION_NAME variable, cannot initialize Redis token cache.',
+      );
+
+    console.log(
+      `[TOKEN CACHE] Using Redis cache for integration ${INTEGRATION_NAME}`,
+    );
+
     return new TokenStorageCache(new RedisStorageAdapter(REDIS_URL));
   }
 
