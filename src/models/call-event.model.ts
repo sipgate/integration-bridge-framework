@@ -1,4 +1,4 @@
-import { CallDirection, IntegrationEntity, LoggedIntegrationEntity } from "./";
+import { CallDirection, IntegrationEntity, LoggedIntegrationEntity } from './';
 
 /**
  * The type of the call participant.
@@ -7,8 +7,8 @@ import { CallDirection, IntegrationEntity, LoggedIntegrationEntity } from "./";
  *  you should use the remote party since it also contains the correct phone number of the call.
  */
 export enum CallParticipantType {
-  LOCAL = "local",
-  REMOTE = "remote",
+  LOCAL = 'local',
+  REMOTE = 'remote',
 }
 
 export type CallParticipant = {
@@ -17,10 +17,10 @@ export type CallParticipant = {
 };
 
 export enum CallState {
-  BUSY = "BUSY",
-  CONNECTED = "CONNECTED",
-  MISSED = "MISSED",
-  NOT_FOUND = "NOT_FOUND",
+  BUSY = 'BUSY',
+  CONNECTED = 'CONNECTED',
+  MISSED = 'MISSED',
+  NOT_FOUND = 'NOT_FOUND',
 }
 
 export interface CallEvent {

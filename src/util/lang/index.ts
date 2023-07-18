@@ -1,3 +1,3 @@
-import { diffArrays } from "./diff";
+import { diffArrays } from './diff';
 
 export { diffArrays };

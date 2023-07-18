@@ -1,7 +1,7 @@
-import * as dotenv from "dotenv";
+import * as dotenv from 'dotenv';
 
 export function isProduction() {
-  return process.env.NODE_ENV === "production";
+  return process.env.NODE_ENV === 'production';
 }
 
 export interface APIConfig {
@@ -9,12 +9,12 @@ export interface APIConfig {
 }
 
 export const parseEnvironment = (): APIConfig => {
-  if (process.env.NODE_ENV === "development") dotenv.config();
+  if (process.env.NODE_ENV === 'development') dotenv.config();
 
   const { API_URL } = process.env;
 
   if (!API_URL) {
-    throw new Error("Missing API_URL in environment.");
+    throw new Error('Missing API_URL in environment.');
   }
 
   return {
@@ -32,10 +32,10 @@ export interface OAuth2Options {
   APP_ACCESSTOKEN_URL: string;
 }
 
-const DEFAULT_COOKIE_NAME = "oauth_nonce";
+const DEFAULT_COOKIE_NAME = 'oauth_nonce';
 
 export const parseOAuthOptionFromEnvironment = (): OAuth2Options => {
-  if (process.env.NODE_ENV === "development") dotenv.config();
+  if (process.env.NODE_ENV === 'development') dotenv.config();
 
   const {
     APP_ID,
@@ -48,22 +48,22 @@ export const parseOAuthOptionFromEnvironment = (): OAuth2Options => {
   } = process.env;
 
   if (!APP_ID) {
-    throw new Error("Missing APP_ID in environment.");
+    throw new Error('Missing APP_ID in environment.');
   }
   if (!APP_SECRET) {
-    throw new Error("Missing APP_SECRET in environment.");
+    throw new Error('Missing APP_SECRET in environment.');
   }
   if (!APP_REDIRECT_URL) {
-    throw new Error("Missing APP_REDIRECT_URL in environment.");
+    throw new Error('Missing APP_REDIRECT_URL in environment.');
   }
   if (!API_URL) {
-    throw new Error("Missing API_URL in environment.");
+    throw new Error('Missing API_URL in environment.');
   }
   if (!APP_AUTHORIZE_URL) {
-    throw new Error("Missing APP_AUTHORIZE_URL in environment.");
+    throw new Error('Missing APP_AUTHORIZE_URL in environment.');
   }
   if (!APP_ACCESSTOKEN_URL) {
-    throw new Error("Missing APP_ACCESSTOKEN_URL in environment.");
+    throw new Error('Missing APP_ACCESSTOKEN_URL in environment.');
   }
   return {
     APP_ID,

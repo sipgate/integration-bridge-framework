@@ -1,28 +1,28 @@
-import { parsePhoneNumber as parse } from "awesome-phonenumber";
-import { PhoneNumber, PhoneNumberType } from "../models";
-import { APIPhoneNumber } from "../models/api-contact.model";
+import { parsePhoneNumber as parse } from 'awesome-phonenumber';
+import { PhoneNumber, PhoneNumberType } from '../models';
+import { APIPhoneNumber } from '../models/api-contact.model';
 
 const MIN_PHONE_NUMBER_LENGTH = 5;
 
 export const normalizePhoneNumber = (phoneNumber: string) =>
-  phoneNumber.replace(/[^\d\w\+]/g, "");
+  phoneNumber.replace(/[^\d\w\+]/g, '');
 
 export const parsePhoneNumber = (
   { label, phoneNumber }: PhoneNumber,
   locale: string,
-  ignoreRegion = false
+  ignoreRegion = false,
 ): APIPhoneNumber => {
   const isNumberDirectDial = isDirectDial(normalizePhoneNumber(phoneNumber));
   const type = isNumberDirectDial
     ? PhoneNumberType.DIRECT_DIAL
     : PhoneNumberType.STANDARD;
   try {
-    const region = locale.replace("_", "-").replace(/.+-/, "").toUpperCase();
+    const region = locale.replace('_', '-').replace(/.+-/, '').toUpperCase();
     const parsedPhoneNumber = parse(phoneNumber, region);
-    const nationalNumber = parsedPhoneNumber.getNumber("national");
+    const nationalNumber = parsedPhoneNumber.getNumber('national');
 
     const phoneNumberRegion = parsedPhoneNumber.getRegionCode();
-    const e164 = parsedPhoneNumber.getNumber("e164") ?? phoneNumber;
+    const e164 = parsedPhoneNumber.getNumber('e164') ?? phoneNumber;
     let newVar = {
       label,
       type,
@@ -30,7 +30,7 @@ export const parsePhoneNumber = (
       localized:
         ignoreRegion || region === phoneNumberRegion
           ? nationalNumber ?? phoneNumber
-          : parsedPhoneNumber.getNumber("international") ?? phoneNumber,
+          : parsedPhoneNumber.getNumber('international') ?? phoneNumber,
       phoneNumber: e164,
     };
     return newVar;

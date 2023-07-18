@@ -7,29 +7,33 @@ way to connect apps to any provider of external data management, like contacts o
 
 To test your changes to the integration-bridge framework locally, follow these steps:
 
-* Run `npm run dev` in sipgate-integration-bridge repo
-* Run `npm link @sipgate/integration-bridge` in *-integration-bridge-repo
-* Add the following to your `tsconfig.json`:
+- Run `npm run dev` in sipgate-integration-bridge repo
+- Run `npm link @sipgate/integration-bridge` in \*-integration-bridge-repo
+- Add the following to your `tsconfig.json`:
   ```json
   {
     "compilerOptions": {
       "paths": {
-        "@sipgate/integration-bridge": ["node_modules/@sipgate/integration-bridge/src"]
+        "@sipgate/integration-bridge": [
+          "node_modules/@sipgate/integration-bridge/src"
+        ]
       }
     }
   }
   ```
 
 ## Publishing a version
+
 To publish a new framework version, simply create a new tag and push it:
+
 ```
 
 npm version <minor|patch>
 git push --follow-tags
 
 ```
-This will automatically publish the package in the npm registry via the CI pipeline. 
 
+This will automatically publish the package in the npm registry via the CI pipeline.
 
 ## Bootstrapping a new bridge
 
@@ -48,30 +52,30 @@ yarn add @sipgate/integration-bridge
 The minimum adapter implements the `getContacts` method:
 
 ```js
-const bridge = require("@sipgate/integration-bridge");
-const fetch = require("node-fetch");
+const bridge = require('@sipgate/integration-bridge');
+const fetch = require('node-fetch');
 
-const {ServerError} = bridge;
+const { ServerError } = bridge;
 
 const adapter = {
-    getContacts: async ({apiKey, apiUrl}) => {
-        // Fetch contacts using apiUrl and apiKey
-        const response = await fetch(`${apiUrl}/api/contacts`, {
-            headers: {Authorization: `Bearer ${apiKey}`},
-        });
+  getContacts: async ({ apiKey, apiUrl }) => {
+    // Fetch contacts using apiUrl and apiKey
+    const response = await fetch(`${apiUrl}/api/contacts`, {
+      headers: { Authorization: `Bearer ${apiKey}` },
+    });
 
-        if (response.status === 401) {
-            throw new ServerError(401, "Unauthorized");
-        }
+    if (response.status === 401) {
+      throw new ServerError(401, 'Unauthorized');
+    }
 
-        if (!response.ok) {
-            throw new ServerError(500, "Could not fetch contacts");
-        }
+    if (!response.ok) {
+      throw new ServerError(500, 'Could not fetch contacts');
+    }
 
-        // TODO: Convert contacts to the structure below
-        const contacts = await response.json();
-        return contacts;
-    },
+    // TODO: Convert contacts to the structure below
+    const contacts = await response.json();
+    return contacts;
+  },
 };
 
 bridge.start(adapter);

@@ -1,5 +1,5 @@
-import * as Nonce from "./nonce";
+import * as Nonce from './nonce';
 
 export { Nonce };
 
-export * from "./nonce";
+export * from './nonce';

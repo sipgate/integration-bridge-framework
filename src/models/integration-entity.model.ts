@@ -13,18 +13,18 @@ export type LoggedIntegrationEntity = IntegrationEntity & {
 };
 
 export enum IntegrationEntityType {
-  CONTACTS = "contacts",
+  CONTACTS = 'contacts',
   // hubspot specific
-  DEALS = "deals",
-  COMPANIES = "companies",
-  TICKETS = "tickets",
+  DEALS = 'deals',
+  COMPANIES = 'companies',
+  TICKETS = 'tickets',
   // salesforces specific
-  LEADS = "leads",
-  ACCOUNTS = "accounts",
-  OPPORTUNITIES = "opportunities",
-  CASES = "cases",
+  LEADS = 'leads',
+  ACCOUNTS = 'accounts',
+  OPPORTUNITIES = 'opportunities',
+  CASES = 'cases',
   // outlook specific
-  CONTACTS_FOLDER = "contacts-folder",
+  CONTACTS_FOLDER = 'contacts-folder',
   // outlook and sipgate
-  USERS = "users",
+  USERS = 'users',
 }

@@ -1,16 +1,16 @@
-import axios, { AxiosError } from "axios";
+import axios, { AxiosError } from 'axios';
 import {
   DELEGATE_TO_FRONTEND_CODE,
   IntegrationErrorType,
   ServerError,
-} from "../models";
-import { errorLogger } from "./logger.util";
+} from '../models';
+import { errorLogger } from './logger.util';
 
 export const throwAndDelegateError = (
   error: AxiosError | DelegateToFrontedError | ServerError | Error,
   source: string,
   apiKey: string | undefined,
-  logMessage?: string
+  logMessage?: string,
 ) => {
   const errorMessage = axios.isAxiosError(error)
     ? error.response?.data
@@ -63,13 +63,13 @@ export const throwAndDelegateError = (
 
   if (errorType !== undefined) {
     errorLogger(
-      "throwAndDelegateError",
+      'throwAndDelegateError',
       `Delegating error to frontend with code ${DELEGATE_TO_FRONTEND_CODE} and type ${errorType}`,
-      apiKey
+      apiKey,
     );
     throw new ServerError(DELEGATE_TO_FRONTEND_CODE, errorType);
   }
-  throw new ServerError(500, "An internal error occurred");
+  throw new ServerError(500, 'An internal error occurred');
 };
 
 export class DelegateToFrontedError extends ServerError {
@@ -78,6 +78,6 @@ export class DelegateToFrontedError extends ServerError {
     super(DELEGATE_TO_FRONTEND_CODE, errorType);
 
     this.errorType = errorType;
-    this.name = "DelegateToFrontedError";
+    this.name = 'DelegateToFrontedError';
   }
 }

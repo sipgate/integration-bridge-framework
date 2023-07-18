@@ -1,4 +1,4 @@
-import { AxiosResponse } from "axios";
+import { AxiosResponse } from 'axios';
 
 export type MergeDataFn<T> = (data: T, newData: T) => T;
 export type ExtractDataFromResponseFn<T> = (response: AxiosResponse) => T;
@@ -6,12 +6,12 @@ export type IsEofFn<T> = (response: AxiosResponse, data: T) => boolean;
 export type RetryOnError = (exception: any) => Promise<boolean>;
 export type InvokeNextRequestFn<T> = (
   previousResponse: AxiosResponse | undefined,
-  data: T
+  data: T,
 ) => Promise<AxiosResponse>;
 
 async function sleep(ms: number): Promise<void> {
   return new Promise((resolve, reject) =>
-    setTimeout(() => resolve(undefined), ms || 0)
+    setTimeout(() => resolve(undefined), ms || 0),
   );
 }
 
@@ -22,7 +22,7 @@ export async function paginate<T>(
   invokeNextRequest: InvokeNextRequestFn<T>,
   delayMs: number,
   initialData: T,
-  retryOnError?: RetryOnError
+  retryOnError?: RetryOnError,
 ): Promise<T> {
   const paginateId = Math.floor(Math.random() * 100000);
 
@@ -46,7 +46,7 @@ export async function paginate<T>(
         if (retryOnError && (await retryOnError(e))) {
           setImmediate(() => fetchNextPage(data, previousResponse));
         } else {
-          console.error("[paginate] Error during pagination", `${e}`);
+          console.error('[paginate] Error during pagination', `${e}`);
           reject(e);
         }
       }

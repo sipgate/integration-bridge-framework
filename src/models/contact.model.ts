@@ -2,27 +2,27 @@ import {
   IntegrationEntity,
   IntegrationEntityType,
   LabeledIntegrationEntity,
-} from "./integration-entity.model";
+} from './integration-entity.model';
 
 export enum PhoneNumberLabel {
-  WORK = "WORK",
-  MOBILE = "MOBILE",
-  HOME = "HOME",
-  HOMEFAX = "HOMEFAX",
-  WORKFAX = "WORKFAX",
-  OTHERFAX = "OTHERFAX",
-  PAGER = "PAGER",
-  WORKMOBILE = "WORKMOBILE",
-  WORKPAGER = "WORKPAGER",
-  MAIN = "MAIN",
-  GOOGLEVOICE = "GOOGLEVOICE",
-  OTHER = "OTHER",
-  DIRECTDIAL = "DIRECTDIAL",
+  WORK = 'WORK',
+  MOBILE = 'MOBILE',
+  HOME = 'HOME',
+  HOMEFAX = 'HOMEFAX',
+  WORKFAX = 'WORKFAX',
+  OTHERFAX = 'OTHERFAX',
+  PAGER = 'PAGER',
+  WORKMOBILE = 'WORKMOBILE',
+  WORKPAGER = 'WORKPAGER',
+  MAIN = 'MAIN',
+  GOOGLEVOICE = 'GOOGLEVOICE',
+  OTHER = 'OTHER',
+  DIRECTDIAL = 'DIRECTDIAL',
 }
 
 export enum PhoneNumberType {
-  DIRECT_DIAL = "DIRECT_DIAL",
-  STANDARD = "STANDARD",
+  DIRECT_DIAL = 'DIRECT_DIAL',
+  STANDARD = 'STANDARD',
 }
 
 export type PhoneNumber = {

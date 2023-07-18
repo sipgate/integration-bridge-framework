@@ -36,13 +36,13 @@ function sizeOfObject(object: any): number {
 // tslint:disable-next-line no-any
 export default function sizeof(object: any): number {
   switch (typeof object) {
-    case "string":
+    case 'string':
       return object.length * ECMA_SIZES.STRING;
-    case "boolean":
+    case 'boolean':
       return ECMA_SIZES.BOOLEAN;
-    case "number":
+    case 'number':
       return ECMA_SIZES.NUMBER;
-    case "object":
+    case 'object':
       return sizeOfObject(object);
     default:
       return 0;

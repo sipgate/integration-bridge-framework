@@ -1,5 +1,5 @@
-import * as GDPRSlackNotification from "./gdprSlackNotification";
+import * as GDPRSlackNotification from './gdprSlackNotification';
 
 export { GDPRSlackNotification };
 
-export * from "./gdprSlackNotification";
+export * from './gdprSlackNotification';

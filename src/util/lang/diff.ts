@@ -1,4 +1,4 @@
-import * as fp from "lodash/fp";
+import * as fp from 'lodash/fp';
 
 export type IdOf<T> = (x: T) => string;
 export type Diff<X, Y> = {
@@ -16,7 +16,7 @@ export function diffArrays<X, Y>(
   idOfX: IdOf<X>,
   idOfY: IdOf<Y>,
   xs: X[],
-  ys: Y[]
+  ys: Y[],
 ): Diff<X, Y> {
   const xsByIds = byId(idOfX, xs);
   const ysByIds = byId(idOfY, ys);
@@ -66,6 +66,6 @@ export function diffArrays<X, Y>(
       commonXs: [],
       commonYs: [],
     },
-    Array.from(allIds)
+    Array.from(allIds),
   );
 }

@@ -3,7 +3,7 @@ import {
   ContactResult,
   PhoneNumberLabel,
   PhoneNumberType,
-} from "./contact.model";
+} from './contact.model';
 
 export interface APIPhoneNumber {
   label: PhoneNumberLabel | string;

@@ -1,8 +1,8 @@
-import { Request, Response } from "express";
-import { Security } from ".";
-import * as util from "util";
-import axios, { AxiosResponse } from "axios";
-import { ServerError } from "../models";
+import { Request, Response } from 'express';
+import { Security } from '.';
+import * as util from 'util';
+import axios, { AxiosResponse } from 'axios';
+import { ServerError } from '../models';
 
 export type ExtractTokenFromResponseFn<T> = (response: AxiosResponse) => T;
 
@@ -27,7 +27,7 @@ export interface OAuthCallbackParams {
 export async function getOAuth2RedirectUrl(
   config: OAuthParams,
   req: Request,
-  res: Response
+  res: Response,
 ): Promise<string> {
   try {
     const nonce_string: string = Security.Nonce.nonce();
@@ -37,7 +37,7 @@ export async function getOAuth2RedirectUrl(
       apiUrl: config.apiUrl,
     });
     const searchParamsAuth = new URLSearchParams({
-      response_type: "code",
+      response_type: 'code',
       redirect_uri: config.redirect_uri,
       client_id: config.client_id,
       state,
@@ -47,7 +47,7 @@ export async function getOAuth2RedirectUrl(
       res,
       config.cookieName,
       config.client_secret,
-      nonce_string
+      nonce_string,
     );
     const url = new URL(config.authorizeUrl);
     url.search = searchParamsAuth.toString();
@@ -55,7 +55,7 @@ export async function getOAuth2RedirectUrl(
   } catch (exception: any) {
     const errorMessage = `Error in getOAuth2RedirectUrl:  ${JSON.stringify(
       exception,
-      Object.getOwnPropertyNames(exception)
+      Object.getOwnPropertyNames(exception),
     )} ${util.inspect(exception?.response?.data, { depth: 3 })}`;
     console.error(errorMessage);
     throw new ServerError(500, errorMessage);
@@ -67,7 +67,7 @@ export async function handleOAuth2Callback(
   req: Request,
   res: Response,
   checkNonceCookie: boolean = false,
-  paramCommunication: GetAccessTokenParamCommunication = GetAccessTokenParamCommunication.BODY
+  paramCommunication: GetAccessTokenParamCommunication = GetAccessTokenParamCommunication.BODY,
 ): Promise<{ apiKey: string; apiUrl: string; query_params: any }> {
   try {
     if (req.query.error)
@@ -80,7 +80,7 @@ export async function handleOAuth2Callback(
       req,
       res,
       config.cookieName,
-      config.client_secret
+      config.client_secret,
     );
     const state = JSON.parse(req.query.state.toString());
     if (checkNonceCookie) {
@@ -95,7 +95,7 @@ export async function handleOAuth2Callback(
         req,
         res,
         config.cookieName,
-        config.client_secret
+        config.client_secret,
       );
     }
     const response = await getAccessToken(
@@ -104,7 +104,7 @@ export async function handleOAuth2Callback(
       config.client_id,
       config.client_secret,
       config.redirect_uri,
-      paramCommunication
+      paramCommunication,
     );
     return {
       apiKey: config.extractToken(response),
@@ -114,7 +114,7 @@ export async function handleOAuth2Callback(
   } catch (exception: any) {
     const errorMessage = `Error in handleOAuth2Callback: ${JSON.stringify(
       exception,
-      Object.getOwnPropertyNames(exception)
+      Object.getOwnPropertyNames(exception),
     )} ${util.inspect(exception?.response?.data, { depth: 3 })}`;
     console.error(errorMessage);
     throw new ServerError(500, errorMessage);
@@ -131,11 +131,11 @@ export async function getAccessToken(
   clientId: string,
   clientSecret: string,
   redirect_uri: string,
-  paramCommunication: GetAccessTokenParamCommunication = GetAccessTokenParamCommunication.BODY
+  paramCommunication: GetAccessTokenParamCommunication = GetAccessTokenParamCommunication.BODY,
 ) {
   console.log(`Start: fetching access tokens`);
   const params = {
-    grant_type: "authorization_code",
+    grant_type: 'authorization_code',
     code: authorizationCode,
     client_id: clientId,
     client_secret: clientSecret,
@@ -146,12 +146,12 @@ export async function getAccessToken(
       return await axios.post(accessTokenURL, {}, { params: params });
     case GetAccessTokenParamCommunication.X_WWW_FORM_URL_ENCODED:
       return await axios.post(accessTokenURL, new URLSearchParams(params), {
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       });
     case GetAccessTokenParamCommunication.BODY:
       return await axios.post(accessTokenURL, params);
     default:
-      throw Error("Unexpected parameter communication type");
+      throw Error('Unexpected parameter communication type');
       break;
   }
   console.log(`End: fetching access tokens`);
@@ -162,11 +162,11 @@ export async function refreshToken(
   refresh_token: string,
   clientId: string,
   clientSecret: string,
-  paramCommunication: GetAccessTokenParamCommunication = GetAccessTokenParamCommunication.BODY
+  paramCommunication: GetAccessTokenParamCommunication = GetAccessTokenParamCommunication.BODY,
 ) {
   console.log(`Start: refreshing access tokens`);
   const params = {
-    grant_type: "refresh_token",
+    grant_type: 'refresh_token',
     refresh_token: refresh_token,
     client_id: clientId,
     client_secret: clientSecret,
@@ -176,12 +176,12 @@ export async function refreshToken(
       return await axios.post(accessTokenURL, {}, { params: params });
     case GetAccessTokenParamCommunication.X_WWW_FORM_URL_ENCODED:
       return await axios.post(accessTokenURL, new URLSearchParams(params), {
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       });
     case GetAccessTokenParamCommunication.BODY:
       return await axios.post(accessTokenURL, params);
     default:
-      throw Error("Unexpected parameter communication type");
+      throw Error('Unexpected parameter communication type');
       break;
   }
   console.log(`End: refreshing access tokens`);

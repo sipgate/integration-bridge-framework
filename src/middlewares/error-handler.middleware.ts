@@ -1,11 +1,11 @@
-import { NextFunction, Request, Response } from "express";
-import { ServerError } from "../models";
+import { NextFunction, Request, Response } from 'express';
+import { ServerError } from '../models';
 
 export function errorHandlerMiddleware(
   error: Error | ServerError,
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ): void {
   if (error instanceof ServerError) {
     res.status(error.status).send(error.message);

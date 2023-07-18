@@ -1,19 +1,19 @@
 apiVersion: nautilus.sipgate.cloud/v1alpha1
 kind: Service
 metadata:
-  creationTimestamp: "2023-05-25T09:21:30Z"
+  creationTimestamp: '2023-05-25T09:21:30Z'
   name: integration-bridge-framework
   namespace: default
-  resourceVersion: "1"
+  resourceVersion: '1'
   uid: b46fa541-a466-403b-8c59-4b7aab319756
 spec:
-  backup: "false"
-  containerized: "false"
-  localPersistence: "true"
+  backup: 'false'
+  containerized: 'false'
+  localPersistence: 'true'
   on_call_schedule: bestEffort
-  pciDssRelevant: "false"
+  pciDssRelevant: 'false'
   ports: null
   repositoryType: library
   singleton: unknown
   tlsProvider: unknown
-  virtualized: "true"
+  virtualized: 'true'

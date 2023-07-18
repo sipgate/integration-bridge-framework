@@ -1,9 +1,9 @@
-import { TokenStorageCache } from "../cache";
-import { MemoryStorageAdapter, RedisStorageAdapter } from "../cache/storage";
-import { Config } from "../models";
-import { Token } from "../models/token.model";
+import { TokenStorageCache } from '../cache';
+import { MemoryStorageAdapter, RedisStorageAdapter } from '../cache/storage';
+import { Config } from '../models';
+import { Token } from '../models/token.model';
 
-import { tokenCache } from "..";
+import { tokenCache } from '..';
 
 const REFRESH_MARKER_TTL = 5;
 
@@ -14,7 +14,7 @@ function useCollection(value: string) {
     return value;
   }
 
-  return `${INTEGRATION_NAME}:${value.replace(/:/g, "_")}`;
+  return `${INTEGRATION_NAME}:${value.replace(/:/g, '_')}`;
 }
 
 export type TokenRefreshFn = (config: Config) => Promise<Token>;
@@ -23,21 +23,21 @@ export function getTokenCache() {
   const { REDIS_URL } = process.env;
 
   if (REDIS_URL) {
-    console.log("[TOKEN CACHE] Using Redis cache");
+    console.log('[TOKEN CACHE] Using Redis cache');
     return new TokenStorageCache(new RedisStorageAdapter(REDIS_URL));
   }
 
-  console.log("[TOKEN CACHE] Using memory cache");
+  console.log('[TOKEN CACHE] Using memory cache');
   const { TOKEN_CACHE_TTL } = process.env;
   return new TokenStorageCache(
-    new MemoryStorageAdapter(parseInt(TOKEN_CACHE_TTL || "60"))
+    new MemoryStorageAdapter(parseInt(TOKEN_CACHE_TTL || '60')),
   );
 }
 
 export async function getFreshAccessToken(
   config: Config,
   refreshFn: TokenRefreshFn,
-  force = false
+  force = false,
 ): Promise<string> {
   const sleep = (ms: number) =>
     new Promise((resolve) => setTimeout(resolve, ms));
@@ -64,16 +64,16 @@ export async function getFreshAccessToken(
 
 async function getNewToken(
   config: Config,
-  refreshFn: TokenRefreshFn
+  refreshFn: TokenRefreshFn,
 ): Promise<Token> {
   await tokenCache.set(
     useCollection(config.apiKey),
     {
-      refresh_token: "",
-      access_token: "",
+      refresh_token: '',
+      access_token: '',
       isPending: true,
     },
-    REFRESH_MARKER_TTL
+    REFRESH_MARKER_TTL,
   );
 
   const newToken = { ...(await refreshFn(config)), isPending: false };
@@ -81,7 +81,7 @@ async function getNewToken(
   await tokenCache.set(
     useCollection(config.apiKey),
     newToken,
-    parseInt(process.env.TOKEN_CACHE_TTL || "60")
+    parseInt(process.env.TOKEN_CACHE_TTL || '60'),
   );
 
   return newToken;

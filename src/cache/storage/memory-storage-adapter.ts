@@ -1,6 +1,6 @@
-import LRU from "lru-cache";
-import { StorageAdapter } from "../../models/storage-adapter.model";
-import sizeof from "../../util/size-of";
+import LRU from 'lru-cache';
+import { StorageAdapter } from '../../models/storage-adapter.model';
+import sizeof from '../../util/size-of';
 
 export class MemoryStorageAdapter implements StorageAdapter {
   private cache: LRU<string, unknown>;

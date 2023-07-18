@@ -1,8 +1,8 @@
-import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
-import { RateLimiterMemory } from "rate-limiter-flexible";
-import { infoLogger } from "../logger.util";
+import axios, { AxiosRequestConfig, AxiosResponse } from 'axios';
+import { RateLimiterMemory } from 'rate-limiter-flexible';
+import { infoLogger } from '../logger.util';
 
-const DEFAULT_KEY = "DEFAULT_KEY";
+const DEFAULT_KEY = 'DEFAULT_KEY';
 
 export class RateLimitedAxios {
   rateLimiter: RateLimiterMemory;
@@ -10,7 +10,7 @@ export class RateLimitedAxios {
   constructor(
     allowedCalls: number,
     intervall: number,
-    enableLogging: boolean = false
+    enableLogging: boolean = false,
   ) {
     this.rateLimiter = new RateLimiterMemory({
       points: allowedCalls,
@@ -26,9 +26,9 @@ export class RateLimitedAxios {
     } catch (rateLimiterRes: any) {
       if (this.enableLogging) {
         infoLogger(
-          "checkRateLimitAndWait",
+          'checkRateLimitAndWait',
           `Waiting ${rateLimiterRes.msBeforeNext} to respect rate limit`,
-          key ? key : ""
+          key ? key : '',
         );
       }
       await new Promise((resolve) => {
@@ -41,7 +41,7 @@ export class RateLimitedAxios {
   async get<T = any, R = AxiosResponse<T>, D = any>(
     url: string,
     config?: AxiosRequestConfig<D>,
-    key?: string
+    key?: string,
   ): Promise<R> {
     await this.checkRateLimitAndWait(key);
     return axios.get(url, config);
@@ -50,7 +50,7 @@ export class RateLimitedAxios {
   async delete<T = any, R = AxiosResponse<T>, D = any>(
     url: string,
     config?: AxiosRequestConfig<D>,
-    key?: string
+    key?: string,
   ): Promise<R> {
     await this.checkRateLimitAndWait(key);
     return axios.delete(url, config);
@@ -60,7 +60,7 @@ export class RateLimitedAxios {
     url: string,
     data?: D,
     config?: AxiosRequestConfig<D>,
-    key?: string
+    key?: string,
   ): Promise<R> {
     await this.checkRateLimitAndWait(key);
     return axios.post(url, data, config);
@@ -70,7 +70,7 @@ export class RateLimitedAxios {
     url: string,
     data?: D,
     config?: AxiosRequestConfig<D>,
-    key?: string
+    key?: string,
   ): Promise<R> {
     await this.checkRateLimitAndWait(key);
     return axios.put(url, data, config);
@@ -80,7 +80,7 @@ export class RateLimitedAxios {
     url: string,
     data?: D,
     config?: AxiosRequestConfig<D>,
-    key?: string
+    key?: string,
   ): Promise<R> {
     await this.checkRateLimitAndWait(key);
     return axios.patch(url, data, config);

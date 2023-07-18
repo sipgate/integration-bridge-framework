@@ -1,23 +1,23 @@
-import moment from "moment";
-import { CallDirection, CallState } from "../models";
-import { errorLogger } from "./logger.util";
+import moment from 'moment';
+import { CallDirection, CallState } from '../models';
+import { errorLogger } from './logger.util';
 
 export function getCommentSubject(
   state: CallState,
   direction: CallDirection,
   locale: string,
-  htmlOpen = "",
-  htmlClose = ""
+  htmlOpen = '',
+  htmlClose = '',
 ) {
-  const isGerman = locale.startsWith("de");
+  const isGerman = locale.startsWith('de');
   const isIncoming = direction == CallDirection.IN;
   const directionString = isGerman
     ? isIncoming
-      ? "eingehender"
-      : "ausgehender"
+      ? 'eingehender'
+      : 'ausgehender'
     : isIncoming
-    ? "incoming"
-    : "outgoing";
+    ? 'incoming'
+    : 'outgoing';
 
   const titleEndGerman = `${directionString} Anruf (${getProductName()})`;
   const titleEndEnglish = `${directionString} Call (${getProductName()})`;
@@ -47,16 +47,16 @@ export function getProductName() {
 
   if (!productName)
     errorLogger(
-      "getProductName",
-      "Missing environment variable PRODUCT_NAME, using CLINQ."
+      'getProductName',
+      'Missing environment variable PRODUCT_NAME, using CLINQ.',
     );
 
-  return productName || "CLINQ";
+  return productName || 'CLINQ';
 }
 
 export function getCommentHeader(locale: string) {
-  const isGerman = locale.startsWith("de");
-  return `<h1>${isGerman ? "Notizen" : "Note"} (${getProductName()}):</h1>`;
+  const isGerman = locale.startsWith('de');
+  return `<h1>${isGerman ? 'Notizen' : 'Note'} (${getProductName()}):</h1>`;
 }
 
 export function getCommentContent(note: string, locale: string) {
@@ -66,14 +66,14 @@ export function getCommentContent(note: string, locale: string) {
 export function getCallDuration(
   startTime: number,
   endTime: number,
-  locale: string
+  locale: string,
 ) {
   const start = moment(startTime);
   const end = moment(endTime);
 
   const diff = end.diff(start);
 
-  return `${locale.startsWith("de") ? "Dauer" : "Duration"}: ${moment
+  return `${locale.startsWith('de') ? 'Dauer' : 'Duration'}: ${moment
     .utc(diff)
-    .format("HH:mm:ss")}`;
+    .format('HH:mm:ss')}`;
 }

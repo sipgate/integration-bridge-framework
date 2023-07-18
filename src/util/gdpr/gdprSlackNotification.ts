@@ -1,13 +1,13 @@
-import { Router } from "express";
-import { Request, Response } from "express";
-import * as util from "util";
-import { IncomingWebhook } from "@slack/webhook";
-import { ServerError } from "../../models";
-import { CustomRouter } from "../../models/custom-router.model";
+import { Router } from 'express';
+import { Request, Response } from 'express';
+import * as util from 'util';
+import { IncomingWebhook } from '@slack/webhook';
+import { ServerError } from '../../models';
+import { CustomRouter } from '../../models/custom-router.model';
 
 export function slackNotificationRoute(
   slackWebhookUrl: string,
-  path: string
+  path: string,
 ): Router {
   const route = Router();
   route.post(path, async (req: Request, res: Response) => {
@@ -29,23 +29,23 @@ export function slackNotificationRoute(
 }
 
 export function getGDPRSlackNotificationRouter(
-  slackWebhookUrl: string
+  slackWebhookUrl: string,
 ): CustomRouter[] {
   const gdprRouter: CustomRouter[] = [
     {
-      path: "/gdpr/",
+      path: '/gdpr/',
       router: slackNotificationRoute(
         slackWebhookUrl,
-        "/customers/data_request/"
+        '/customers/data_request/',
       ),
     },
     {
-      path: "/gdpr/",
-      router: slackNotificationRoute(slackWebhookUrl, "/customers/redact/"),
+      path: '/gdpr/',
+      router: slackNotificationRoute(slackWebhookUrl, '/customers/redact/'),
     },
     {
-      path: "/gdpr/",
-      router: slackNotificationRoute(slackWebhookUrl, "/shop/redact/"),
+      path: '/gdpr/',
+      router: slackNotificationRoute(slackWebhookUrl, '/shop/redact/'),
     },
   ];
   return gdprRouter;

@@ -1,19 +1,19 @@
-import { anonymizeKey } from "./anonymize-key";
+import { anonymizeKey } from './anonymize-key';
 
-it("anonymizes valid key correctly", () => {
-  const originalKey = "1n2n3k23j43j23j4bdnc";
-  const anonymizedKey = "***3j23j4bdnc";
+it('anonymizes valid key correctly', () => {
+  const originalKey = '1n2n3k23j43j23j4bdnc';
+  const anonymizedKey = '***3j23j4bdnc';
   expect(anonymizeKey(originalKey)).toEqual(anonymizedKey);
 });
 
-it("anonymizes empty key correctly", () => {
-  const originalKey = "";
-  const anonymizedKey = "UNKNOWN";
+it('anonymizes empty key correctly', () => {
+  const originalKey = '';
+  const anonymizedKey = 'UNKNOWN';
   expect(anonymizeKey(originalKey)).toEqual(anonymizedKey);
 });
 
-it("anonymizes not-string key correctly", () => {
+it('anonymizes not-string key correctly', () => {
   const originalKey = {};
-  const anonymizedKey = "UNKNOWN";
+  const anonymizedKey = 'UNKNOWN';
   expect(anonymizeKey(originalKey)).toEqual(anonymizedKey);
 });

@@ -1,6 +1,6 @@
 export enum CacheItemStateType {
-  CACHED = "CACHED",
-  FETCHING = "FETCHING",
+  CACHED = 'CACHED',
+  FETCHING = 'FETCHING',
 }
 
 export type CacheItemState = {

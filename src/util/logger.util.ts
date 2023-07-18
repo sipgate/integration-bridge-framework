@@ -1,4 +1,4 @@
-import { anonymizeKey } from "./anonymize-key";
+import { anonymizeKey } from './anonymize-key';
 
 /**
  * Logging function equivalent to console.log
@@ -61,17 +61,17 @@ const logger = (
   const formatedMessage = constructLogMessage(
     anonymizedApiKey ? `[${anonymizedApiKey}]` : undefined,
     `[${source}]`,
-    message
+    message,
   );
 
-  if (process.env.NODE_ENV == "development") {
+  if (process.env.NODE_ENV == 'development') {
     logFn(formatedMessage, ...args);
   } else {
     logFn(
       JSON.stringify({
         message: formatedMessage,
         data: args,
-      })
+      }),
     );
   }
 };
@@ -82,6 +82,6 @@ const constructLogMessage = (...args: unknown[]): string =>
     .filter((item) => item != undefined)
     .map((item: unknown) => {
       if (Array.isArray(item) && item.length == 0) return;
-      return typeof item !== "string" ? JSON.stringify(item) : item;
+      return typeof item !== 'string' ? JSON.stringify(item) : item;
     })
-    .join(" ")}`;
+    .join(' ')}`;

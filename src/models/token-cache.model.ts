@@ -1,4 +1,4 @@
-import { TokenWithStatus } from "./token.model";
+import { TokenWithStatus } from './token.model';
 
 export interface TokenCache {
   get: (key: string) => Promise<TokenWithStatus | null>;

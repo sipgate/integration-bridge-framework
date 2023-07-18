@@ -1,29 +1,29 @@
 export const calendarEventsSchema = {
-  title: "CalendarEvents",
-  type: "array",
+  title: 'CalendarEvents',
+  type: 'array',
   items: {
-    type: "object",
+    type: 'object',
     properties: {
       fillDefaults: true,
       id: {
-        type: "string",
+        type: 'string',
       },
       title: {
-        type: ["string", "null"],
+        type: ['string', 'null'],
       },
       description: {
-        type: ["string", "null"],
+        type: ['string', 'null'],
       },
       eventUrl: {
-        type: ["string", "null"],
+        type: ['string', 'null'],
       },
       start: {
-        type: ["number", "null"],
+        type: ['number', 'null'],
       },
       end: {
-        type: ["number", "null"],
+        type: ['number', 'null'],
       },
     },
-    required: ["id", "title", "description", "eventUrl", "start", "end"],
+    required: ['id', 'title', 'description', 'eventUrl', 'start', 'end'],
   },
 };

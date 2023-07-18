@@ -1,6 +1,6 @@
-import Ajv from "ajv";
-import { NextFunction, Request, Response } from "express";
-import { stringify } from "querystring";
+import Ajv from 'ajv';
+import { NextFunction, Request, Response } from 'express';
+import { stringify } from 'querystring';
 import {
   Adapter,
   CalendarEvent,
@@ -12,26 +12,26 @@ import {
   ContactTemplate,
   ContactUpdate,
   ServerError,
-} from ".";
-import { calendarEventsSchema, contactsSchema } from "../schemas";
-import { shouldSkipCallEvent } from "../util/call-event.util";
-import { errorLogger, infoLogger } from "../util/logger.util";
-import { parsePhoneNumber } from "../util/phone-number-utils";
-import { validate } from "../util/validate";
-import { APIContact } from "./api-contact.model";
+} from '.';
+import { calendarEventsSchema, contactsSchema } from '../schemas';
+import { shouldSkipCallEvent } from '../util/call-event.util';
+import { errorLogger, infoLogger } from '../util/logger.util';
+import { parsePhoneNumber } from '../util/phone-number-utils';
+import { validate } from '../util/validate';
+import { APIContact } from './api-contact.model';
 import {
   BridgeRequest,
   IdBridgeRequest,
   IntegrationEntityBridgeRequest,
-} from "./bridge-request.model";
-import { CacheItemStateType } from "./cache-item-state.model";
-import { CalendarFilterOptions } from "./calendar-filter-options.model";
-import { IntegrationErrorType } from "./integration-error.model";
-import { PubSubClient } from "./pubsub-client.model";
+} from './bridge-request.model';
+import { CacheItemStateType } from './cache-item-state.model';
+import { CalendarFilterOptions } from './calendar-filter-options.model';
+import { IntegrationErrorType } from './integration-error.model';
+import { PubSubClient } from './pubsub-client.model';
 import {
   PubSubContactsMessage,
   PubSubContactsState,
-} from "./pubsub-contacts-message.model";
+} from './pubsub-contacts-message.model';
 
 const CONTACT_FETCH_TIMEOUT = 5000;
 
@@ -39,7 +39,7 @@ function sanitizeContact(contact: Contact, locale: string): Contact {
   const result: APIContact = {
     ...contact,
     phoneNumbers: contact.phoneNumbers.map((phoneNumber) =>
-      parsePhoneNumber(phoneNumber, locale)
+      parsePhoneNumber(phoneNumber, locale),
     ),
   };
   return result;
@@ -50,7 +50,7 @@ export class Controller {
   private contactCache: ContactCache | null;
   private ajv: Ajv;
   private pubSubClient: PubSubClient | null = null;
-  private integrationName: string = "UNKNOWN";
+  private integrationName: string = 'UNKNOWN';
   private streamingPromises = new Map<string, Promise<void>>();
 
   constructor(adapter: Adapter, contactCache: ContactCache | null) {
@@ -65,18 +65,18 @@ export class Controller {
       } = process.env;
 
       if (!topicName) {
-        throw new Error("No PUBSUB_TOPIC_NAME provided.");
+        throw new Error('No PUBSUB_TOPIC_NAME provided.');
       }
 
       if (!integrationName) {
-        throw new Error("No INTEGRATION_NAME provided.");
+        throw new Error('No INTEGRATION_NAME provided.');
       }
 
       this.integrationName = integrationName;
       this.pubSubClient = new PubSubClient(topicName);
       infoLogger(
-        "Controller",
-        `Initialized PubSub client with topic ${topicName}`
+        'Controller',
+        `Initialized PubSub client with topic ${topicName}`,
       );
     }
   }
@@ -84,34 +84,34 @@ export class Controller {
   public async getContacts(
     req: BridgeRequest<unknown>,
     res: Response,
-    next: NextFunction
+    next: NextFunction,
   ): Promise<void> {
     const { providerConfig } = req;
 
     if (!providerConfig) {
-      throw new ServerError(400, "Missing parameters");
+      throw new ServerError(400, 'Missing parameters');
     }
 
     try {
-      infoLogger("getContacts", "START", providerConfig.apiKey);
+      infoLogger('getContacts', 'START', providerConfig.apiKey);
 
       const fetchContacts = async (): Promise<Contact[]> => {
         if (!this.adapter.getContacts) {
-          throw new ServerError(501, "Fetching contacts is not implemented");
+          throw new ServerError(501, 'Fetching contacts is not implemented');
         }
 
-        infoLogger("getContacts", `Fetching contacts…`, providerConfig.apiKey);
+        infoLogger('getContacts', `Fetching contacts…`, providerConfig.apiKey);
 
         const fetchedContacts: Contact[] = await this.adapter.getContacts(
-          providerConfig
+          providerConfig,
         );
 
         if (!validate(this.ajv, contactsSchema, fetchedContacts)) {
-          throw new ServerError(500, "Invalid contacts received");
+          throw new ServerError(500, 'Invalid contacts received');
         }
 
         return fetchedContacts.map((contact) =>
-          sanitizeContact(contact, providerConfig.locale)
+          sanitizeContact(contact, providerConfig.locale),
         );
       };
 
@@ -119,16 +119,16 @@ export class Controller {
         ? this.contactCache.get(providerConfig.apiKey, fetchContacts)
         : fetchContacts();
 
-      const timeoutPromise: Promise<"TIMEOUT"> = new Promise((resolve) =>
-        setTimeout(() => resolve("TIMEOUT"), CONTACT_FETCH_TIMEOUT)
+      const timeoutPromise: Promise<'TIMEOUT'> = new Promise((resolve) =>
+        setTimeout(() => resolve('TIMEOUT'), CONTACT_FETCH_TIMEOUT),
       );
 
       const raceResult = await Promise.race([fetcherPromise, timeoutPromise]);
-      if (raceResult === "TIMEOUT") {
+      if (raceResult === 'TIMEOUT') {
         infoLogger(
-          "getContacts",
+          'getContacts',
           `Fetching too slow, returning empty array.`,
-          providerConfig.apiKey
+          providerConfig.apiKey,
         );
       }
 
@@ -139,25 +139,25 @@ export class Controller {
       const contactsCount = responseContacts.length;
 
       infoLogger(
-        "getContacts",
+        'getContacts',
         `Found ${contactsCount} cached contacts`,
-        providerConfig.apiKey
+        providerConfig.apiKey,
       );
 
       if (
         !Array.isArray(raceResult) &&
-        (raceResult === "TIMEOUT" ||
+        (raceResult === 'TIMEOUT' ||
           raceResult.state === CacheItemStateType.FETCHING)
       ) {
-        res.header("X-Fetching-State", "pending");
+        res.header('X-Fetching-State', 'pending');
       }
 
       if (this.adapter.getToken && req.providerConfig) {
         const { apiKey } = await this.adapter.getToken(req.providerConfig);
-        res.header("X-Provider-Key", apiKey);
+        res.header('X-Provider-Key', apiKey);
       }
 
-      infoLogger("getContacts", "END", providerConfig.apiKey);
+      infoLogger('getContacts', 'END', providerConfig.apiKey);
       res.status(200).send(responseContacts);
     } catch (error: any) {
       // prevent logging of refresh errors
@@ -170,10 +170,10 @@ export class Controller {
       }
 
       errorLogger(
-        "getContacts",
-        "Could not get contacts:",
+        'getContacts',
+        'Could not get contacts:',
         providerConfig.apiKey,
-        error
+        error,
       );
       next(error);
     }
@@ -182,32 +182,32 @@ export class Controller {
   public async streamContacts(
     req: BridgeRequest<unknown>,
     res: Response,
-    next: NextFunction
+    next: NextFunction,
   ): Promise<void> {
     const { providerConfig } = req;
 
     if (!providerConfig) {
-      throw new ServerError(400, "Missing parameters");
+      throw new ServerError(400, 'Missing parameters');
     }
 
     const { userId } = providerConfig;
 
     if (!userId) {
-      throw new ServerError(400, "Missing user ID");
+      throw new ServerError(400, 'Missing user ID');
     }
 
     const timestamp = Date.now();
 
     try {
       infoLogger(
-        "streamContacts",
+        'streamContacts',
         `Starting contact streaming ${timestamp}`,
-        providerConfig.apiKey
+        providerConfig.apiKey,
       );
 
       const streamContacts = async () => {
         if (!this.adapter.streamContacts) {
-          throw new ServerError(501, "Streaming contacts is not implemented");
+          throw new ServerError(501, 'Streaming contacts is not implemented');
         }
 
         const iterator = this.adapter.streamContacts(providerConfig);
@@ -219,14 +219,14 @@ export class Controller {
 
           try {
             if (!validate(this.ajv, contactsSchema, contacts)) {
-              throw new Error("Invalid contacts received");
+              throw new Error('Invalid contacts received');
             }
 
             const message: PubSubContactsMessage = {
               userId,
               timestamp,
               contacts: contacts.map((contact) =>
-                sanitizeContact(contact, providerConfig.locale)
+                sanitizeContact(contact, providerConfig.locale),
               ),
               state: PubSubContactsState.IN_PROGRESS,
               integrationName: this.integrationName,
@@ -235,10 +235,10 @@ export class Controller {
             await this.pubSubClient?.publishMessage(message);
           } catch (error) {
             errorLogger(
-              "streamContacts",
+              'streamContacts',
               `Could not publish contacts`,
               providerConfig.apiKey,
-              error
+              error,
             );
           } finally {
             result = await iterator.next();
@@ -249,11 +249,11 @@ export class Controller {
       const streamingPromise = streamContacts()
         .catch((error) =>
           errorLogger(
-            "streamContacts",
-            "Could not stream contacts",
+            'streamContacts',
+            'Could not stream contacts',
             providerConfig.apiKey,
-            error
-          )
+            error,
+          ),
         )
         .finally(() => {
           this.pubSubClient?.publishMessage({
@@ -270,10 +270,10 @@ export class Controller {
 
       if (this.adapter.getToken && req.providerConfig) {
         const { apiKey } = await this.adapter.getToken(req.providerConfig);
-        res.header("X-Provider-Key", apiKey);
+        res.header('X-Provider-Key', apiKey);
       }
 
-      infoLogger("streamContacts", "END", providerConfig.apiKey);
+      infoLogger('streamContacts', 'END', providerConfig.apiKey);
 
       res.status(200).send({ timestamp });
     } catch (error: any) {
@@ -287,10 +287,10 @@ export class Controller {
       }
 
       errorLogger(
-        "streamContacts",
-        "Could not stream contacts",
+        'streamContacts',
+        'Could not stream contacts',
         providerConfig.apiKey,
-        error
+        error,
       );
       next(error);
     }
@@ -299,49 +299,49 @@ export class Controller {
   public async createContact(
     req: BridgeRequest<ContactTemplate>,
     res: Response,
-    next: NextFunction
+    next: NextFunction,
   ): Promise<void> {
-    const { providerConfig: { apiKey = "", locale = "" } = {} } = req;
+    const { providerConfig: { apiKey = '', locale = '' } = {} } = req;
     try {
-      infoLogger("createContact", "START", apiKey);
+      infoLogger('createContact', 'START', apiKey);
 
       if (!this.adapter.createContact) {
-        throw new ServerError(501, "Creating contacts is not implemented");
+        throw new ServerError(501, 'Creating contacts is not implemented');
       }
 
       if (!req.providerConfig) {
-        throw new ServerError(400, "Missing config parameters");
+        throw new ServerError(400, 'Missing config parameters');
       }
-      infoLogger("createContact", "Creating contact", apiKey);
+      infoLogger('createContact', 'Creating contact', apiKey);
 
       const contact: Contact = await this.adapter.createContact(
         req.providerConfig,
-        req.body
+        req.body,
       );
 
       const valid = validate(this.ajv, contactsSchema, [contact]);
 
       if (!valid) {
         errorLogger(
-          "createContact",
-          "Invalid contact provided by adapter",
+          'createContact',
+          'Invalid contact provided by adapter',
           apiKey,
-          this.ajv.errorsText()
+          this.ajv.errorsText(),
         );
-        throw new ServerError(400, "Invalid contact provided by adapter");
+        throw new ServerError(400, 'Invalid contact provided by adapter');
       }
 
       infoLogger(
-        "createContact",
+        'createContact',
         `Contact with id ${contact.id} created`,
-        apiKey
+        apiKey,
       );
 
       const sanitizedContact: Contact = sanitizeContact(contact, locale);
 
       if (this.adapter.getToken && req.providerConfig) {
         const { apiKey } = await this.adapter.getToken(req.providerConfig);
-        res.header("X-Provider-Key", apiKey);
+        res.header('X-Provider-Key', apiKey);
       }
       res.status(200).send(sanitizedContact);
 
@@ -352,7 +352,7 @@ export class Controller {
         }
       }
 
-      infoLogger("createContact", "END", apiKey);
+      infoLogger('createContact', 'END', apiKey);
     } catch (error) {
       // prevent logging of refresh errors
       if (
@@ -364,12 +364,12 @@ export class Controller {
       }
 
       errorLogger(
-        "createContact",
-        "Could not create contact:",
+        'createContact',
+        'Could not create contact:',
         apiKey,
-        error || "Unknown"
+        error || 'Unknown',
       );
-      errorLogger("createContact", "Entity", apiKey, req.body);
+      errorLogger('createContact', 'Entity', apiKey, req.body);
       next(error);
     }
   }
@@ -377,48 +377,48 @@ export class Controller {
   public async updateContact(
     req: IdBridgeRequest<ContactUpdate>,
     res: Response,
-    next: NextFunction
+    next: NextFunction,
   ): Promise<void> {
-    const { providerConfig: { apiKey = "", locale = "" } = {} } = req;
+    const { providerConfig: { apiKey = '', locale = '' } = {} } = req;
     try {
       if (!this.adapter.updateContact) {
-        throw new ServerError(501, "Updating contacts is not implemented");
+        throw new ServerError(501, 'Updating contacts is not implemented');
       }
 
       if (!req.providerConfig) {
-        throw new ServerError(400, "Missing config parameters");
+        throw new ServerError(400, 'Missing config parameters');
       }
 
-      infoLogger("updateContact", "Updating contact", apiKey);
+      infoLogger('updateContact', 'Updating contact', apiKey);
 
       const contact: Contact = await this.adapter.updateContact(
         req.providerConfig,
         req.params.id,
-        req.body
+        req.body,
       );
 
       const valid = validate(this.ajv, contactsSchema, [contact]);
       if (!valid) {
         errorLogger(
-          "updateContact",
-          "Invalid contact provided by adapter",
+          'updateContact',
+          'Invalid contact provided by adapter',
           apiKey,
-          this.ajv.errorsText()
+          this.ajv.errorsText(),
         );
-        throw new ServerError(400, "Invalid contact provided by adapter");
+        throw new ServerError(400, 'Invalid contact provided by adapter');
       }
 
       infoLogger(
-        "updateContact",
+        'updateContact',
         `Contact with id ${contact.id} updated`,
-        apiKey
+        apiKey,
       );
 
       const sanitizedContact: Contact = sanitizeContact(contact, locale);
 
       if (this.adapter.getToken && req.providerConfig) {
         const { apiKey } = await this.adapter.getToken(req.providerConfig);
-        res.header("X-Provider-Key", apiKey);
+        res.header('X-Provider-Key', apiKey);
       }
       res.status(200).send(sanitizedContact);
 
@@ -426,13 +426,13 @@ export class Controller {
         const contacts = await this.contactCache.get(apiKey);
         if (Array.isArray(contacts)) {
           const updatedCache: Contact[] = contacts.map((entry) =>
-            entry.id === sanitizedContact.id ? sanitizedContact : entry
+            entry.id === sanitizedContact.id ? sanitizedContact : entry,
           );
           await this.contactCache.set(apiKey, updatedCache);
         }
       }
 
-      infoLogger("updateContact", "END", apiKey);
+      infoLogger('updateContact', 'END', apiKey);
     } catch (error) {
       // prevent logging of refresh errors
       if (
@@ -444,12 +444,12 @@ export class Controller {
       }
 
       errorLogger(
-        "updateContact",
-        "Could not update contact:",
+        'updateContact',
+        'Could not update contact:',
         apiKey,
-        error || "Unknown"
+        error || 'Unknown',
       );
-      errorLogger("updateContact", "Entity", apiKey, req.body);
+      errorLogger('updateContact', 'Entity', apiKey, req.body);
       next(error);
     }
   }
@@ -457,48 +457,48 @@ export class Controller {
   public async deleteContact(
     req: IdBridgeRequest<unknown>,
     res: Response,
-    next: NextFunction
+    next: NextFunction,
   ): Promise<void> {
-    const { providerConfig: { apiKey = "" } = {} } = req;
+    const { providerConfig: { apiKey = '' } = {} } = req;
     try {
-      infoLogger("deleteContact", "START", apiKey);
+      infoLogger('deleteContact', 'START', apiKey);
 
       if (!this.adapter.deleteContact) {
-        throw new ServerError(501, "Deleting contacts is not implemented");
+        throw new ServerError(501, 'Deleting contacts is not implemented');
       }
 
       if (!req.providerConfig) {
-        throw new ServerError(400, "Missing config parameters");
+        throw new ServerError(400, 'Missing config parameters');
       }
 
-      infoLogger("deleteContact", "Deleting contact", apiKey);
+      infoLogger('deleteContact', 'Deleting contact', apiKey);
 
       const contactId = req.params.id;
       await this.adapter.deleteContact(req.providerConfig, contactId);
 
       if (this.adapter.getToken && req.providerConfig) {
         const { apiKey } = await this.adapter.getToken(req.providerConfig);
-        res.header("X-Provider-Key", apiKey);
+        res.header('X-Provider-Key', apiKey);
       }
       res.status(200).send();
 
       infoLogger(
-        "deleteContact",
+        'deleteContact',
         `Contact with id ${contactId} deleted`,
-        apiKey
+        apiKey,
       );
 
       if (this.contactCache) {
         const contacts = await this.contactCache.get(apiKey);
         if (Array.isArray(contacts)) {
           const updatedCache: Contact[] = contacts.filter(
-            (entry) => entry.id !== contactId
+            (entry) => entry.id !== contactId,
           );
           await this.contactCache.set(apiKey, updatedCache);
         }
       }
 
-      infoLogger("deleteContact", "END", apiKey);
+      infoLogger('deleteContact', 'END', apiKey);
     } catch (error) {
       // prevent logging of refresh errors
       if (
@@ -510,10 +510,10 @@ export class Controller {
       }
 
       errorLogger(
-        "deleteContact",
-        "Could not delete contact:",
+        'deleteContact',
+        'Could not delete contact:',
         apiKey,
-        error || "Unknown"
+        error || 'Unknown',
       );
       next(error);
     }
@@ -522,31 +522,31 @@ export class Controller {
   public async getCalendarEvents(
     req: BridgeRequest<unknown>,
     res: Response,
-    next: NextFunction
+    next: NextFunction,
   ): Promise<void> {
     const {
-      providerConfig: { apiKey = "" } = {},
+      providerConfig: { apiKey = '' } = {},
       query: { start, end },
     } = req;
     try {
-      infoLogger("getCalendarEvents", "START", apiKey);
+      infoLogger('getCalendarEvents', 'START', apiKey);
 
       if (!this.adapter.getCalendarEvents) {
         throw new ServerError(
           501,
-          "Fetching calendar events is not implemented"
+          'Fetching calendar events is not implemented',
         );
       }
 
       if (!req.providerConfig) {
-        errorLogger("getCalendarEvents", "Missing config parameters", apiKey);
-        throw new ServerError(400, "Missing config parameters");
+        errorLogger('getCalendarEvents', 'Missing config parameters', apiKey);
+        throw new ServerError(400, 'Missing config parameters');
       }
 
-      infoLogger("getCalendarEvents", "Fetching calendar events", apiKey);
+      infoLogger('getCalendarEvents', 'Fetching calendar events', apiKey);
 
       const filter: CalendarFilterOptions | null =
-        typeof start === "string" && typeof end === "string"
+        typeof start === 'string' && typeof end === 'string'
           ? {
               start: Number(start),
               end: Number(end),
@@ -559,30 +559,30 @@ export class Controller {
       const valid = validate(this.ajv, calendarEventsSchema, calendarEvents);
       if (!valid) {
         errorLogger(
-          "getCalendarEvents",
+          'getCalendarEvents',
           `Invalid calendar events provided by adapter`,
           apiKey,
-          this.ajv.errorsText()
+          this.ajv.errorsText(),
         );
         throw new ServerError(
           400,
-          "Invalid calendar events provided by adapter"
+          'Invalid calendar events provided by adapter',
         );
       }
 
       infoLogger(
-        "getCalendarEvents",
+        'getCalendarEvents',
         `Found ${calendarEvents.length} events`,
-        apiKey
+        apiKey,
       );
       res.status(200).send(calendarEvents);
-      infoLogger("getCalendarEvents", `END`, apiKey);
+      infoLogger('getCalendarEvents', `END`, apiKey);
     } catch (error) {
       errorLogger(
-        "getCalendarEvents",
+        'getCalendarEvents',
         `Could not get calendar events:`,
         apiKey,
-        error || "Unknown"
+        error || 'Unknown',
       );
       next(error);
     }
@@ -591,24 +591,24 @@ export class Controller {
   public async createCalendarEvent(
     req: BridgeRequest<CalendarEventTemplate>,
     res: Response,
-    next: NextFunction
+    next: NextFunction,
   ): Promise<void> {
-    const { providerConfig: { apiKey = "" } = {} } = req;
+    const { providerConfig: { apiKey = '' } = {} } = req;
     try {
-      infoLogger("createCalendarEvent", `START`, apiKey);
+      infoLogger('createCalendarEvent', `START`, apiKey);
 
       if (!this.adapter.createCalendarEvent) {
         throw new ServerError(
           501,
-          "Creating calendar events is not implemented"
+          'Creating calendar events is not implemented',
         );
       }
 
       if (!req.providerConfig) {
-        throw new ServerError(400, "Missing config parameters");
+        throw new ServerError(400, 'Missing config parameters');
       }
 
-      infoLogger("createCalendarEvent", `Creating calendar event`, apiKey);
+      infoLogger('createCalendarEvent', `Creating calendar event`, apiKey);
 
       const calendarEvent: CalendarEvent =
         await this.adapter.createCalendarEvent(req.providerConfig, req.body);
@@ -616,26 +616,26 @@ export class Controller {
       const valid = validate(this.ajv, calendarEventsSchema, [calendarEvent]);
       if (!valid) {
         errorLogger(
-          "createCalendarEvent",
-          "Invalid calendar event provided by adapter",
+          'createCalendarEvent',
+          'Invalid calendar event provided by adapter',
           apiKey,
-          this.ajv.errorsText()
+          this.ajv.errorsText(),
         );
         throw new ServerError(
           400,
-          "Invalid calendar event provided by adapter"
+          'Invalid calendar event provided by adapter',
         );
       }
-      infoLogger("createCalendarEvent", `END`, apiKey);
+      infoLogger('createCalendarEvent', `END`, apiKey);
       res.status(200).send(calendarEvent);
     } catch (error) {
       errorLogger(
-        "createCalendarEvent",
-        "Could not create calendar event:",
+        'createCalendarEvent',
+        'Could not create calendar event:',
         apiKey,
-        error || "Unknown"
+        error || 'Unknown',
       );
-      errorLogger("createCalendarEvent", "Entity", apiKey, req.body);
+      errorLogger('createCalendarEvent', 'Entity', apiKey, req.body);
       next(error);
     }
   }
@@ -643,54 +643,54 @@ export class Controller {
   public async updateCalendarEvent(
     req: IdBridgeRequest<CalendarEventTemplate>,
     res: Response,
-    next: NextFunction
+    next: NextFunction,
   ): Promise<void> {
-    const { providerConfig: { apiKey = "" } = {} } = req;
+    const { providerConfig: { apiKey = '' } = {} } = req;
     try {
-      infoLogger("updateCalendarEvent", `START`, apiKey);
+      infoLogger('updateCalendarEvent', `START`, apiKey);
       if (!this.adapter.updateCalendarEvent) {
         throw new ServerError(
           501,
-          "Updating calendar events is not implemented"
+          'Updating calendar events is not implemented',
         );
       }
 
       if (!req.providerConfig) {
-        throw new ServerError(400, "Missing config parameters");
+        throw new ServerError(400, 'Missing config parameters');
       }
-      infoLogger("updateCalendarEvent", `Updating calendar event`, apiKey);
+      infoLogger('updateCalendarEvent', `Updating calendar event`, apiKey);
 
       const calendarEvent: CalendarEvent =
         await this.adapter.updateCalendarEvent(
           req.providerConfig,
           req.params.id,
-          req.body
+          req.body,
         );
 
       const valid = validate(this.ajv, calendarEventsSchema, [calendarEvent]);
       if (!valid) {
         errorLogger(
-          "updateCalendarEvent",
+          'updateCalendarEvent',
           `Invalid calendar event provided by adapter`,
           apiKey,
-          this.ajv.errorsText()
+          this.ajv.errorsText(),
         );
         throw new ServerError(
           400,
-          "Invalid calendar event provided by adapter"
+          'Invalid calendar event provided by adapter',
         );
       }
-      infoLogger("updateCalendarEvent", `END`, apiKey);
+      infoLogger('updateCalendarEvent', `END`, apiKey);
 
       res.status(200).send(calendarEvent);
     } catch (error) {
       errorLogger(
-        "updateCalendarEvent",
+        'updateCalendarEvent',
         `Could not update calendar event:`,
         apiKey,
-        error || "Unknown"
+        error || 'Unknown',
       );
-      errorLogger("updateCalendarEvent", "Entity", apiKey, req.body);
+      errorLogger('updateCalendarEvent', 'Entity', apiKey, req.body);
       next(error);
     }
   }
@@ -698,32 +698,32 @@ export class Controller {
   public async deleteCalendarEvent(
     req: IdBridgeRequest<unknown>,
     res: Response,
-    next: NextFunction
+    next: NextFunction,
   ): Promise<void> {
-    const { providerConfig: { apiKey = "" } = {} } = req;
+    const { providerConfig: { apiKey = '' } = {} } = req;
     try {
-      infoLogger("deleteCalendarEvent", `START`, apiKey);
+      infoLogger('deleteCalendarEvent', `START`, apiKey);
 
       if (!this.adapter.deleteCalendarEvent) {
         throw new ServerError(
           501,
-          "Deleting calendar events is not implemented"
+          'Deleting calendar events is not implemented',
         );
       }
 
       if (!req.providerConfig) {
-        throw new ServerError(400, "Missing config parameters");
+        throw new ServerError(400, 'Missing config parameters');
       }
-      infoLogger("deleteCalendarEvent", `Deleting calendar event`, apiKey);
+      infoLogger('deleteCalendarEvent', `Deleting calendar event`, apiKey);
       await this.adapter.deleteCalendarEvent(req.providerConfig, req.params.id);
-      infoLogger("deleteCalendarEvent", `END`, apiKey);
+      infoLogger('deleteCalendarEvent', `END`, apiKey);
       res.status(200).send();
     } catch (error) {
       errorLogger(
-        "deleteCalendarEvent",
+        'deleteCalendarEvent',
         `Could not delete calendar event:`,
         apiKey,
-        error || "Unknown"
+        error || 'Unknown',
       );
       next(error);
     }
@@ -738,68 +738,68 @@ export class Controller {
   public async handleCallEvent(
     req: BridgeRequest<CallEvent>,
     res: Response,
-    next: NextFunction
+    next: NextFunction,
   ): Promise<void> {
     const { providerConfig } = req;
 
     try {
-      infoLogger("handleCallEvent", `START`, providerConfig?.apiKey);
+      infoLogger('handleCallEvent', `START`, providerConfig?.apiKey);
       if (!providerConfig) {
-        throw new ServerError(400, "Missing config parameters");
+        throw new ServerError(400, 'Missing config parameters');
       }
 
       if (!this.adapter.handleCallEvent) {
-        throw new ServerError(501, "Handling call event is not implemented");
+        throw new ServerError(501, 'Handling call event is not implemented');
       }
 
       if (shouldSkipCallEvent(req.body)) {
         infoLogger(
-          "handleCallEvent",
+          'handleCallEvent',
           `Skipping call event for call id ${req.body.id}`,
-          providerConfig.apiKey
+          providerConfig.apiKey,
         );
-        res.status(200).send("Skipping call event");
+        res.status(200).send('Skipping call event');
         return;
       }
 
       infoLogger(
-        "handleCallEvent",
+        'handleCallEvent',
         `Handling call event`,
-        providerConfig.apiKey
+        providerConfig.apiKey,
       );
 
       const integrationCallEventRef = await this.adapter.handleCallEvent(
         providerConfig,
-        req.body
+        req.body,
       );
 
-      if (integrationCallEventRef != "")
+      if (integrationCallEventRef != '')
         infoLogger(
-          "handleCallEvent",
+          'handleCallEvent',
           `CallEvent with refId ${integrationCallEventRef} created!`,
-          providerConfig.apiKey
+          providerConfig.apiKey,
         );
       else
         infoLogger(
-          "handleCallEvent",
+          'handleCallEvent',
           `Did not create callEvent`,
-          providerConfig.apiKey
+          providerConfig.apiKey,
         );
 
-      infoLogger("handleCallEvent", `END`, providerConfig.apiKey);
+      infoLogger('handleCallEvent', `END`, providerConfig.apiKey);
       res.status(200).send(integrationCallEventRef);
     } catch (error) {
       errorLogger(
-        "handleCallEvent",
-        "Could not handle call event:",
+        'handleCallEvent',
+        'Could not handle call event:',
         providerConfig?.apiKey,
-        error || "Unknown"
+        error || 'Unknown',
       );
       errorLogger(
-        "handleCallEvent",
-        "Entity",
+        'handleCallEvent',
+        'Entity',
         providerConfig?.apiKey,
-        req.body
+        req.body,
       );
       next(error);
     }
@@ -808,36 +808,36 @@ export class Controller {
   public async handleConnectedEvent(
     req: BridgeRequest<unknown>,
     res: Response,
-    next: NextFunction
+    next: NextFunction,
   ): Promise<void> {
-    const { providerConfig: { apiKey = "" } = {} } = req;
+    const { providerConfig: { apiKey = '' } = {} } = req;
     try {
-      infoLogger("handleConnectedEvent", `START`, apiKey);
+      infoLogger('handleConnectedEvent', `START`, apiKey);
 
       if (!this.adapter.handleConnectedEvent) {
         throw new ServerError(
           501,
-          "Handling connected event is not implemented"
+          'Handling connected event is not implemented',
         );
       }
 
       if (!req.providerConfig) {
-        throw new ServerError(400, "Missing config parameters");
+        throw new ServerError(400, 'Missing config parameters');
       }
-      infoLogger("handleConnectedEvent", `Handling connected event`, apiKey);
+      infoLogger('handleConnectedEvent', `Handling connected event`, apiKey);
 
       await this.adapter.handleConnectedEvent(req.providerConfig);
 
-      infoLogger("handleConnectedEvent", `END`, apiKey);
+      infoLogger('handleConnectedEvent', `END`, apiKey);
       res.status(200).send();
     } catch (error) {
       errorLogger(
-        "handleConnectedEvent",
+        'handleConnectedEvent',
         `Could not handle connected event:`,
         apiKey,
-        error || "Unknown"
+        error || 'Unknown',
       );
-      errorLogger("handleConnectedEvent", "Entity", apiKey, req.body);
+      errorLogger('handleConnectedEvent', 'Entity', apiKey, req.body);
       next(error);
     }
   }
@@ -851,32 +851,32 @@ export class Controller {
   public async updateCallEvent(
     req: BridgeRequest<CallEvent>,
     res: Response,
-    next: NextFunction
+    next: NextFunction,
   ): Promise<void> {
-    const { providerConfig: { apiKey = "" } = {}, body, params } = req;
+    const { providerConfig: { apiKey = '' } = {}, body, params } = req;
 
     try {
-      infoLogger("updateCallEvent", `START`, apiKey);
+      infoLogger('updateCallEvent', `START`, apiKey);
       if (!this.adapter.updateCallEvent) {
-        throw new ServerError(501, "Updating call events is not implemented");
+        throw new ServerError(501, 'Updating call events is not implemented');
       }
 
       if (!req.providerConfig) {
-        throw new ServerError(400, "Missing config parameters");
+        throw new ServerError(400, 'Missing config parameters');
       }
-      infoLogger("updateCallEvent", `Updating call event`, apiKey);
+      infoLogger('updateCallEvent', `Updating call event`, apiKey);
 
       await this.adapter.updateCallEvent(req.providerConfig, params.id, body);
-      infoLogger("updateCallEvent", `END`, apiKey);
+      infoLogger('updateCallEvent', `END`, apiKey);
       res.status(200).send();
     } catch (error) {
       errorLogger(
-        "updateCallEvent",
+        'updateCallEvent',
         `Could not update call event:`,
         apiKey,
-        error || "Unknown"
+        error || 'Unknown',
       );
-      errorLogger("updateCallEvent", "Entity", apiKey, req.body);
+      errorLogger('updateCallEvent', 'Entity', apiKey, req.body);
       next(error);
     }
   }
@@ -884,57 +884,57 @@ export class Controller {
   public async createCallLogForPhoneNumber(
     req: BridgeRequest<CallEvent>,
     res: Response,
-    next: NextFunction
+    next: NextFunction,
   ): Promise<void> {
     const { providerConfig } = req;
 
     try {
       infoLogger(
-        "createCallLogForPhoneNumber",
+        'createCallLogForPhoneNumber',
         `START`,
-        providerConfig?.apiKey
+        providerConfig?.apiKey,
       );
 
       if (!providerConfig) {
-        throw new ServerError(400, "Missing config parameters");
+        throw new ServerError(400, 'Missing config parameters');
       }
 
       if (!this.adapter.createCallLogForPhoneNumber) {
         throw new ServerError(
           501,
-          "Creating call log for phoneNumber is not implemented"
+          'Creating call log for phoneNumber is not implemented',
         );
       }
 
       if (shouldSkipCallEvent(req.body)) {
         infoLogger(
-          "createCallLogForPhoneNumber",
+          'createCallLogForPhoneNumber',
           `Skipping call log for call id ${req.body.id}`,
-          providerConfig.apiKey
+          providerConfig.apiKey,
         );
         res.status(200).send([]);
         return;
       }
 
       infoLogger(
-        "createCallLogForPhoneNumber",
+        'createCallLogForPhoneNumber',
         `Creating call Log for PhoneNumber…`,
-        providerConfig.apiKey
+        providerConfig.apiKey,
       );
 
       const loggedEntities = await this.adapter.createCallLogForPhoneNumber(
         providerConfig,
-        req.body
+        req.body,
       );
 
-      infoLogger("createCallLogForPhoneNumber", `END`, providerConfig.apiKey);
+      infoLogger('createCallLogForPhoneNumber', `END`, providerConfig.apiKey);
       res.status(200).send(loggedEntities);
     } catch (error) {
       errorLogger(
-        "createCallLogForPhoneNumber",
-        "Could not create call log for phoneNumber:",
+        'createCallLogForPhoneNumber',
+        'Could not create call log for phoneNumber:',
         providerConfig?.apiKey,
-        error || "Unknown"
+        error || 'Unknown',
       );
       next(error);
     }
@@ -943,62 +943,62 @@ export class Controller {
   public async createOrUpdateCallLogsForEntities(
     req: BridgeRequest<CallEventWithIntegrationEntities>,
     res: Response,
-    next: NextFunction
+    next: NextFunction,
   ): Promise<void> {
     const { providerConfig } = req;
 
     try {
       infoLogger(
-        "createOrUpdateCallLogForEntities",
+        'createOrUpdateCallLogForEntities',
         `START`,
-        providerConfig?.apiKey
+        providerConfig?.apiKey,
       );
 
       if (!providerConfig) {
-        throw new ServerError(400, "Missing config parameters");
+        throw new ServerError(400, 'Missing config parameters');
       }
 
       if (!this.adapter.createOrUpdateCallLogForEntities) {
         throw new ServerError(
           501,
-          "Updating call log with entities is not implemented"
+          'Updating call log with entities is not implemented',
         );
       }
 
       if (shouldSkipCallEvent(req.body)) {
         infoLogger(
-          "createOrUpdateCallLogForEntities",
+          'createOrUpdateCallLogForEntities',
           `Skipping call log for call id ${req.body.id}`,
-          providerConfig.apiKey
+          providerConfig.apiKey,
         );
         res.status(200).send([]);
         return;
       }
 
       infoLogger(
-        "createOrUpdateCallLogForEntities",
+        'createOrUpdateCallLogForEntities',
         `Creating and updating call Logs…`,
-        providerConfig.apiKey
+        providerConfig.apiKey,
       );
 
       const entitiesWithCallLogReferences =
         await this.adapter.createOrUpdateCallLogForEntities(
           providerConfig,
-          req.body
+          req.body,
         );
 
       infoLogger(
-        "createOrUpdateCallLogForEntities",
+        'createOrUpdateCallLogForEntities',
         `END`,
-        providerConfig.apiKey
+        providerConfig.apiKey,
       );
       res.status(200).send(entitiesWithCallLogReferences);
     } catch (error) {
       errorLogger(
-        "createOrUpdateCallLogForEntities",
-        "Could not update call logs with entities:",
+        'createOrUpdateCallLogForEntities',
+        'Could not update call logs with entities:',
         providerConfig?.apiKey,
-        error || "Unknown"
+        error || 'Unknown',
       );
       next(error);
     }
@@ -1007,39 +1007,39 @@ export class Controller {
   public async getEntity(
     req: IntegrationEntityBridgeRequest,
     res: Response,
-    next: NextFunction
+    next: NextFunction,
   ): Promise<void> {
     const { providerConfig } = req;
     try {
-      infoLogger("getEntity", `START`, providerConfig?.apiKey);
+      infoLogger('getEntity', `START`, providerConfig?.apiKey);
 
       if (!providerConfig) {
-        throw new ServerError(400, "Missing parameters");
+        throw new ServerError(400, 'Missing parameters');
       }
 
       if (!this.adapter.getEntity) {
-        throw new ServerError(501, "Fetching Entity is not implemented");
+        throw new ServerError(501, 'Fetching Entity is not implemented');
       }
 
       const fetchedEntity = await this.adapter.getEntity(
         providerConfig,
         req.params.id,
-        req.params.type
+        req.params.type,
       );
 
       infoLogger(
-        "getEntity",
+        'getEntity',
         `[${JSON.stringify(fetchedEntity)}] `,
-        providerConfig.apiKey
+        providerConfig.apiKey,
       );
-      infoLogger("getEntity", `END`, providerConfig?.apiKey);
+      infoLogger('getEntity', `END`, providerConfig?.apiKey);
       res.status(200).send(fetchedEntity);
     } catch (error) {
       errorLogger(
-        "getEntity",
-        "Could not get entity:",
+        'getEntity',
+        'Could not get entity:',
         providerConfig?.apiKey,
-        error
+        error,
       );
       next(error);
     }
@@ -1048,7 +1048,7 @@ export class Controller {
   public async getHealth(
     req: BridgeRequest<unknown>,
     res: Response,
-    next: NextFunction
+    next: NextFunction,
   ): Promise<void> {
     try {
       if (this.adapter.getHealth) {
@@ -1056,19 +1056,19 @@ export class Controller {
       }
       res.sendStatus(200);
     } catch (error) {
-      errorLogger("getHealth", "Health check failed:", "", error || "Unknown");
-      next(error || "Internal Server Error");
+      errorLogger('getHealth', 'Health check failed:', '', error || 'Unknown');
+      next(error || 'Internal Server Error');
     }
   }
 
   public async oAuth2Redirect(
     req: Request,
     res: Response,
-    next: NextFunction
+    next: NextFunction,
   ): Promise<void> {
     try {
       if (!this.adapter.getOAuth2RedirectUrl) {
-        throw new ServerError(501, "OAuth2 flow not implemented");
+        throw new ServerError(501, 'OAuth2 flow not implemented');
       }
 
       const redirectUrl = await this.adapter.getOAuth2RedirectUrl(req, res);
@@ -1076,10 +1076,10 @@ export class Controller {
       res.status(200).send({ redirectUrl });
     } catch (error) {
       errorLogger(
-        "oAuth2Redirect",
-        "Could not get OAuth2 redirect URL:",
-        "",
-        error || "Unknown"
+        'oAuth2Redirect',
+        'Could not get OAuth2 redirect URL:',
+        '',
+        error || 'Unknown',
       );
       next(error);
     }
@@ -1088,23 +1088,23 @@ export class Controller {
   public async oAuth2Callback(req: Request, res: Response): Promise<void> {
     let {
       OAUTH2_REDIRECT_URL: redirectUrl,
-      OAUTH2_IDENTIFIER: oAuth2Identifier = "UNKNOWN",
+      OAUTH2_IDENTIFIER: oAuth2Identifier = 'UNKNOWN',
     } = process.env;
 
     if (!redirectUrl) {
-      errorLogger("oAuth2Callback", "OAuth2 Redirect URL not configured!", "");
-      res.status(500).send("OAuth2 Redirect URL not configured!");
+      errorLogger('oAuth2Callback', 'OAuth2 Redirect URL not configured!', '');
+      res.status(500).send('OAuth2 Redirect URL not configured!');
       return;
     }
 
     try {
       if (!this.adapter.handleOAuth2Callback) {
-        throw new ServerError(501, "OAuth2 flow not implemented");
+        throw new ServerError(501, 'OAuth2 flow not implemented');
       }
 
       const { apiKey, apiUrl } = await this.adapter.handleOAuth2Callback(
         req,
-        res
+        res,
       );
 
       const params = stringify({
@@ -1116,10 +1116,10 @@ export class Controller {
       res.redirect(`${redirectUrl}?${params}`);
     } catch (error) {
       errorLogger(
-        "oAuth2Callback",
-        "Unable to save OAuth2 token:",
-        "",
-        error || "Unknown"
+        'oAuth2Callback',
+        'Unable to save OAuth2 token:',
+        '',
+        error || 'Unknown',
       );
       res.redirect(redirectUrl);
     }

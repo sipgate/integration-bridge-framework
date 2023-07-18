@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import { Request, Response } from 'express';
 import {
   CalendarEvent,
   CalendarEventTemplate,
@@ -11,8 +11,8 @@ import {
   ContactUpdate,
   LabeledIntegrationEntity,
   LoggedIntegrationEntity,
-} from ".";
-import { IntegrationEntityType } from "./integration-entity.model";
+} from '.';
+import { IntegrationEntityType } from './integration-entity.model';
 
 export interface Adapter {
   getToken?: (config: Config) => Promise<{ apiKey: string }>;
@@ -20,31 +20,31 @@ export interface Adapter {
   streamContacts?: (config: Config) => AsyncGenerator<Contact[], void, unknown>;
   createContact?: (
     config: Config,
-    contact: ContactTemplate
+    contact: ContactTemplate,
   ) => Promise<Contact>;
   updateContact?: (
     config: Config,
     id: string,
-    contact: ContactUpdate
+    contact: ContactUpdate,
   ) => Promise<Contact>;
   deleteContact?: (config: Config, id: string) => Promise<void>;
   getCalendarEvents?: (
     config: Config,
-    options?: CalendarFilterOptions | null
+    options?: CalendarFilterOptions | null,
   ) => Promise<CalendarEvent[]>;
   createCalendarEvent?: (
     config: Config,
-    event: CalendarEventTemplate
+    event: CalendarEventTemplate,
   ) => Promise<CalendarEvent>;
   updateCalendarEvent?: (
     config: Config,
     id: string,
-    event: CalendarEventTemplate
+    event: CalendarEventTemplate,
   ) => Promise<CalendarEvent>;
   updateCallEvent?: (
     config: Config,
     id: string,
-    event: CallEvent
+    event: CallEvent,
   ) => Promise<void>;
   deleteCalendarEvent?: (config: Config, id: string) => Promise<void>;
   /** @deprecated handleCallEvent should be replaced by createOrUpdateCallLogForEntities.
@@ -53,22 +53,22 @@ export interface Adapter {
   handleCallEvent?: (config: Config, event: CallEvent) => Promise<string>;
   createOrUpdateCallLogForEntities?: (
     config: Config,
-    body: CallEventWithIntegrationEntities
+    body: CallEventWithIntegrationEntities,
   ) => Promise<LoggedIntegrationEntity[]>;
   createCallLogForPhoneNumber?: (
     config: Config,
-    body: CallEvent
+    body: CallEvent,
   ) => Promise<LoggedIntegrationEntity>;
   getEntity?: (
     providerConfig: Config,
     id: string,
-    type: IntegrationEntityType
+    type: IntegrationEntityType,
   ) => Promise<LabeledIntegrationEntity | null>;
   handleConnectedEvent?: (config: Config) => Promise<void>;
   getHealth?: () => Promise<void>;
   getOAuth2RedirectUrl?: (req?: Request, res?: Response) => Promise<string>;
   handleOAuth2Callback?: (
     req: Request,
-    res?: Response
+    res?: Response,
   ) => Promise<{ apiKey: string; apiUrl: string }>;
 }

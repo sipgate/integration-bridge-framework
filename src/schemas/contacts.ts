@@ -1,64 +1,64 @@
 export const contactsSchema = {
-  title: "Contacts",
-  type: "array",
+  title: 'Contacts',
+  type: 'array',
   items: {
-    type: "object",
+    type: 'object',
     properties: {
       fillDefaults: true,
       id: {
-        type: "string",
+        type: 'string',
       },
       email: {
-        type: ["string", "null"],
+        type: ['string', 'null'],
       },
       organization: {
-        type: ["string", "null"],
+        type: ['string', 'null'],
       },
       contactUrl: {
-        type: ["string", "null"],
+        type: ['string', 'null'],
       },
       avatarUrl: {
-        type: ["string", "null"],
+        type: ['string', 'null'],
       },
       name: {
-        type: ["string", "null"],
+        type: ['string', 'null'],
       },
       firstName: {
-        type: ["string", "null"],
+        type: ['string', 'null'],
       },
       lastName: {
-        type: ["string", "null"],
+        type: ['string', 'null'],
       },
       readonly: {
-        type: ["boolean"],
+        type: ['boolean'],
       },
       phoneNumbers: {
-        type: "array",
+        type: 'array',
         items: {
-          type: "object",
+          type: 'object',
           properties: {
             fillDefaults: true,
             label: {
-              type: "string",
+              type: 'string',
             },
             phoneNumber: {
-              type: "string",
+              type: 'string',
             },
           },
-          required: ["label", "phoneNumber"],
+          required: ['label', 'phoneNumber'],
         },
       },
     },
     required: [
-      "id",
-      "name",
-      "firstName",
-      "lastName",
-      "email",
-      "organization",
-      "contactUrl",
-      "avatarUrl",
-      "phoneNumbers",
+      'id',
+      'name',
+      'firstName',
+      'lastName',
+      'email',
+      'organization',
+      'contactUrl',
+      'avatarUrl',
+      'phoneNumbers',
     ],
   },
 };

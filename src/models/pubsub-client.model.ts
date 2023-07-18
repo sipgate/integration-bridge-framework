@@ -1,6 +1,6 @@
-import { PubSub } from "@google-cloud/pubsub";
-import { timeout } from "../util/timeout";
-import { PubSubContactsMessage } from "./pubsub-contacts-message.model";
+import { PubSub } from '@google-cloud/pubsub';
+import { timeout } from '../util/timeout';
+import { PubSubContactsMessage } from './pubsub-contacts-message.model';
 
 const PUBLISH_TIMEOUT = 10_000;
 
@@ -15,7 +15,7 @@ export class PubSubClient {
 
   async publishMessage(message: PubSubContactsMessage) {
     if (!this.topicName) {
-      throw new Error("No pubsub topic name provided.");
+      throw new Error('No pubsub topic name provided.');
     }
 
     const json = JSON.stringify(message);
@@ -26,7 +26,7 @@ export class PubSubClient {
       topic.publishMessage({ data: dataBuffer }),
       timeout(
         PUBLISH_TIMEOUT,
-        "Could not publish message in time. Did you forget to authenticate with GCP? (gcloud auth application-default login)"
+        'Could not publish message in time. Did you forget to authenticate with GCP? (gcloud auth application-default login)',
       ),
     ]);
   }

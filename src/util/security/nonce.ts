@@ -1,6 +1,6 @@
-import { randomBytes } from "crypto";
-import { Request, Response } from "express";
-import Cookies from "cookies";
+import { randomBytes } from 'crypto';
+import { Request, Response } from 'express';
+import Cookies from 'cookies';
 
 export function nonce(): string {
   const length = 15;
@@ -10,7 +10,7 @@ export function nonce(): string {
     .map((byte) => {
       return byte % 10;
     })
-    .join("");
+    .join('');
 
   return nonce;
 }
@@ -19,7 +19,7 @@ export function getNonceFromCookie(
   request: Request,
   response: Response,
   name: string,
-  secret: string
+  secret: string,
 ): string | undefined {
   const cookies = new Cookies(request, response, {
     secure: true,
@@ -33,7 +33,7 @@ export function setNonceCookie(
   res: Response,
   cookieName: string,
   secret: string,
-  state: string
+  state: string,
 ) {
   const cookies = new Cookies(req, res, {
     keys: [secret],
@@ -42,7 +42,7 @@ export function setNonceCookie(
   cookies.set(cookieName, state, {
     signed: true,
     expires: new Date(Date.now() + 60000), // ToDo: MilliSeconds? 10 minuten expire date
-    sameSite: "none",
+    sameSite: 'none',
     secure: true,
   });
 }
@@ -51,7 +51,7 @@ export function deleteNonceCookie(
   req: Request,
   res: Response,
   cookieName: string,
-  secret: string
+  secret: string,
 ) {
   const cookies = new Cookies(req, res, {
     keys: [secret],
