@@ -1,7 +1,7 @@
-import { Request, Response } from 'express';
-import { Security } from '.';
-import * as util from 'util';
 import axios, { AxiosResponse } from 'axios';
+import { Request, Response } from 'express';
+import * as util from 'util';
+import { Security } from '.';
 import { ServerError } from '../models';
 
 export type ExtractTokenFromResponseFn<T> = (response: AxiosResponse) => T;
@@ -125,7 +125,7 @@ export enum GetAccessTokenParamCommunication {
   X_WWW_FORM_URL_ENCODED,
   BODY,
 }
-export async function getAccessToken(
+async function getAccessToken(
   accessTokenURL: string,
   authorizationCode: string,
   clientId: string,
@@ -152,9 +152,7 @@ export async function getAccessToken(
       return await axios.post(accessTokenURL, params);
     default:
       throw Error('Unexpected parameter communication type');
-      break;
   }
-  console.log(`End: fetching access tokens`);
 }
 
 export async function refreshToken(
@@ -182,7 +180,5 @@ export async function refreshToken(
       return await axios.post(accessTokenURL, params);
     default:
       throw Error('Unexpected parameter communication type');
-      break;
   }
-  console.log(`End: refreshing access tokens`);
 }
