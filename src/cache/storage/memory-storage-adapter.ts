@@ -5,7 +5,7 @@ import sizeof from "../../util/size-of";
 export class MemoryStorageAdapter implements StorageAdapter {
   private cache: LRU<string, unknown>;
 
-  constructor() {
+  constructor(ttl?: number) {
     const { MEMORY_CACHE_TTL_MS } = process.env;
     const cacheTtlMs: number =
       Number(MEMORY_CACHE_TTL_MS) || 60 * 60 * 24 * 30 * 1000; // 30 days
@@ -13,7 +13,7 @@ export class MemoryStorageAdapter implements StorageAdapter {
 
     this.cache = new LRU({
       maxSize: maxSizeBytes,
-      ttl: cacheTtlMs,
+      ttl: ttl || cacheTtlMs,
       sizeCalculation: sizeof,
     });
 
