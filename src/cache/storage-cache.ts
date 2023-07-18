@@ -204,25 +204,11 @@ export class StorageCache implements ContactCache {
 export class TokenStorageCache implements TokenCache {
   private LOG_PREFIX = "TOKEN CACHE";
   private storage: StorageAdapter;
-  private cacheRefreshIntervalMs = 30 * 60 * 1000; // 30 minutes
 
   constructor(storageAdapter: StorageAdapter) {
     this.storage = storageAdapter;
 
-    const { CACHE_REFRESH_INTERVAL } = process.env;
-
-    if (CACHE_REFRESH_INTERVAL) {
-      this.cacheRefreshIntervalMs =
-        Math.max(Number(CACHE_REFRESH_INTERVAL), 1) * 1000;
-    }
-
-    infoLogger(
-      this.LOG_PREFIX,
-      `Initialized token storage cache with maximum refresh interval of ${
-        this.cacheRefreshIntervalMs / 1000
-      }s.`,
-      undefined
-    );
+    infoLogger(this.LOG_PREFIX, `Initialized token storage cache.`, undefined);
   }
 
   public async get(key: string): Promise<TokenWithStatus | null> {
@@ -230,7 +216,7 @@ export class TokenStorageCache implements TokenCache {
       infoLogger(this.LOG_PREFIX, "Trying to get token from cache", key);
       return await this.storage.get<TokenWithStatus>(key);
     } catch (e) {
-      errorLogger(this.LOG_PREFIX, `Unable to get contacts from cache`, key, e);
+      errorLogger(this.LOG_PREFIX, `Unable to get token from cache`, key, e);
       return null;
     }
   }
