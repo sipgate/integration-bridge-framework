@@ -18,7 +18,7 @@ function* fetchDataGen(chunkSize: number, items: number): any {
 }
 
 describe('pagination', () => {
-  it('should paginate over all pages (mod != 0)', async () => {
+  it('should resolve all pages (mod != 0)', async () => {
     const chunkSize = 3;
     const totalCount = 8;
 
@@ -56,7 +56,7 @@ describe('pagination', () => {
     ]);
   });
 
-  it('should paginate over all pages (mod == 0)', async () => {
+  it('should resolve all pages (mod == 0)', async () => {
     const chunkSize = 3;
     const totalCount = 9;
 
@@ -95,7 +95,7 @@ describe('pagination', () => {
     ]);
   });
 
-  it('should paginate over all pages (count < chunkSize)', async () => {
+  it('should resolve all pages (count < chunkSize)', async () => {
     const chunkSize = 5;
     const totalCount = 3;
 
@@ -126,5 +126,27 @@ describe('pagination', () => {
       { name: 'idx1', value: 1 },
       { name: 'idx2', value: 2 },
     ]);
+  });
+
+  it('should reject on error', async () => {
+    const fetchData = () =>
+      Promise.reject({
+        data: undefined,
+        status: 500,
+        statusText: 'ERROR',
+        headers: {},
+        config: {},
+      });
+
+    await expect(
+      paginate<Array<any>>(
+        (data, newData) => [...(data || []), ...(newData || [])],
+        (response) => response?.data?.entries,
+        (response) => (response?.data?.entries?.length || 0) < 3,
+        (previousResponse, data) => fetchData(),
+        0,
+        [],
+      ),
+    ).rejects.toHaveProperty('status', 500);
   });
 });
