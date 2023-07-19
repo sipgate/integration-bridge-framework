@@ -16,7 +16,7 @@ import { CustomRoute } from './models/custom-routes.model';
 import { errorLogger, getTokenCache, infoLogger } from './util';
 import { getContactCache } from './util/get-contact-cache';
 
-export let tokenCache: TokenStorageCache;
+export let tokenCache: TokenStorageCache | undefined;
 const PORT: number = Number(process.env.PORT) || 8080;
 
 const app: express.Application = express();
