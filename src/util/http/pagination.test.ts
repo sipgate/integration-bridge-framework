@@ -94,4 +94,37 @@ describe('pagination', () => {
       { name: 'idx8', value: 8 },
     ]);
   });
+
+  it('should paginate over all pages (count < chunkSize)', async () => {
+    const chunkSize = 5;
+    const totalCount = 3;
+
+    const fetchDataIterator = fetchDataGen(chunkSize, totalCount);
+    const fetchData = () =>
+      Promise.resolve({
+        data: {
+          entries: fetchDataIterator.next().value,
+        },
+        status: 200,
+        statusText: 'OK',
+        headers: {},
+        config: {},
+      });
+
+    const data = await paginate<Array<any>>(
+      (data, newData) => [...(data || []), ...(newData || [])],
+      (response) => response?.data?.entries,
+      (response) => (response?.data?.entries?.length || 0) < chunkSize,
+      (previousResponse, data) => fetchData(),
+      0,
+      [],
+    );
+
+    expect(data).toHaveLength(totalCount);
+    expect(data).toEqual([
+      { name: 'idx0', value: 0 },
+      { name: 'idx1', value: 1 },
+      { name: 'idx2', value: 2 },
+    ]);
+  });
 });
