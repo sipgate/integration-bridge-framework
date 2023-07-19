@@ -21,3 +21,4 @@ export * from './env';
 
 export { Http, CallEventHelper, Security, Lang, GDPR, OAuth };
 export * from './token-util';
+export * from './contact-utils';
