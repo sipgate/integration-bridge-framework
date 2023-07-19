@@ -1,4 +1,4 @@
-import { AxiosResponse } from 'axios';
+import type { AxiosResponse } from 'axios';
 
 export type MergeDataFn<T> = (data: T, newData: T) => T;
 export type ExtractDataFromResponseFn<T> = (response: AxiosResponse) => T;
@@ -29,7 +29,7 @@ export async function paginate<T>(
   return new Promise<T>((resolve, reject) => {
     const fetchNextPage = async (data: T, previousResponse?: AxiosResponse) => {
       try {
-        if (previousResponse) {
+        if (previousResponse && delayMs) {
           await sleep(delayMs);
         }
 
