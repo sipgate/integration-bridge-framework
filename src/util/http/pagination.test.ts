@@ -149,4 +149,53 @@ describe('pagination', () => {
       ),
     ).rejects.toHaveProperty('status', 500);
   });
+
+  it('should retry on error if retryOnError is provided', async () => {
+    const chunkSize = 3;
+    const totalCount = 5;
+
+    let errored = false;
+    const fetchDataIterator = fetchDataGen(chunkSize, totalCount);
+    const fetchData = () => {
+      if (!errored) {
+        errored = true;
+        return Promise.reject({
+          data: undefined,
+          status: 500,
+          statusText: 'ERROR',
+          headers: {},
+          config: {},
+        });
+      } else {
+        return Promise.resolve({
+          data: {
+            entries: fetchDataIterator.next().value,
+          },
+          status: 200,
+          statusText: 'OK',
+          headers: {},
+          config: {},
+        });
+      }
+    };
+
+    const data = await paginate<Array<any>>(
+      (data, newData) => [...(data || []), ...(newData || [])],
+      (response) => response?.data?.entries,
+      (response) => (response?.data?.entries?.length || 0) < chunkSize,
+      (previousResponse, data) => fetchData(),
+      0,
+      [],
+      (e) => Promise.resolve(true),
+    );
+
+    expect(data).toHaveLength(totalCount);
+    expect(data).toEqual([
+      { name: 'idx0', value: 0 },
+      { name: 'idx1', value: 1 },
+      { name: 'idx2', value: 2 },
+      { name: 'idx3', value: 3 },
+      { name: 'idx4', value: 4 },
+    ]);
+  });
 });
