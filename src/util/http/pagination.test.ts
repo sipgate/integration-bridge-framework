@@ -3,13 +3,14 @@ import { paginate } from './pagination';
 
 function* fetchDataGen(chunkSize: number, items: number): any {
   let itemsLeft = items;
+  let idx = 0;
 
   while (itemsLeft > 0) {
     const n = Math.max(0, Math.min(chunkSize, itemsLeft));
 
     yield new Array(n).fill(0).map((x) => ({
-      name: `${Math.random()}`,
-      value: Math.random(),
+      name: `idx${idx}`,
+      value: idx++,
     }));
 
     itemsLeft -= n;
@@ -17,11 +18,16 @@ function* fetchDataGen(chunkSize: number, items: number): any {
 }
 
 describe('pagination', () => {
-  it('should paginate over all pages', async () => {
-    const fetchDataIterator = fetchDataGen(3, 8);
+  it('should paginate over all pages (mod != 0)', async () => {
+    const chunkSize = 3;
+    const totalCount = 8;
+
+    const fetchDataIterator = fetchDataGen(chunkSize, totalCount);
     const fetchData = () =>
       Promise.resolve({
-        data: fetchDataIterator.next().value,
+        data: {
+          entries: fetchDataIterator.next().value,
+        },
         status: 200,
         statusText: 'OK',
         headers: {},
@@ -30,13 +36,62 @@ describe('pagination', () => {
 
     const data = await paginate<Array<any>>(
       (data, newData) => [...(data || []), ...(newData || [])],
-      (response) => response?.data,
-      (response) => (response?.data?.length || 0) < 3,
+      (response) => response?.data?.entries,
+      (response) => (response?.data?.entries?.length || 0) < chunkSize,
       (previousResponse, data) => fetchData(),
       0,
       [],
     );
 
-    expect(data).toHaveLength(8);
+    expect(data).toHaveLength(totalCount);
+    expect(data).toEqual([
+      { name: 'idx0', value: 0 },
+      { name: 'idx1', value: 1 },
+      { name: 'idx2', value: 2 },
+      { name: 'idx3', value: 3 },
+      { name: 'idx4', value: 4 },
+      { name: 'idx5', value: 5 },
+      { name: 'idx6', value: 6 },
+      { name: 'idx7', value: 7 },
+    ]);
+  });
+
+  it('should paginate over all pages (mod == 0)', async () => {
+    const chunkSize = 3;
+    const totalCount = 9;
+
+    const fetchDataIterator = fetchDataGen(chunkSize, totalCount);
+    const fetchData = () =>
+      Promise.resolve({
+        data: {
+          entries: fetchDataIterator.next().value,
+        },
+        status: 200,
+        statusText: 'OK',
+        headers: {},
+        config: {},
+      });
+
+    const data = await paginate<Array<any>>(
+      (data, newData) => [...(data || []), ...(newData || [])],
+      (response) => response?.data?.entries,
+      (response) => (response?.data?.entries?.length || 0) < chunkSize,
+      (previousResponse, data) => fetchData(),
+      0,
+      [],
+    );
+
+    expect(data).toHaveLength(totalCount);
+    expect(data).toEqual([
+      { name: 'idx0', value: 0 },
+      { name: 'idx1', value: 1 },
+      { name: 'idx2', value: 2 },
+      { name: 'idx3', value: 3 },
+      { name: 'idx4', value: 4 },
+      { name: 'idx5', value: 5 },
+      { name: 'idx6', value: 6 },
+      { name: 'idx7', value: 7 },
+      { name: 'idx8', value: 8 },
+    ]);
   });
 });
