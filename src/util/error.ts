@@ -19,9 +19,16 @@ export const throwAndDelegateError = (
     : error.message;
 
   if (logMessage) {
-    errorLogger(source, logMessage, apiKey, { message: errorMessage, error });
+    errorLogger(source, logMessage, apiKey, {
+      message: errorMessage,
+      error,
+      stackTrace: error.stack,
+    });
   } else {
-    errorLogger(source, errorMessage, apiKey, { error });
+    errorLogger(source, errorMessage, apiKey, {
+      error,
+      stackTrace: error.stack,
+    });
   }
 
   const err = error as any;
