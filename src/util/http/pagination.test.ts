@@ -1,5 +1,5 @@
 //import type { AxiosResponse } from 'axios';
-import { paginate } from './pagination';
+import { paginate, paginatex } from './pagination';
 
 function* fetchDataGen(chunkSize: number, items: number): any {
   let itemsLeft = items;
@@ -34,11 +34,20 @@ describe('pagination', () => {
         config: {},
       });
 
+    const isEof = jest
+      .fn()
+      .mockImplementation(
+        (response, data) => (response?.data?.entries?.length || 0) < chunkSize,
+      );
+    const invokeNextRequest = jest
+      .fn()
+      .mockImplementation((previousResponse, data) => fetchData());
+
     const data = await paginate<Array<any>>(
       (data, newData) => [...(data || []), ...(newData || [])],
       (response) => response?.data?.entries,
-      (response) => (response?.data?.entries?.length || 0) < chunkSize,
-      (previousResponse, data) => fetchData(),
+      isEof,
+      invokeNextRequest,
       0,
       [],
     );
@@ -54,6 +63,154 @@ describe('pagination', () => {
       { name: 'idx6', value: 6 },
       { name: 'idx7', value: 7 },
     ]);
+    expect(isEof).toHaveBeenCalledTimes(3);
+    expect(isEof).toHaveBeenNthCalledWith(
+      1,
+      {
+        status: 200,
+        statusText: 'OK',
+        headers: {},
+        config: {},
+        data: {
+          entries: [
+            {
+              name: 'idx0',
+              value: 0,
+            },
+            {
+              name: 'idx1',
+              value: 1,
+            },
+            {
+              name: 'idx2',
+              value: 2,
+            },
+          ],
+        },
+      },
+      [
+        {
+          name: 'idx0',
+          value: 0,
+        },
+        {
+          name: 'idx1',
+          value: 1,
+        },
+        {
+          name: 'idx2',
+          value: 2,
+        },
+      ],
+    );
+    expect(isEof).toHaveBeenNthCalledWith(
+      2,
+      {
+        status: 200,
+        statusText: 'OK',
+        headers: {},
+        config: {},
+        data: {
+          entries: [
+            {
+              name: 'idx3',
+              value: 3,
+            },
+            {
+              name: 'idx4',
+              value: 4,
+            },
+            {
+              name: 'idx5',
+              value: 5,
+            },
+          ],
+        },
+      },
+      [
+        {
+          name: 'idx0',
+          value: 0,
+        },
+        {
+          name: 'idx1',
+          value: 1,
+        },
+        {
+          name: 'idx2',
+          value: 2,
+        },
+        {
+          name: 'idx3',
+          value: 3,
+        },
+        {
+          name: 'idx4',
+          value: 4,
+        },
+        {
+          name: 'idx5',
+          value: 5,
+        },
+      ],
+    );
+    expect(isEof).toHaveBeenNthCalledWith(
+      3,
+      {
+        status: 200,
+        statusText: 'OK',
+        headers: {},
+        config: {},
+        data: {
+          entries: [
+            {
+              name: 'idx6',
+              value: 6,
+            },
+            {
+              name: 'idx7',
+              value: 7,
+            },
+          ],
+        },
+      },
+      [
+        {
+          name: 'idx0',
+          value: 0,
+        },
+        {
+          name: 'idx1',
+          value: 1,
+        },
+        {
+          name: 'idx2',
+          value: 2,
+        },
+        {
+          name: 'idx3',
+          value: 3,
+        },
+        {
+          name: 'idx4',
+          value: 4,
+        },
+        {
+          name: 'idx5',
+          value: 5,
+        },
+        {
+          name: 'idx6',
+          value: 6,
+        },
+        {
+          name: 'idx7',
+          value: 7,
+        },
+      ],
+    );
+    expect(invokeNextRequest).toHaveBeenCalledTimes(3);
+    expect(invokeNextRequest).toHaveBeenNthCalledWith(1, undefined, []);
   });
 
   it('should resolve all pages (mod == 0)', async () => {
@@ -72,7 +229,7 @@ describe('pagination', () => {
         config: {},
       });
 
-    const data = await paginate<Array<any>>(
+    const data = await paginatex<Array<any>>(
       (data, newData) => [...(data || []), ...(newData || [])],
       (response) => response?.data?.entries,
       (response) => (response?.data?.entries?.length || 0) < chunkSize,
@@ -111,7 +268,7 @@ describe('pagination', () => {
         config: {},
       });
 
-    const data = await paginate<Array<any>>(
+    const data = await paginatex<Array<any>>(
       (data, newData) => [...(data || []), ...(newData || [])],
       (response) => response?.data?.entries,
       (response) => (response?.data?.entries?.length || 0) < chunkSize,
@@ -139,7 +296,7 @@ describe('pagination', () => {
       });
 
     await expect(
-      paginate<Array<any>>(
+      paginatex<Array<any>>(
         (data, newData) => [...(data || []), ...(newData || [])],
         (response) => response?.data?.entries,
         (response) => (response?.data?.entries?.length || 0) < 3,
