@@ -345,8 +345,8 @@ describe('pagination (generator)', () => {
 
     let data: any[] = [];
 
-    for await (const chunkSize of iterator) {
-      data = [...data, ...(chunkSize ?? [])];
+    for await (const chunkData of iterator) {
+      data = [...data, ...(chunkData ?? [])];
     }
 
     expect(data).toHaveLength(totalCount);
@@ -354,6 +354,78 @@ describe('pagination (generator)', () => {
       { name: 'idx0', value: 0 },
       { name: 'idx1', value: 1 },
       { name: 'idx2', value: 2 },
+    ]);
+  });
+
+  it('should throw on error', async () => {
+    const fetchData = () =>
+      Promise.reject({
+        data: undefined,
+        status: 500,
+        statusText: 'ERROR',
+        headers: {},
+        config: {},
+      });
+
+    const iterator = paginateGenerator(
+      (response) => response?.data?.entries,
+      (response) => (response?.data?.entries?.length || 0) < 3,
+      (previousResponse) => fetchData(),
+    );
+
+    await expect(iterator.next()).rejects.toHaveProperty('status', 500);
+  });
+
+  it('should retry on error if retryOnError is provided', async () => {
+    const chunkSize = 3;
+    const totalCount = 5;
+
+    let errored = false;
+    const fetchDataIterator = fetchDataGen(chunkSize, totalCount);
+    const fetchData = () => {
+      if (!errored) {
+        errored = true;
+        return Promise.reject({
+          data: undefined,
+          status: 500,
+          statusText: 'ERROR',
+          headers: {},
+          config: {},
+        });
+      } else {
+        return Promise.resolve({
+          data: {
+            entries: fetchDataIterator.next().value,
+          },
+          status: 200,
+          statusText: 'OK',
+          headers: {},
+          config: {},
+        });
+      }
+    };
+
+    const iterator = await paginateGenerator(
+      (response) => response?.data?.entries,
+      (response) => (response?.data?.entries?.length || 0) < chunkSize,
+      (previousResponse) => fetchData(),
+      0,
+      (e) => Promise.resolve(true),
+    );
+
+    let data: any[] = [];
+
+    for await (const chunkData of iterator) {
+      data = [...data, ...(chunkData ?? [])];
+    }
+
+    expect(data).toHaveLength(totalCount);
+    expect(data).toEqual([
+      { name: 'idx0', value: 0 },
+      { name: 'idx1', value: 1 },
+      { name: 'idx2', value: 2 },
+      { name: 'idx3', value: 3 },
+      { name: 'idx4', value: 4 },
     ]);
   });
 });
