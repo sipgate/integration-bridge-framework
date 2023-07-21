@@ -260,7 +260,7 @@ describe('pagination (generator)', () => {
     let data: any[] = [];
 
     for await (const chunkData of iterator) {
-      data = [...data, ...chunkData];
+      data = [...data, ...(chunkData ?? {})];
     }
 
     expect(data).toHaveLength(totalCount);
@@ -277,5 +277,83 @@ describe('pagination (generator)', () => {
     expect(extractDataFromResponse).toHaveBeenCalledTimes(3);
     expect(isEof).toHaveBeenCalledTimes(3);
     expect(invokeNextRequest).toHaveBeenCalledTimes(3);
+  });
+
+  it('should resolve all pages (mod == 0)', async () => {
+    const chunkSize = 3;
+    const totalCount = 9;
+
+    const fetchDataIterator = fetchDataGen(chunkSize, totalCount);
+    const fetchData = () =>
+      Promise.resolve({
+        data: {
+          entries: fetchDataIterator.next().value,
+        },
+        status: 200,
+        statusText: 'OK',
+        headers: {},
+        config: {},
+      });
+
+    const iterator = paginateGenerator(
+      (response) => response?.data?.entries,
+      (response) => (response?.data?.entries?.length || 0) < chunkSize,
+      (previousResponse) => fetchData(),
+    );
+
+    let data: any[] = [];
+
+    for await (const chunkData of iterator) {
+      data = [...data, ...(chunkData ?? [])];
+    }
+
+    expect(data).toHaveLength(totalCount);
+    expect(data).toEqual([
+      { name: 'idx0', value: 0 },
+      { name: 'idx1', value: 1 },
+      { name: 'idx2', value: 2 },
+      { name: 'idx3', value: 3 },
+      { name: 'idx4', value: 4 },
+      { name: 'idx5', value: 5 },
+      { name: 'idx6', value: 6 },
+      { name: 'idx7', value: 7 },
+      { name: 'idx8', value: 8 },
+    ]);
+  });
+
+  it('should resolve all pages (count < chunkSize)', async () => {
+    const chunkSize = 5;
+    const totalCount = 3;
+
+    const fetchDataIterator = fetchDataGen(chunkSize, totalCount);
+    const fetchData = () =>
+      Promise.resolve({
+        data: {
+          entries: fetchDataIterator.next().value,
+        },
+        status: 200,
+        statusText: 'OK',
+        headers: {},
+        config: {},
+      });
+
+    const iterator = paginateGenerator(
+      (response) => response?.data?.entries,
+      (response) => (response?.data?.entries?.length || 0) < chunkSize,
+      (previousResponse) => fetchData(),
+    );
+
+    let data: any[] = [];
+
+    for await (const chunkSize of iterator) {
+      data = [...data, ...(chunkSize ?? [])];
+    }
+
+    expect(data).toHaveLength(totalCount);
+    expect(data).toEqual([
+      { name: 'idx0', value: 0 },
+      { name: 'idx1', value: 1 },
+      { name: 'idx2', value: 2 },
+    ]);
   });
 });
