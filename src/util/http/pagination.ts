@@ -19,6 +19,7 @@ export async function* paginateGenerator<T>(
   isEof: IsEofFn,
   invokeNextRequest: InvokeNextRequestFn,
   retryOnError?: RetryOnError,
+  paginateId?: number,
 ) {
   let response: AxiosResponse | undefined;
 
@@ -33,7 +34,10 @@ export async function* paginateGenerator<T>(
       if (retryOnError && (await retryOnError(e))) {
         continue;
       } else {
-        console.error('[paginate] Error during pagination', `${e}`);
+        console.error(
+          `[PAGINATE] (${paginateId ?? 'unknown'}) Error during pagination`,
+          `${e}`,
+        );
         throw e;
       }
     }
@@ -52,11 +56,16 @@ export async function paginate<T>(
   let data = initialData;
   let done = false;
 
+  const paginateId = Math.floor(Math.random() * 100000);
+
+  console.log(`[PAGINATE] (${paginateId}) Start`);
+
   const pageIter = paginateGenerator(
     extractDataFromResponse,
     isEof,
     invokeNextRequest,
     retryOnError,
+    paginateId,
   );
 
   do {
@@ -67,11 +76,13 @@ export async function paginate<T>(
     if (!done) {
       data = mergeData(data, result.value!);
 
-      if (delayMs && !done) {
+      if (delayMs) {
         await sleep(delayMs);
       }
     }
   } while (!done);
+
+  console.log(`[PAGINATE] (${paginateId}) End`);
 
   return data;
 }
