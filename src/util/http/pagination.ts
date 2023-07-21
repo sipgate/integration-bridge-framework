@@ -2,9 +2,13 @@ import type { AxiosResponse } from 'axios';
 
 export type MergeDataFn<T> = (data: T, newData: T) => T;
 export type ExtractDataFromResponseFn<T> = (response: AxiosResponse) => T;
-export type IsEofFn<T> = (response: AxiosResponse, data?: T) => boolean;
+export type IsEofFn = (response: AxiosResponse) => boolean;
+export type IsEofFnLegacy<T> = (response: AxiosResponse, data?: T) => boolean;
 export type RetryOnError = (exception: any) => Promise<boolean>;
-export type InvokeNextRequestFn<T> = (
+export type InvokeNextRequestFn = (
+  previousResponse: AxiosResponse | undefined,
+) => Promise<AxiosResponse>;
+export type InvokeNextRequestFnLegacy<T> = (
   previousResponse: AxiosResponse | undefined,
   data?: T,
 ) => Promise<AxiosResponse>;
@@ -17,12 +21,11 @@ async function sleep(ms: number): Promise<void> {
 
 export async function* paginateGenerator<T>(
   extractDataFromResponse: ExtractDataFromResponseFn<T>,
-  isEof: IsEofFn<T>,
-  invokeNextRequest: InvokeNextRequestFn<T>,
+  isEof: IsEofFn,
+  invokeNextRequest: InvokeNextRequestFn,
   retryOnError?: RetryOnError,
 ) {
   let response: AxiosResponse | undefined;
-  let data: T;
 
   //while (!response || !isEof(response)) {
   do {
@@ -31,7 +34,6 @@ export async function* paginateGenerator<T>(
       const responseData = extractDataFromResponse(newResponse);
 
       response = newResponse; // NOTE: due to potential retry (from within catch below), reassign response only as a last step
-      data = responseData;
       yield responseData;
     } catch (e: any) {
       if (retryOnError && (await retryOnError(e))) {
@@ -41,14 +43,14 @@ export async function* paginateGenerator<T>(
         throw e;
       }
     }
-  } while (response && !isEof(response, data!));
+  } while (response && !isEof(response));
 }
 
 export async function paginatex<T>(
   mergeData: MergeDataFn<T>,
   extractDataFromResponse: ExtractDataFromResponseFn<T>,
-  isEof: IsEofFn<T>,
-  invokeNextRequest: InvokeNextRequestFn<T>,
+  isEof: IsEofFn,
+  invokeNextRequest: InvokeNextRequestFn,
   delayMs: number,
   initialData: T,
   retryOnError?: RetryOnError,
@@ -56,12 +58,9 @@ export async function paginatex<T>(
   let data = initialData;
   let done = false;
 
-  const isEofX: IsEofFn<T> = (response: AxiosResponse, data?: T) =>
-    isEof(response, data);
-
   const pageIter = paginateGenerator(
     extractDataFromResponse,
-    isEofX,
+    isEof,
     invokeNextRequest,
     retryOnError,
   );
@@ -86,8 +85,8 @@ export async function paginatex<T>(
 export async function paginate<T>(
   mergeData: MergeDataFn<T>,
   extractDataFromResponse: ExtractDataFromResponseFn<T>,
-  isEof: IsEofFn<T>,
-  invokeNextRequest: InvokeNextRequestFn<T>,
+  isEof: IsEofFnLegacy<T>,
+  invokeNextRequest: InvokeNextRequestFnLegacy<T>,
   delayMs: number,
   initialData: T,
   retryOnError?: RetryOnError,
