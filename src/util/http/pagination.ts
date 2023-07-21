@@ -53,12 +53,11 @@ export async function paginate<T>(
   initialData: T,
   retryOnError?: RetryOnError,
 ): Promise<T> {
+  const paginateId = Math.floor(Math.random() * 100000);
+  console.log(`[PAGINATE] (${paginateId}) Start`);
+
   let data = initialData;
   let done = false;
-
-  const paginateId = Math.floor(Math.random() * 100000);
-
-  console.log(`[PAGINATE] (${paginateId}) Start`);
 
   const pageIter = paginateGenerator(
     extractDataFromResponse,
