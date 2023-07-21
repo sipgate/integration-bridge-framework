@@ -67,7 +67,7 @@ export async function paginate<T>(
   );
 
   for await (const chunkData of pageIter) {
-    data = mergeData(data, chunkData!);
+    data = mergeData(data, chunkData);
 
     if (delayMs) {
       await sleep(delayMs);
