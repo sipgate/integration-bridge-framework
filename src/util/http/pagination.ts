@@ -57,7 +57,6 @@ export async function paginate<T>(
   console.log(`[PAGINATE] (${paginateId}) Start`);
 
   let data = initialData;
-  let done = false;
 
   const pageIter = paginateGenerator(
     extractDataFromResponse,
@@ -67,19 +66,13 @@ export async function paginate<T>(
     paginateId,
   );
 
-  do {
-    const result = await pageIter.next();
+  for await (const chunkData of pageIter) {
+    data = mergeData(data, chunkData!);
 
-    done = result.done!;
-
-    if (!done) {
-      data = mergeData(data, result.value!);
-
-      if (delayMs) {
-        await sleep(delayMs);
-      }
+    if (delayMs) {
+      await sleep(delayMs);
     }
-  } while (!done);
+  }
 
   console.log(`[PAGINATE] (${paginateId}) End`);
 
