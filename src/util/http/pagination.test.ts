@@ -1,5 +1,5 @@
 //import type { AxiosResponse } from 'axios';
-import { paginate } from './pagination';
+import { paginate, paginateGenerator } from './pagination';
 
 function* fetchDataGen(chunkSize: number, items: number): any {
   let itemsLeft = items;
@@ -17,7 +17,7 @@ function* fetchDataGen(chunkSize: number, items: number): any {
   }
 }
 
-describe('pagination', () => {
+describe('pagination (accumulating)', () => {
   it('should resolve all pages (mod != 0)', async () => {
     const chunkSize = 3;
     const totalCount = 8;
@@ -34,6 +34,15 @@ describe('pagination', () => {
         config: {},
       });
 
+    const mergeData = jest
+      .fn()
+      .mockImplementation((data, newData) => [
+        ...(data || []),
+        ...(newData || []),
+      ]);
+    const extractDataFromResponse = jest
+      .fn()
+      .mockImplementation((response) => response?.data?.entries);
     const isEof = jest
       .fn()
       .mockImplementation(
@@ -44,8 +53,8 @@ describe('pagination', () => {
       .mockImplementation((previousResponse) => fetchData());
 
     const data = await paginate<Array<any>>(
-      (data, newData) => [...(data || []), ...(newData || [])],
-      (response) => response?.data?.entries,
+      mergeData,
+      extractDataFromResponse,
       isEof,
       invokeNextRequest,
       0,
@@ -63,6 +72,8 @@ describe('pagination', () => {
       { name: 'idx6', value: 6 },
       { name: 'idx7', value: 7 },
     ]);
+    expect(mergeData).toHaveBeenCalledTimes(3);
+    expect(extractDataFromResponse).toHaveBeenCalledTimes(3);
     expect(isEof).toHaveBeenCalledTimes(3);
     expect(invokeNextRequest).toHaveBeenCalledTimes(3);
   });
@@ -208,5 +219,63 @@ describe('pagination', () => {
       { name: 'idx3', value: 3 },
       { name: 'idx4', value: 4 },
     ]);
+  });
+});
+
+describe('pagination (generator)', () => {
+  it('should yield all pages (mod !== 0)', async () => {
+    const chunkSize = 3;
+    const totalCount = 8;
+
+    const fetchDataIterator = fetchDataGen(chunkSize, totalCount);
+    const fetchData = () =>
+      Promise.resolve({
+        data: {
+          entries: fetchDataIterator.next().value,
+        },
+        status: 200,
+        statusText: 'OK',
+        headers: {},
+        config: {},
+      });
+
+    const extractDataFromResponse = jest
+      .fn()
+      .mockImplementation((response) => response?.data?.entries);
+    const isEof = jest
+      .fn()
+      .mockImplementation(
+        (response) => (response?.data?.entries?.length || 0) < chunkSize,
+      );
+    const invokeNextRequest = jest
+      .fn()
+      .mockImplementation((previousResponse) => fetchData());
+
+    const iterator = paginateGenerator(
+      extractDataFromResponse,
+      isEof,
+      invokeNextRequest,
+    );
+
+    let data: any[] = [];
+
+    for await (const chunkData of iterator) {
+      data = [...data, ...chunkData];
+    }
+
+    expect(data).toHaveLength(totalCount);
+    expect(data).toEqual([
+      { name: 'idx0', value: 0 },
+      { name: 'idx1', value: 1 },
+      { name: 'idx2', value: 2 },
+      { name: 'idx3', value: 3 },
+      { name: 'idx4', value: 4 },
+      { name: 'idx5', value: 5 },
+      { name: 'idx6', value: 6 },
+      { name: 'idx7', value: 7 },
+    ]);
+    expect(extractDataFromResponse).toHaveBeenCalledTimes(3);
+    expect(isEof).toHaveBeenCalledTimes(3);
+    expect(invokeNextRequest).toHaveBeenCalledTimes(3);
   });
 });
