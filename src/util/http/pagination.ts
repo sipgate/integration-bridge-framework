@@ -18,6 +18,7 @@ export async function* paginateGenerator<T>(
   extractDataFromResponse: ExtractDataFromResponseFn<T>,
   isEof: IsEofFn,
   invokeNextRequest: InvokeNextRequestFn,
+  delayMs?: number,
   retryOnError?: RetryOnError,
   paginateId?: number,
 ) {
@@ -25,6 +26,10 @@ export async function* paginateGenerator<T>(
 
   while (!response || !isEof(response)) {
     try {
+      if (response && delayMs) {
+        await sleep(delayMs);
+      }
+
       const newResponse = await invokeNextRequest(response);
       const responseData = extractDataFromResponse(newResponse);
 
@@ -62,16 +67,13 @@ export async function paginate<T>(
     extractDataFromResponse,
     isEof,
     invokeNextRequest,
+    delayMs,
     retryOnError,
     paginateId,
   );
 
   for await (const chunkData of pageIter) {
     data = mergeData(data, chunkData);
-
-    if (delayMs) {
-      await sleep(delayMs);
-    }
   }
 
   console.log(`[PAGINATE] (${paginateId}) End`);
