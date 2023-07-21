@@ -1,5 +1,5 @@
 //import type { AxiosResponse } from 'axios';
-import { paginate, paginatex } from './pagination';
+import { paginate } from './pagination';
 
 function* fetchDataGen(chunkSize: number, items: number): any {
   let itemsLeft = items;
@@ -43,7 +43,7 @@ describe('pagination', () => {
       .fn()
       .mockImplementation((previousResponse) => fetchData());
 
-    const data = await paginatex<Array<any>>(
+    const data = await paginate<Array<any>>(
       (data, newData) => [...(data || []), ...(newData || [])],
       (response) => response?.data?.entries,
       isEof,
@@ -83,7 +83,7 @@ describe('pagination', () => {
         config: {},
       });
 
-    const data = await paginatex<Array<any>>(
+    const data = await paginate<Array<any>>(
       (data, newData) => [...(data || []), ...(newData || [])],
       (response) => response?.data?.entries,
       (response) => (response?.data?.entries?.length || 0) < chunkSize,
@@ -122,7 +122,7 @@ describe('pagination', () => {
         config: {},
       });
 
-    const data = await paginatex<Array<any>>(
+    const data = await paginate<Array<any>>(
       (data, newData) => [...(data || []), ...(newData || [])],
       (response) => response?.data?.entries,
       (response) => (response?.data?.entries?.length || 0) < chunkSize,
@@ -150,7 +150,7 @@ describe('pagination', () => {
       });
 
     await expect(
-      paginatex<Array<any>>(
+      paginate<Array<any>>(
         (data, newData) => [...(data || []), ...(newData || [])],
         (response) => response?.data?.entries,
         (response) => (response?.data?.entries?.length || 0) < 3,
