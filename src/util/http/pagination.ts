@@ -1,12 +1,12 @@
-import { AxiosResponse } from 'axios';
+import type { AxiosResponse } from 'axios';
+import { infoLogger, errorLogger } from '../logger.util';
 
 export type MergeDataFn<T> = (data: T, newData: T) => T;
 export type ExtractDataFromResponseFn<T> = (response: AxiosResponse) => T;
-export type IsEofFn<T> = (response: AxiosResponse, data: T) => boolean;
+export type IsEofFn = (response: AxiosResponse) => boolean;
 export type RetryOnError = (exception: any) => Promise<boolean>;
-export type InvokeNextRequestFn<T> = (
+export type InvokeNextRequestFn = (
   previousResponse: AxiosResponse | undefined,
-  data: T,
 ) => Promise<AxiosResponse>;
 
 async function sleep(ms: number): Promise<void> {
@@ -15,48 +15,69 @@ async function sleep(ms: number): Promise<void> {
   );
 }
 
+export async function* paginateGenerator<T>(
+  extractDataFromResponse: ExtractDataFromResponseFn<T>,
+  isEof: IsEofFn,
+  invokeNextRequest: InvokeNextRequestFn,
+  delayMs?: number,
+  retryOnError?: RetryOnError,
+  paginateId?: number,
+) {
+  let response: AxiosResponse | undefined;
+
+  while (!response || !isEof(response)) {
+    try {
+      if (response && delayMs) {
+        await sleep(delayMs);
+      }
+
+      const newResponse = await invokeNextRequest(response);
+      const responseData = extractDataFromResponse(newResponse);
+
+      response = newResponse; // NOTE: due to potential retry (from within catch below), reassign response only as a last step
+      yield responseData;
+    } catch (e: any) {
+      if (retryOnError && (await retryOnError(e))) {
+        continue;
+      } else {
+        errorLogger(
+          'PAGINATE',
+          `(${paginateId ?? 'unknown'}) Error during pagination ${e}`,
+        );
+        throw e;
+      }
+    }
+  }
+}
+
 export async function paginate<T>(
   mergeData: MergeDataFn<T>,
   extractDataFromResponse: ExtractDataFromResponseFn<T>,
-  isEof: IsEofFn<T>,
-  invokeNextRequest: InvokeNextRequestFn<T>,
+  isEof: IsEofFn,
+  invokeNextRequest: InvokeNextRequestFn,
   delayMs: number,
   initialData: T,
   retryOnError?: RetryOnError,
 ): Promise<T> {
   const paginateId = Math.floor(Math.random() * 100000);
+  infoLogger('PAGINATE', `(${paginateId}) Start`);
 
-  return new Promise<T>((resolve, reject) => {
-    const fetchNextPage = async (data: T, previousResponse?: AxiosResponse) => {
-      try {
-        if (previousResponse) {
-          await sleep(delayMs);
-        }
+  let data = initialData;
 
-        const response = await invokeNextRequest(previousResponse, data);
-        const responseData = extractDataFromResponse(response);
-        const allData = mergeData(data, responseData);
+  const pageIter = paginateGenerator(
+    extractDataFromResponse,
+    isEof,
+    invokeNextRequest,
+    delayMs,
+    retryOnError,
+    paginateId,
+  );
 
-        if (!isEof(response, allData)) {
-          setImmediate(() => fetchNextPage(allData, response));
-        } else {
-          resolve(allData);
-        }
-      } catch (e: any) {
-        if (retryOnError && (await retryOnError(e))) {
-          setImmediate(() => fetchNextPage(data, previousResponse));
-        } else {
-          console.error('[paginate] Error during pagination', `${e}`);
-          reject(e);
-        }
-      }
-    };
+  for await (const chunkData of pageIter) {
+    data = mergeData(data, chunkData);
+  }
 
-    console.log(`[paginate] ${paginateId} start`);
-    return fetchNextPage(initialData);
-  }).then((resultData: T): T => {
-    console.log(`[paginate] ${paginateId} end`);
+  infoLogger('PAGINATE', `(${paginateId}) End`);
 
-    return resultData;
-  });
+  return data;
 }
