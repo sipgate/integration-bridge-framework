@@ -1,4 +1,5 @@
 import type { AxiosResponse } from 'axios';
+import { infoLogger, errorLogger } from '../logger.util';
 
 export type MergeDataFn<T> = (data: T, newData: T) => T;
 export type ExtractDataFromResponseFn<T> = (response: AxiosResponse) => T;
@@ -39,9 +40,9 @@ export async function* paginateGenerator<T>(
       if (retryOnError && (await retryOnError(e))) {
         continue;
       } else {
-        console.error(
-          `[PAGINATE] (${paginateId ?? 'unknown'}) Error during pagination`,
-          `${e}`,
+        errorLogger(
+          'PAGINATE',
+          `(${paginateId ?? 'unknown'}) Error during pagination ${e}`,
         );
         throw e;
       }
@@ -59,7 +60,7 @@ export async function paginate<T>(
   retryOnError?: RetryOnError,
 ): Promise<T> {
   const paginateId = Math.floor(Math.random() * 100000);
-  console.log(`[PAGINATE] (${paginateId}) Start`);
+  infoLogger('PAGINATE', `(${paginateId}) Start`);
 
   let data = initialData;
 
@@ -76,7 +77,7 @@ export async function paginate<T>(
     data = mergeData(data, chunkData);
   }
 
-  console.log(`[PAGINATE] (${paginateId}) End`);
+  infoLogger('PAGINATE', `(${paginateId}) End`);
 
   return data;
 }
