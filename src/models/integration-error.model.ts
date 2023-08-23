@@ -3,6 +3,7 @@ export enum IntegrationErrorType {
 
   // TODO: rename to INTEGRATION_ERROR_REFRESH = "integration/error/refresh"
   INTEGRATION_REFRESH_ERROR = 'integration/refresh-error',
+  INTEGRATION_UNAUTHORIZED_ERROR = 'integration/unauthorized-error',
   INTEGRATION_ERROR_FORBIDDEN = 'integration/error/forbidden',
   INTEGRATION_ERROR_UNAVAILABLE = 'integration/error/unavailable',
   INTEGRATION_ERROR_LICENSE_ACCESS_LIMITED = 'integration/error/license-access-limited',
