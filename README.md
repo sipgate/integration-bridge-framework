@@ -86,33 +86,19 @@ Contacts are accepted in this format:
 ```js
 {
     id: "abc123",
-        // Provide either the full name or first and last name, not both
-        name
-:
-    null, // or null
-        firstName
-:
-    "Walter", // or null
-        lastName
-:
-    "Geoffrey", // or null
-        organization
-:
-    "Rocket Science Inc.", // or null
-        contactUrl
-:
-    "http://myapp.com/contacts/abc123", // or null
-        avatarUrl
-:
-    "http://myapp.com/avatar/abc123.png", // or null
-        email
-:
-    "walter@example.com", // or null
-        phoneNumbers
-:
-    [
+
+    // Provide either the full name or first and last name, not both
+    name: null, // or null
+    firstName: "Walter", // or null
+    lastName: "Geoffrey", // or null
+
+    organization: "Rocket Science Inc.", // or null
+    contactUrl: "http://myapp.com/contacts/abc123", // or null
+    avatarUrl: "http://myapp.com/avatar/abc123.png", // or null
+    email: "walter@example.com", // or null
+    phoneNumbers: [
         {
-            label: "MOBILE", // or "WORK" or "HOME"
+            label: "MOBILE", // or "WORK" or "HOME" ...
             phoneNumber: "+4915799912345"
         }
     ]
