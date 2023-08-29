@@ -107,6 +107,10 @@ export function start(
 
   app.get('/health', (req, res, next) => controller.getHealth(req, res, next));
 
+  app.get('/validate-token', (req, res, next) =>
+    controller.isValidToken(req, res, next),
+  );
+
   app.get('/oauth2/redirect', (req, res, next) =>
     controller.oAuth2Redirect(req, res, next),
   );

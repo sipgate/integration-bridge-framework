@@ -81,6 +81,51 @@ export class Controller {
     }
   }
 
+  public async isValidToken(
+    req: BridgeRequest<unknown>,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
+    const { providerConfig } = req;
+
+    if (!providerConfig) {
+      throw new ServerError(400, 'Missing parameters');
+    }
+
+    try {
+      infoLogger('isValidToken', 'START', providerConfig.apiKey);
+
+      if (!this.adapter.isValidToken) {
+        throw new ServerError(
+          501,
+          'Token validation function is not implemented',
+        );
+      }
+
+      const response = await this.adapter.isValidToken(providerConfig);
+
+      infoLogger('isValidToken', 'END', providerConfig.apiKey);
+      res.status(200).send(response);
+    } catch (error: any) {
+      // prevent logging of refresh errors
+      if (
+        error instanceof ServerError &&
+        error.message === IntegrationErrorType.INTEGRATION_REFRESH_ERROR
+      ) {
+        next(error);
+        return;
+      }
+
+      errorLogger(
+        'isValidToken',
+        'Could not validate token:',
+        providerConfig.apiKey,
+        error,
+      );
+      next(error);
+    }
+  }
+
   public async getContacts(
     req: BridgeRequest<unknown>,
     res: Response,
