@@ -24,7 +24,7 @@ export enum IntegrationEntityType {
   OPPORTUNITIES = 'opportunities',
   CASES = 'cases',
   // outlook specific
-  CONTACTS_FOLDER = 'contacts-folder',
+  CONTACTS_FOLDER = 'contacts_folder',
   // outlook and sipgate
   USERS = 'users',
 }
