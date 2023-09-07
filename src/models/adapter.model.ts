@@ -42,16 +42,20 @@ export interface Adapter {
     id: string,
     event: CalendarEventTemplate,
   ) => Promise<CalendarEvent>;
+
+  deleteCalendarEvent?: (config: Config, id: string) => Promise<void>;
+  /**
+   * @deprecated handleCallEvent should be replaced by createOrUpdateCallLogForEntities
+   */
+  handleCallEvent?: (config: Config, event: CallEvent) => Promise<string>;
+  /**
+   * @deprecated updateCallEvent should be replaced by createOrUpdateCallLogForEntities
+   */
   updateCallEvent?: (
     config: Config,
     id: string,
     event: CallEvent,
   ) => Promise<void>;
-  deleteCalendarEvent?: (config: Config, id: string) => Promise<void>;
-  /** @deprecated handleCallEvent should be replaced by createOrUpdateCallLogForEntities.
-   * Please do no longer implement handleCallEvent in new bridges.
-   * */
-  handleCallEvent?: (config: Config, event: CallEvent) => Promise<string>;
   createOrUpdateCallLogForEntities?: (
     config: Config,
     body: CallEventWithIntegrationEntities,
