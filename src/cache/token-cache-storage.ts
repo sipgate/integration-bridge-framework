@@ -1,46 +1,69 @@
-import { TokenWithStatus } from '../models';
+import { TokenCacheItem } from '../models';
 import { StorageAdapter } from '../models/storage-adapter.model';
 import { TokenCache } from '../models/token-cache.model';
 import { errorLogger, infoLogger } from '../util';
 
 export class TokenCacheStorage implements TokenCache {
-  private LOG_PREFIX = 'TOKEN CACHE';
   private storage: StorageAdapter;
+  private logPrefix = 'TOKEN CACHE';
+  private keyPrefix: string;
 
-  constructor(storageAdapter: StorageAdapter) {
+  constructor(storageAdapter: StorageAdapter, keyPrefix: string) {
     this.storage = storageAdapter;
-    infoLogger(this.LOG_PREFIX, `Initialized token storage cache.`, undefined);
+    this.keyPrefix = keyPrefix;
+    infoLogger(this.logPrefix, `Initialized token storage cache.`);
   }
 
-  public async get(key: string): Promise<TokenWithStatus | null> {
+  public async get(key: string): Promise<TokenCacheItem | null> {
+    const keyWithPrefix = this.buildKey(key);
     try {
-      infoLogger(this.LOG_PREFIX, 'Trying to get token from cache', key);
-      return await this.storage.get<TokenWithStatus>(key);
+      infoLogger(
+        this.logPrefix,
+        'Trying to get token from cache',
+        keyWithPrefix,
+      );
+      return await this.storage.get<TokenCacheItem>(keyWithPrefix);
     } catch (e) {
-      errorLogger(this.LOG_PREFIX, `Unable to get token from cache`, key, e);
+      errorLogger(
+        this.logPrefix,
+        `Unable to get token from cache`,
+        keyWithPrefix,
+        e,
+      );
       return null;
     }
   }
 
   public async set(
     key: string,
-    token: TokenWithStatus,
+    token: TokenCacheItem,
     ttl?: number,
   ): Promise<void> {
-    infoLogger(this.LOG_PREFIX, `Saving token to cache`, key);
+    const keyWithPrefix = this.buildKey(key);
+    infoLogger(this.logPrefix, `Saving token to cache`, keyWithPrefix);
     try {
-      await this.storage.set(key, token, ttl);
+      await this.storage.set(keyWithPrefix, token, ttl);
     } catch (e) {
-      errorLogger(this.LOG_PREFIX, `Unable to set cache`, key, e);
+      errorLogger(this.logPrefix, `Unable to set cache`, keyWithPrefix, e);
     }
   }
 
   public async delete(key: string): Promise<void> {
-    infoLogger(this.LOG_PREFIX, `Removing token from cache`, key);
+    const keyWithPrefix = this.buildKey(key);
+    infoLogger(this.logPrefix, `Removing token from cache`, keyWithPrefix);
     try {
-      await this.storage.delete(key);
+      await this.storage.delete(keyWithPrefix);
     } catch (e) {
-      errorLogger(this.LOG_PREFIX, `Unable to remove token from cache`, key, e);
+      errorLogger(
+        this.logPrefix,
+        `Unable to remove token from cache`,
+        keyWithPrefix,
+        e,
+      );
     }
+  }
+
+  private buildKey(key: string): string {
+    return `${this.keyPrefix}:${key}`;
   }
 }

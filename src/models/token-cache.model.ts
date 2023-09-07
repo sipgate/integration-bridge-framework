@@ -1,7 +1,7 @@
-import { TokenWithStatus } from './token.model';
+import { TokenCacheItem } from './token.model';
 
 export interface TokenCache {
-  get: (key: string) => Promise<TokenWithStatus | null>;
-  set: (key: string, value: TokenWithStatus, ttl?: number) => Promise<void>;
+  get: (key: string) => Promise<TokenCacheItem | null>;
+  set: (key: string, value: TokenCacheItem, ttl?: number) => Promise<void>;
   delete: (key: string) => Promise<void>;
 }

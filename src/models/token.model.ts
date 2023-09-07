@@ -1,6 +1,5 @@
 export type Token = {
-  refresh_token: string;
-  access_token: string;
+  accessToken: string | null;
 };
 
-export type TokenWithStatus = Token & { isPending: boolean };
+export type TokenCacheItem = Token & { isPending: boolean };

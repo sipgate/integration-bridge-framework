@@ -6,13 +6,8 @@ import { Token } from '../models/token.model';
 
 const REFRESH_MARKER_TTL = 5;
 const DEFAULT_TTL = 3540;
-let KEY_PREFIX: string;
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-
-function useCollection(value: string) {
-  return `${KEY_PREFIX}:${value.replace(/:/g, '_')}`;
-}
 
 export type TokenRefreshFn = (config: Config) => Promise<Token>;
 
@@ -27,7 +22,7 @@ function getTokenCacheTtl(): number {
 export function getTokenCache() {
   const { REDIS_URL, INTEGRATION_NAME, OAUTH2_REDIRECT_URL } = process.env;
 
-  // if oauth is not configured, token cache is not needed
+  // if OAuth2 is not configured, token cache is not needed
   if (!OAUTH2_REDIRECT_URL) {
     infoLogger(
       'TOKEN CACHE',
@@ -37,56 +32,29 @@ export function getTokenCache() {
     return null;
   }
 
+  let keyPrefix: string = 'AUTH';
+
   if (REDIS_URL) {
     if (INTEGRATION_NAME) {
-      KEY_PREFIX = INTEGRATION_NAME;
+      keyPrefix = `AUTH:${INTEGRATION_NAME}`;
     } else {
       throw new ServerError(
         500,
         'Could not specify KEY_PREFIX for getTokenCache, missing environment variable INTEGRATION_NAME',
       );
     }
-    infoLogger(`TOKEN CACHE`, `Using Redis cache with prefix ${KEY_PREFIX}`);
-    return new TokenCacheStorage(new RedisStorageAdapter(REDIS_URL));
+    infoLogger(`TOKEN CACHE`, `Using Redis cache with prefix ${keyPrefix}`);
+    return new TokenCacheStorage(new RedisStorageAdapter(REDIS_URL), keyPrefix);
   }
 
   const tokenCacheTtl = getTokenCacheTtl();
 
   infoLogger('TOKEN CACHE', `Using memory cache with TTL of ${tokenCacheTtl}s`);
 
-  return new TokenCacheStorage(new MemoryStorageAdapter(tokenCacheTtl));
-}
-
-export async function getFreshAccessToken(
-  config: Config,
-  refreshFn: TokenRefreshFn,
-  force = false,
-): Promise<string> {
-  if (!tokenCache) {
-    throw new ServerError(
-      500,
-      'Tried getting token from cache while cache was undefined.',
-    );
-  }
-
-  if (force) {
-    const newToken = await getNewToken(config, refreshFn);
-
-    return newToken.access_token;
-  }
-
-  const token = await tokenCache?.get(useCollection(config.apiKey));
-
-  if (token?.access_token) return token.access_token;
-
-  if (token?.isPending) {
-    await sleep(5_000);
-    return await getFreshAccessToken(config, refreshFn);
-  }
-
-  const newToken = await getNewToken(config, refreshFn);
-
-  return newToken.access_token;
+  return new TokenCacheStorage(
+    new MemoryStorageAdapter(tokenCacheTtl),
+    keyPrefix,
+  );
 }
 
 async function getNewToken(
@@ -100,11 +68,10 @@ async function getNewToken(
     );
   }
 
-  await tokenCache?.set(
-    useCollection(config.apiKey),
+  await tokenCache.set(
+    config.apiKey,
     {
-      refresh_token: '',
-      access_token: '',
+      accessToken: null,
       isPending: true,
     },
     REFRESH_MARKER_TTL,
@@ -112,11 +79,40 @@ async function getNewToken(
 
   const newToken = { ...(await refreshFn(config)), isPending: false };
 
-  await tokenCache?.set(
-    useCollection(config.apiKey),
-    newToken,
-    getTokenCacheTtl(),
-  );
+  await tokenCache.set(config.apiKey, newToken, getTokenCacheTtl());
 
   return newToken;
+}
+
+export async function getFreshAccessToken(
+  config: Config,
+  refreshFn: TokenRefreshFn,
+  force = false,
+): Promise<string | null> {
+  if (!tokenCache) {
+    throw new ServerError(
+      500,
+      'Tried getting token from cache while cache was undefined.',
+    );
+  }
+
+  if (force) {
+    const newToken = await getNewToken(config, refreshFn);
+    return newToken.accessToken;
+  }
+
+  const token = await tokenCache.get(config.apiKey);
+
+  if (token?.accessToken) {
+    return token.accessToken;
+  }
+
+  if (token?.isPending) {
+    await sleep(5_000);
+    return await getFreshAccessToken(config, refreshFn);
+  }
+
+  const newToken = await getNewToken(config, refreshFn);
+
+  return newToken.accessToken;
 }
