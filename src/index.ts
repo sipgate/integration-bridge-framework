@@ -16,23 +16,23 @@ import { CustomRoute } from './models/custom-routes.model';
 import { errorLogger, getTokenCache, infoLogger } from './util';
 import { getContactCache } from './util/get-contact-cache';
 
-export let tokenCache: TokenStorageCache | undefined;
 const PORT: number = Number(process.env.PORT) || 8080;
 
 const app: express.Application = express();
 
+const corsMiddleware = cors({
+  credentials: true,
+  origin: true,
+  allowedHeaders: '*',
+});
+
 app.use(compression());
-app.use(
-  cors({
-    credentials: true,
-    origin: true,
-    allowedHeaders: '*',
-  }),
-);
+app.use(corsMiddleware);
 app.use(bodyParser.json());
 app.use(extractHeaderMiddleware);
 
 let contactCache: ContactCache | null = null;
+export let tokenCache: TokenStorageCache | null = null;
 
 export function start(
   adapter: Adapter,
@@ -41,6 +41,7 @@ export function start(
 ): Server {
   contactCache = getContactCache();
   tokenCache = getTokenCache();
+
   const controller: Controller = new Controller(adapter, contactCache);
 
   app.get('/contacts', (req, res, next) =>

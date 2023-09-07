@@ -1,14 +1,15 @@
+import { infoLogger, tokenCache, warnLogger } from '..';
 import { TokenStorageCache } from '../cache';
 import { MemoryStorageAdapter, RedisStorageAdapter } from '../cache/storage';
 import { Config, ServerError } from '../models';
 import { Token } from '../models/token.model';
 
-import { infoLogger, tokenCache, warnLogger } from '..';
-
 const REFRESH_MARKER_TTL = 5;
 const DEFAULT_TTL = '3540';
 
 let KEY_PREFIX: string;
+
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 function useCollection(value: string) {
   return `${KEY_PREFIX}:${value.replace(/:/g, '_')}`;
@@ -31,7 +32,7 @@ export function getTokenCache() {
       'No OAUTH2_REDIRECT_URL provided, skipping token cache initialization.',
     );
 
-    return;
+    return null;
   }
 
   if (REDIS_URL) {
@@ -71,14 +72,12 @@ export async function getFreshAccessToken(
   refreshFn: TokenRefreshFn,
   force = false,
 ): Promise<string> {
-  if (tokenCache === undefined)
+  if (!tokenCache) {
     throw new ServerError(
       500,
       'Tried getting token from cache while cache was undefined.',
     );
-
-  const sleep = (ms: number) =>
-    new Promise((resolve) => setTimeout(resolve, ms));
+  }
 
   if (force) {
     const newToken = await getNewToken(config, refreshFn);
@@ -86,7 +85,7 @@ export async function getFreshAccessToken(
     return newToken.access_token;
   }
 
-  const token = await tokenCache.get(useCollection(config.apiKey));
+  const token = await tokenCache?.get(useCollection(config.apiKey));
 
   if (token?.access_token) return token.access_token;
 
@@ -104,13 +103,14 @@ async function getNewToken(
   config: Config,
   refreshFn: TokenRefreshFn,
 ): Promise<Token> {
-  if (tokenCache === undefined)
+  if (!tokenCache) {
     throw new ServerError(
       500,
       'Tried getting token from cache while cache was undefined.',
     );
+  }
 
-  await tokenCache.set(
+  await tokenCache?.set(
     useCollection(config.apiKey),
     {
       refresh_token: '',
@@ -122,7 +122,7 @@ async function getNewToken(
 
   const newToken = { ...(await refreshFn(config)), isPending: false };
 
-  await tokenCache.set(
+  await tokenCache?.set(
     useCollection(config.apiKey),
     newToken,
     parseInt(process.env.TOKEN_CACHE_TTL || DEFAULT_TTL),
