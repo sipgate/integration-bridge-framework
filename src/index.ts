@@ -3,7 +3,7 @@ import compression from 'compression';
 import cors from 'cors';
 import express from 'express';
 import { Server } from 'http';
-import { TokenStorageCache } from './cache';
+import { TokenCacheStorage } from './cache';
 import { errorHandlerMiddleware, extractHeaderMiddleware } from './middlewares';
 import {
   Adapter,
@@ -32,7 +32,7 @@ app.use(bodyParser.json());
 app.use(extractHeaderMiddleware);
 
 let contactCache: ContactCache | null = null;
-export let tokenCache: TokenStorageCache | null = null;
+export let tokenCache: TokenCacheStorage | null = null;
 
 export function start(
   adapter: Adapter,

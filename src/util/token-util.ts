@@ -1,12 +1,11 @@
-import { infoLogger, tokenCache, warnLogger } from '..';
-import { TokenStorageCache } from '../cache';
+import { infoLogger, tokenCache } from '..';
+import { TokenCacheStorage } from '../cache';
 import { MemoryStorageAdapter, RedisStorageAdapter } from '../cache/storage';
 import { Config, ServerError } from '../models';
 import { Token } from '../models/token.model';
 
 const REFRESH_MARKER_TTL = 5;
-const DEFAULT_TTL = '3540';
-
+const DEFAULT_TTL = 3540;
 let KEY_PREFIX: string;
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -17,13 +16,16 @@ function useCollection(value: string) {
 
 export type TokenRefreshFn = (config: Config) => Promise<Token>;
 
+function getTokenCacheTtl(): number {
+  const { TOKEN_CACHE_TTL } = process.env;
+
+  const ttlFromEnv = Number(TOKEN_CACHE_TTL);
+
+  return !isNaN(ttlFromEnv) ? ttlFromEnv : DEFAULT_TTL;
+}
+
 export function getTokenCache() {
-  const {
-    REDIS_URL,
-    INTEGRATION_NAME,
-    OAUTH2_IDENTIFIER,
-    OAUTH2_REDIRECT_URL,
-  } = process.env;
+  const { REDIS_URL, INTEGRATION_NAME, OAUTH2_REDIRECT_URL } = process.env;
 
   // if oauth is not configured, token cache is not needed
   if (!OAUTH2_REDIRECT_URL) {
@@ -38,33 +40,21 @@ export function getTokenCache() {
   if (REDIS_URL) {
     if (INTEGRATION_NAME) {
       KEY_PREFIX = INTEGRATION_NAME;
-    } else if (OAUTH2_IDENTIFIER) {
-      warnLogger(
-        'TOKEN CACHE',
-        'Using OAUTH2_IDENTIFIER is deprecated, specify INTEGRATION_NAME instead.',
-      );
-      KEY_PREFIX = OAUTH2_IDENTIFIER;
     } else {
       throw new ServerError(
         500,
-        'Could not specify KEY_PREFIX for getTokenCache, missing environment variable INTEGRATION_NAME.',
+        'Could not specify KEY_PREFIX for getTokenCache, missing environment variable INTEGRATION_NAME',
       );
     }
-
     infoLogger(`TOKEN CACHE`, `Using Redis cache with prefix ${KEY_PREFIX}`);
-    return new TokenStorageCache(new RedisStorageAdapter(REDIS_URL));
+    return new TokenCacheStorage(new RedisStorageAdapter(REDIS_URL));
   }
 
-  const { TOKEN_CACHE_TTL } = process.env;
+  const tokenCacheTtl = getTokenCacheTtl();
 
-  infoLogger(
-    'TOKEN CACHE',
-    `Using memory cache with TTL ${TOKEN_CACHE_TTL || DEFAULT_TTL}`,
-  );
+  infoLogger('TOKEN CACHE', `Using memory cache with TTL of ${tokenCacheTtl}s`);
 
-  return new TokenStorageCache(
-    new MemoryStorageAdapter(parseInt(TOKEN_CACHE_TTL || DEFAULT_TTL)),
-  );
+  return new TokenCacheStorage(new MemoryStorageAdapter(tokenCacheTtl));
 }
 
 export async function getFreshAccessToken(
@@ -125,7 +115,7 @@ async function getNewToken(
   await tokenCache?.set(
     useCollection(config.apiKey),
     newToken,
-    parseInt(process.env.TOKEN_CACHE_TTL || DEFAULT_TTL),
+    getTokenCacheTtl(),
   );
 
   return newToken;
