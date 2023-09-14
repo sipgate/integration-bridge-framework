@@ -230,20 +230,19 @@ export class Controller {
     next: NextFunction,
   ): Promise<void> {
     const { providerConfig } = req;
-
-    if (!providerConfig) {
-      throw new ServerError(400, 'Missing parameters');
-    }
-
-    const { userId } = providerConfig;
-
-    if (!userId) {
-      throw new ServerError(400, 'Missing user ID');
-    }
-
-    const timestamp = Date.now();
-
     try {
+      if (!providerConfig) {
+        throw new ServerError(400, 'Missing parameters');
+      }
+
+      const { userId } = providerConfig;
+
+      if (!userId) {
+        throw new ServerError(400, 'Missing user ID');
+      }
+
+      const timestamp = Date.now();
+
       infoLogger(
         'streamContacts',
         `Starting contact streaming ${timestamp}`,
@@ -334,7 +333,7 @@ export class Controller {
       errorLogger(
         'streamContacts',
         'Could not stream contacts',
-        providerConfig.apiKey,
+        providerConfig?.apiKey,
         error,
       );
       next(error);
