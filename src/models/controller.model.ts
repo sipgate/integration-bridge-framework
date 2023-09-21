@@ -102,10 +102,15 @@ export class Controller {
         );
       }
 
-      const response = await this.adapter.isValidToken(providerConfig);
+      const isTokenValid = await this.adapter.isValidToken(providerConfig);
+
+      if (!isTokenValid) {
+        throw new ServerError(401, 'Token is not valid');
+      }
 
       infoLogger('isValidToken', 'END', providerConfig.apiKey);
-      res.status(200).send(response);
+
+      res.status(200).send('OK');
     } catch (error: any) {
       // prevent logging of refresh errors
       if (
