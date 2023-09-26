@@ -25,12 +25,6 @@ export enum PhoneNumberType {
   STANDARD = 'STANDARD',
 }
 
-export enum ContactDeltaType {
-  CREATED,
-  UPDATED,
-  DELETED,
-}
-
 export type PhoneNumber = {
   label: PhoneNumberLabel | string;
   phoneNumber: string;
@@ -64,6 +58,6 @@ export type ContactUpdate = ContactTemplate & {
 export type Contact = ContactTemplate & ContactResult;
 
 export type ContactDelta = {
-  type: ContactDeltaType;
-  value: Contact | string;
+  contacts: Contact[];
+  deleted: string[];
 };

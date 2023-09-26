@@ -19,7 +19,7 @@ export interface Adapter {
   getToken?: (config: Config) => Promise<{ apiKey: string }>;
   isValidToken?: (config: Config) => Promise<boolean>;
   getContacts?: (config: Config) => Promise<Contact[]>;
-  getContactsDelta?: (config: Config) => Promise<ContactDelta[]>;
+  getContactsDelta?: (config: Config) => Promise<ContactDelta>;
   streamContacts?: (config: Config) => AsyncGenerator<Contact[], void, unknown>;
   createContact?: (
     config: Config,

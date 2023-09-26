@@ -10,7 +10,6 @@ import {
   Contact,
   ContactCache,
   ContactDelta,
-  ContactDeltaType,
   ContactTemplate,
   ContactUpdate,
   ServerError,
@@ -361,7 +360,7 @@ export class Controller {
     try {
       infoLogger('getContactsDelta', 'START', providerConfig.apiKey);
 
-      const fetchContactsDelta = async (): Promise<ContactDelta[]> => {
+      const fetchContactsDelta = async (): Promise<ContactDelta> => {
         if (!this.adapter.getContactsDelta) {
           throw new ServerError(
             501,
@@ -369,25 +368,20 @@ export class Controller {
           );
         }
 
-        const fetchedContactDelta: ContactDelta[] =
-          await this.adapter.getContactsDelta(providerConfig);
+        const fetchedDelta: ContactDelta = await this.adapter.getContactsDelta(
+          providerConfig,
+        );
 
-        const valuesToBeValidated = fetchedContactDelta
-          .filter((x) => x.type != ContactDeltaType.DELETED)
-          .map((x) => x.value);
-
-        if (!validate(this.ajv, contactsSchema, valuesToBeValidated)) {
+        if (!validate(this.ajv, contactsSchema, fetchedDelta.contacts)) {
           throw new ServerError(500, 'Invalid contacts received');
         }
 
-        return fetchedContactDelta.map((contact) =>
-          typeof contact.value === 'string'
-            ? contact
-            : {
-                ...contact,
-                value: sanitizeContact(contact.value, providerConfig.locale),
-              },
-        );
+        return {
+          ...fetchedDelta,
+          contacts: fetchedDelta.contacts.map((x) =>
+            sanitizeContact(x, providerConfig.locale),
+          ),
+        };
       };
 
       const responseDelta = await fetchContactsDelta();
