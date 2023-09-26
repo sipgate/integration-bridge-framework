@@ -1,6 +1,6 @@
-import { IntegrationEntityType } from './integration-entity.model';
 import { Request } from 'express';
 import { Config } from './config.model';
+import { IntegrationEntityType } from './integration-entity.model';
 
 export interface BridgeRequest<BodyType> extends Request {
   providerConfig?: Config;
@@ -9,6 +9,10 @@ export interface BridgeRequest<BodyType> extends Request {
 
 export interface IdBridgeRequest<BodyType> extends BridgeRequest<BodyType> {
   params: { id: string };
+}
+
+export interface BridgeRequestWithTimestamp extends BridgeRequest<unknown> {
+  params: { timestamp: string };
 }
 
 export interface IntegrationEntityBridgeRequest extends BridgeRequest<unknown> {

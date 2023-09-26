@@ -7,6 +7,7 @@ import { TokenCacheStorage } from './cache';
 import { errorHandlerMiddleware, extractHeaderMiddleware } from './middlewares';
 import {
   Adapter,
+  BridgeRequestWithTimestamp,
   ContactCache,
   Controller,
   IntegrationEntityBridgeRequest,
@@ -64,7 +65,7 @@ export function start(
     controller.streamContacts(req, res, next),
   );
 
-  app.get('/contacts-delta', (req, res, next) =>
+  app.get('/contacts-delta', (req: BridgeRequestWithTimestamp, res, next) =>
     controller.getContactsDelta(req, res, next),
   );
 

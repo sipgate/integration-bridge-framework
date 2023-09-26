@@ -22,6 +22,7 @@ import { validate } from '../util/validate';
 import { APIContact } from './api-contact.model';
 import {
   BridgeRequest,
+  BridgeRequestWithTimestamp,
   IdBridgeRequest,
   IntegrationEntityBridgeRequest,
 } from './bridge-request.model';
@@ -347,7 +348,7 @@ export class Controller {
   }
 
   public async getContactsDelta(
-    req: BridgeRequest<unknown>,
+    req: BridgeRequestWithTimestamp,
     res: Response,
     next: NextFunction,
   ): Promise<void> {
@@ -370,6 +371,7 @@ export class Controller {
 
         const fetchedDelta: ContactDelta = await this.adapter.getContactsDelta(
           providerConfig,
+          parseInt(req.params.timestamp),
         );
 
         if (!validate(this.ajv, contactsSchema, fetchedDelta.contacts)) {
