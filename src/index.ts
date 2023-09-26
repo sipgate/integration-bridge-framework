@@ -64,6 +64,10 @@ export function start(
     controller.streamContacts(req, res, next),
   );
 
+  app.get('/contacts-delta', (req, res, next) =>
+    controller.getContactsDelta(req, res, next),
+  );
+
   app.get(
     '/entity/:type/:id',
     (req: IntegrationEntityBridgeRequest, res, next) =>

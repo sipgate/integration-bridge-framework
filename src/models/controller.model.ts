@@ -9,6 +9,8 @@ import {
   CallEventWithIntegrationEntities,
   Contact,
   ContactCache,
+  ContactDelta,
+  ContactDeltaType,
   ContactTemplate,
   ContactUpdate,
   ServerError,
@@ -339,6 +341,78 @@ export class Controller {
         'streamContacts',
         'Could not stream contacts',
         providerConfig?.apiKey,
+        error,
+      );
+      next(error);
+    }
+  }
+
+  public async getContactsDelta(
+    req: BridgeRequest<unknown>,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
+    const { providerConfig } = req;
+
+    if (!providerConfig) {
+      throw new ServerError(400, 'Missing parameters');
+    }
+
+    try {
+      infoLogger('getContactsDelta', 'START', providerConfig.apiKey);
+
+      const fetchContactsDelta = async (): Promise<ContactDelta[]> => {
+        if (!this.adapter.getContactsDelta) {
+          throw new ServerError(
+            501,
+            'Fetching contacts delta is not implemented',
+          );
+        }
+
+        const fetchedContactDelta: ContactDelta[] =
+          await this.adapter.getContactsDelta(providerConfig);
+
+        const valuesToBeValidated = fetchedContactDelta
+          .filter((x) => x.type != ContactDeltaType.DELETED)
+          .map((x) => x.value);
+
+        if (!validate(this.ajv, contactsSchema, valuesToBeValidated)) {
+          throw new ServerError(500, 'Invalid contacts received');
+        }
+
+        return fetchedContactDelta.map((contact) =>
+          typeof contact.value === 'string'
+            ? contact
+            : {
+                ...contact,
+                value: sanitizeContact(contact.value, providerConfig.locale),
+              },
+        );
+      };
+
+      const responseDelta = await fetchContactsDelta();
+
+      if (this.adapter.getToken && req.providerConfig) {
+        const { apiKey } = await this.adapter.getToken(req.providerConfig);
+        res.header('X-Provider-Key', apiKey);
+      }
+
+      infoLogger('getContactsDelta', 'END', providerConfig.apiKey);
+      res.status(200).send(responseDelta);
+    } catch (error: any) {
+      // prevent logging of refresh errors
+      if (
+        error instanceof ServerError &&
+        error.message === IntegrationErrorType.INTEGRATION_REFRESH_ERROR
+      ) {
+        next(error);
+        return;
+      }
+
+      errorLogger(
+        'getContacts',
+        'Could not get contacts:',
+        providerConfig.apiKey,
         error,
       );
       next(error);
