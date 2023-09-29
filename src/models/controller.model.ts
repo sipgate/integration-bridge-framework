@@ -298,23 +298,38 @@ export class Controller {
       };
 
       const streamingPromise = streamContacts()
-        .then(() => {
+        .then(() =>
           this.pubSubClient?.publishMessage({
             userId: providerConfig.userId,
             timestamp,
             contacts: [],
             state: PubSubContactsState.COMPLETE,
             integrationName: this.integrationName,
-          });
-        })
-        .catch((error) =>
+          }),
+        )
+        .catch(async (error) => {
           errorLogger(
             'streamContacts',
             'Could not stream contacts',
             providerConfig.apiKey,
             error,
-          ),
-        )
+          );
+          return this.pubSubClient?.publishMessage({
+            userId: providerConfig.userId,
+            timestamp,
+            contacts: [],
+            state: PubSubContactsState.FAILED,
+            integrationName: this.integrationName,
+          });
+        })
+        .catch((error) => {
+          errorLogger(
+            'streamContacts',
+            'Could not publish failed message',
+            providerConfig.apiKey,
+            error,
+          );
+        })
         .finally(() => this.streamingPromises.delete(`${userId}:${timestamp}`));
 
       this.streamingPromises.set(`${userId}:${timestamp}`, streamingPromise);

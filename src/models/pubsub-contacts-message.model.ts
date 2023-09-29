@@ -3,6 +3,7 @@ import { Contact } from './contact.model';
 export enum PubSubContactsState {
   IN_PROGRESS = 'IN_PROGRESS',
   COMPLETE = 'COMPLETE',
+  FAILED = 'FAILED',
 }
 
 export type PubSubContactsMessage = {
