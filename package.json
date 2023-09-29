@@ -68,7 +68,7 @@
   "dependencies": {
     "@google-cloud/pubsub": "^3.7.1",
     "ajv": "^8.11.0",
-    "awesome-phonenumber": "^3.2.0",
+    "awesome-phonenumber": "^5.0.0",
     "axios": "^0.27.2",
     "body-parser": "^1.20.0",
     "compression": "^1.7.4",
