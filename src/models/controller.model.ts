@@ -298,6 +298,15 @@ export class Controller {
       };
 
       const streamingPromise = streamContacts()
+        .then(() => {
+          this.pubSubClient?.publishMessage({
+            userId: providerConfig.userId,
+            timestamp,
+            contacts: [],
+            state: PubSubContactsState.COMPLETE,
+            integrationName: this.integrationName,
+          });
+        })
         .catch((error) =>
           errorLogger(
             'streamContacts',
@@ -306,16 +315,7 @@ export class Controller {
             error,
           ),
         )
-        .finally(() => {
-          this.pubSubClient?.publishMessage({
-            userId: providerConfig.userId,
-            timestamp,
-            contacts: [],
-            state: PubSubContactsState.COMPLETE,
-            integrationName: this.integrationName,
-          });
-          this.streamingPromises.delete(`${userId}:${timestamp}`);
-        });
+        .finally(() => this.streamingPromises.delete(`${userId}:${timestamp}`));
 
       this.streamingPromises.set(`${userId}:${timestamp}`, streamingPromise);
 
