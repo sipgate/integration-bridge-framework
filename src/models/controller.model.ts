@@ -1258,4 +1258,31 @@ export class Controller {
       res.redirect(redirectUrl);
     }
   }
+
+  public async getAccountId(
+    req: BridgeRequest<unknown>,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
+    const { providerConfig } = req;
+    if (!providerConfig) {
+      throw new ServerError(400, 'Missing parameters');
+    }
+    if (!this.adapter.getAccountId) {
+      throw new ServerError(501, 'Fetching account id is not implemented');
+    }
+    try {
+      const accountId = await this.adapter.getAccountId(providerConfig);
+      console.log('accountId', accountId);
+      res.status(200).send(accountId.toString());
+    } catch (error: any) {
+      errorLogger(
+        'getAccountId',
+        'Could not get AccountId',
+        providerConfig?.apiKey,
+        error,
+      );
+      next(error);
+    }
+  }
 }

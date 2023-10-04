@@ -125,6 +125,10 @@ export function start(
     controller.oAuth2Callback(req, res),
   );
 
+  app.get('/account/id', (req, res, next) =>
+    controller.getAccountId(req, res, next),
+  );
+
   app.use(errorHandlerMiddleware);
 
   customRouters.forEach(({ path, router }) => app.use(path, router));

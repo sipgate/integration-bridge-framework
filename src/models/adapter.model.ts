@@ -18,6 +18,7 @@ import { IntegrationEntityType } from './integration-entity.model';
 export interface Adapter {
   getToken?: (config: Config) => Promise<{ apiKey: string }>;
   isValidToken?: (config: Config) => Promise<boolean>;
+  getAccountId?: (config: Config) => Promise<string>;
   getContacts?: (config: Config) => Promise<Contact[]>;
   getContactsDelta?: (
     config: Config,
