@@ -1,6 +1,6 @@
 import { IntegrationEntityType } from './integration-entity.model';
 
-export type IntegrationEntitiesChangedData = {
+export type ContactsChangedData = {
   integrationName: string;
   data: {
     integrationAccountId: string;

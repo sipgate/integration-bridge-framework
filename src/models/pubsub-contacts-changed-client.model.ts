@@ -1,10 +1,10 @@
 import { PubSub } from '@google-cloud/pubsub';
 import { timeout } from '../util/timeout';
-import { PubSubIntegrationEntitiesChangedMessage } from './pubsub-integration-entities-changed-message.model';
+import { PubSubContactsChangedMessage } from './pubsub-contacts-changed-message.model';
 
 const PUBLISH_TIMEOUT = 10_000;
 
-export class PubSubIntegrationEntitiesChangedClient {
+export class PubSubContactsChangedClient {
   private client: PubSub;
   private topicName: string;
 
@@ -13,7 +13,7 @@ export class PubSubIntegrationEntitiesChangedClient {
     this.topicName = topicName;
   }
 
-  async publishMessage(message: PubSubIntegrationEntitiesChangedMessage) {
+  async publishMessage(message: PubSubContactsChangedMessage) {
     if (!this.topicName) {
       throw new Error('No pubsub topic name provided.');
     }
