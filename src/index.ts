@@ -54,7 +54,7 @@ export function start(
   );
 
   app.get('/contacts/:id', (req, res, next) =>
-    controller.updateContact(req, res, next),
+    controller.getContact(req, res, next),
   );
 
   app.put('/contacts/:id', (req, res, next) =>
