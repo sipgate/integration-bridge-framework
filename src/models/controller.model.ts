@@ -12,6 +12,7 @@ import {
   ContactDelta,
   ContactTemplate,
   ContactUpdate,
+  ContactsChangedData,
   ServerError,
 } from '.';
 import { calendarEventsSchema, contactsSchema } from '../schemas';
@@ -34,6 +35,7 @@ import {
   PubSubContactsMessage,
   PubSubContactsState,
 } from './pubsub-contacts-message.model';
+import { PubSubContactsChangedClient } from './pubsub-contacts-changed-client.model';
 
 const CONTACT_FETCH_TIMEOUT = 5000;
 
@@ -52,6 +54,8 @@ export class Controller {
   private contactCache: ContactCache | null;
   private ajv: Ajv;
   private pubSubClient: PubSubClient | null = null;
+  private pubSubContactsChangedClient: PubSubContactsChangedClient | null =
+    null;
   private integrationName: string = 'UNKNOWN';
   private streamingPromises = new Map<string, Promise<void>>();
 
@@ -63,11 +67,16 @@ export class Controller {
     if (this.adapter.streamContacts) {
       const {
         PUBSUB_TOPIC_NAME: topicName,
+        PUBSUB_CONTACTS_CHANGED_TOPIC_NAME: contactsChangedTopicName,
         INTEGRATION_NAME: integrationName,
       } = process.env;
 
       if (!topicName) {
         throw new Error('No PUBSUB_TOPIC_NAME provided.');
+      }
+
+      if (!contactsChangedTopicName) {
+        throw new Error('No PUBSUB_CONTACTS_CHANGED_TOPIC_NAME provided.');
       }
 
       if (!integrationName) {
@@ -79,6 +88,14 @@ export class Controller {
       infoLogger(
         'Controller',
         `Initialized PubSub client with topic ${topicName}`,
+      );
+
+      this.pubSubContactsChangedClient = new PubSubContactsChangedClient(
+        contactsChangedTopicName,
+      );
+      infoLogger(
+        'Controller',
+        `Initialized PubSub client with topic ${contactsChangedTopicName}`,
       );
     }
   }
@@ -1283,6 +1300,30 @@ export class Controller {
         error,
       );
       next(error);
+    }
+  }
+
+  public async handleWebhook(req: Request, res: Response): Promise<void> {
+    try {
+      if (!this.adapter.handleWebhook) {
+        throw new ServerError(501, 'Webhook handling not implemented');
+      }
+
+      const contactsChangedData: ContactsChangedData =
+        await this.adapter.handleWebhook(req.body);
+
+      console.log('sending webhook to pubsub', contactsChangedData);
+      this.pubSubContactsChangedClient?.publishMessage(contactsChangedData);
+
+      res.sendStatus(200);
+    } catch (error) {
+      errorLogger(
+        'handleWebhook',
+        'Could not handle webhook:',
+        '',
+        error || 'Unknown',
+      );
+      res.sendStatus(500);
     }
   }
 }
