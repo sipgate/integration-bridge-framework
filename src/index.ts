@@ -53,6 +53,10 @@ export function start(
     controller.createContact(req, res, next),
   );
 
+  app.get('/contacts/:id', (req, res, next) =>
+    controller.updateContact(req, res, next),
+  );
+
   app.put('/contacts/:id', (req, res, next) =>
     controller.updateContact(req, res, next),
   );

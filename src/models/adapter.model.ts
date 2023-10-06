@@ -20,6 +20,7 @@ export interface Adapter {
   getToken?: (config: Config) => Promise<{ apiKey: string }>;
   isValidToken?: (config: Config) => Promise<boolean>;
   getAccountId?: (config: Config) => Promise<string>;
+  getContact?: (config: Config, id: string) => Promise<Contact>;
   getContacts?: (config: Config) => Promise<Contact[]>;
   getContactsDelta?: (
     config: Config,

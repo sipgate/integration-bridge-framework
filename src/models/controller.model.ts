@@ -447,6 +447,52 @@ export class Controller {
     }
   }
 
+  public async getContact(
+    req: BridgeRequest<unknown>,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
+    const { providerConfig } = req;
+
+    if (!providerConfig) {
+      throw new ServerError(400, 'Missing parameters');
+    }
+
+    if (!this.adapter.getContact) {
+      throw new ServerError(501, 'Getting single contact is not implemented');
+    }
+
+    try {
+      infoLogger('getContact', 'START', providerConfig.apiKey);
+
+      const contactId = req.params.id;
+      const responeContact = await this.adapter.getContact(
+        providerConfig,
+        contactId,
+      );
+
+      infoLogger('getContact', 'END', providerConfig.apiKey);
+      res.status(200).send(responeContact);
+    } catch (error: any) {
+      // prevent logging of refresh errors
+      if (
+        error instanceof ServerError &&
+        error.message === IntegrationErrorType.INTEGRATION_REFRESH_ERROR
+      ) {
+        next(error);
+        return;
+      }
+
+      errorLogger(
+        'getContact',
+        'Could not get contact:',
+        providerConfig.apiKey,
+        error,
+      );
+      next(error);
+    }
+  }
+
   public async createContact(
     req: BridgeRequest<ContactTemplate>,
     res: Response,
