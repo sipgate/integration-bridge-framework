@@ -12,7 +12,7 @@ import {
   ContactDelta,
   ContactTemplate,
   ContactUpdate,
-  ContactsChangedData,
+  IntegrationEntitiesChangedData,
   ServerError,
 } from '.';
 import { calendarEventsSchema, contactsSchema } from '../schemas';
@@ -35,7 +35,7 @@ import {
   PubSubContactsMessage,
   PubSubContactsState,
 } from './pubsub-contacts-message.model';
-import { PubSubContactsChangedClient } from './pubsub-contacts-changed-client.model';
+import { PubSubIntegrationEntitiesChangedClient } from './pubsub-integration-entities-changed-client.model';
 
 const CONTACT_FETCH_TIMEOUT = 5000;
 
@@ -54,7 +54,7 @@ export class Controller {
   private contactCache: ContactCache | null;
   private ajv: Ajv;
   private pubSubClient: PubSubClient | null = null;
-  private pubSubContactsChangedClient: PubSubContactsChangedClient | null =
+  private pubSubIntegrationEntitiesChangedClient: PubSubIntegrationEntitiesChangedClient | null =
     null;
   private integrationName: string = 'UNKNOWN';
   private streamingPromises = new Map<string, Promise<void>>();
@@ -67,7 +67,8 @@ export class Controller {
     if (this.adapter.streamContacts) {
       const {
         PUBSUB_TOPIC_NAME: topicName,
-        PUBSUB_CONTACTS_CHANGED_TOPIC_NAME: contactsChangedTopicName,
+        PUBSUB_INTEGRATION_ENTITIES_CHANGED_TOPIC_NAME:
+          integrationEntitiesChangedTopicName,
         INTEGRATION_NAME: integrationName,
       } = process.env;
 
@@ -75,8 +76,10 @@ export class Controller {
         throw new Error('No PUBSUB_TOPIC_NAME provided.');
       }
 
-      if (!contactsChangedTopicName) {
-        throw new Error('No PUBSUB_CONTACTS_CHANGED_TOPIC_NAME provided.');
+      if (!integrationEntitiesChangedTopicName) {
+        throw new Error(
+          'No PUBSUB_INTEGRATION_ENTITIES_CHANGED_TOPIC_NAME provided.',
+        );
       }
 
       if (!integrationName) {
@@ -90,12 +93,13 @@ export class Controller {
         `Initialized PubSub client with topic ${topicName}`,
       );
 
-      this.pubSubContactsChangedClient = new PubSubContactsChangedClient(
-        contactsChangedTopicName,
-      );
+      this.pubSubIntegrationEntitiesChangedClient =
+        new PubSubIntegrationEntitiesChangedClient(
+          integrationEntitiesChangedTopicName,
+        );
       infoLogger(
         'Controller',
-        `Initialized PubSub client with topic ${contactsChangedTopicName}`,
+        `Initialized PubSub client with topic ${integrationEntitiesChangedTopicName}`,
       );
     }
   }
@@ -1309,11 +1313,11 @@ export class Controller {
         throw new ServerError(501, 'Webhook handling not implemented');
       }
 
-      const contactsChangedData: ContactsChangedData =
+      const changedData: IntegrationEntitiesChangedData =
         await this.adapter.handleWebhook(req.body);
 
-      console.log('sending webhook to pubsub', contactsChangedData);
-      this.pubSubContactsChangedClient?.publishMessage(contactsChangedData);
+      console.log('sending webhook to pubsub', changedData);
+      this.pubSubIntegrationEntitiesChangedClient?.publishMessage(changedData);
 
       res.sendStatus(200);
     } catch (error) {

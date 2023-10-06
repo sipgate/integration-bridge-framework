@@ -14,7 +14,7 @@ import {
   LoggedIntegrationEntity,
 } from '.';
 import { IntegrationEntityType } from './integration-entity.model';
-import { ContactsChangedData } from './contacts-changed.model';
+import { IntegrationEntitiesChangedData } from './integration-entities-changed.model';
 
 export interface Adapter {
   getToken?: (config: Config) => Promise<{ apiKey: string }>;
@@ -83,5 +83,5 @@ export interface Adapter {
     req: Request,
     res?: Response,
   ) => Promise<{ apiKey: string; apiUrl: string }>;
-  handleWebhook?: (body: unknown) => Promise<ContactsChangedData>;
+  handleWebhook?: (body: unknown) => Promise<IntegrationEntitiesChangedData>;
 }
