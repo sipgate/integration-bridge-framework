@@ -125,6 +125,8 @@ export function start(
     controller.oAuth2Callback(req, res),
   );
 
+  app.post('/webhook', (req, res, next) => controller.handleWebhook(req, res));
+
   app.use(errorHandlerMiddleware);
 
   customRouters.forEach(({ path, router }) => app.use(path, router));
