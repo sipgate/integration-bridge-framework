@@ -1356,7 +1356,7 @@ export class Controller {
       }
 
       const contactsChangedData: ContactsChangedData =
-        await this.adapter.handleWebhook(req.body);
+        await this.adapter.handleWebhook(req);
 
       console.log('sending webhook to pubsub', contactsChangedData);
       this.pubSubContactsChangedClient?.publishMessage(contactsChangedData);
