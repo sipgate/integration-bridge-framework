@@ -37,6 +37,7 @@ import {
 } from './pubsub-contacts-message.model';
 import { PubSubContactsChangedClient } from './pubsub-contacts-changed-client.model';
 import { PubSubContactChangeEventMessage } from './pubsub-contacts-changed-message.model';
+import { isEqual, uniqWith } from 'lodash';
 
 const CONTACT_FETCH_TIMEOUT = 5000;
 
@@ -1385,7 +1386,9 @@ export class Controller {
         '',
       );
 
-      changeEvents.map((changeEvent: ContactChangeEvent) => {
+      const deduplicatedChangeEvents = uniqWith(changeEvents, isEqual);
+
+      deduplicatedChangeEvents.map((changeEvent: ContactChangeEvent) => {
         infoLogger(
           'handleWebhook',
           `Publishing contact change event with accountId ${changeEvent.accountId} and contactId ${changeEvent.contactId}`,
