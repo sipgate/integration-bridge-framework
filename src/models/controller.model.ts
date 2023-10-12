@@ -13,6 +13,7 @@ import {
   ContactDelta,
   ContactTemplate,
   ContactUpdate,
+  IntegrationEntityType,
   ServerError,
 } from '.';
 import { calendarEventsSchema, contactsSchema } from '../schemas';
@@ -464,13 +465,28 @@ export class Controller {
       throw new ServerError(501, 'Getting single contact is not implemented');
     }
 
-    try {
-      infoLogger('getContact', 'START', providerConfig.apiKey);
+    infoLogger('getContact', 'START', providerConfig.apiKey);
 
+    const contactType: IntegrationEntityType | undefined = Object.values(
+      IntegrationEntityType,
+    ).find((value) => value === req.query.type?.toString());
+
+    if (!contactType) {
+      throw new ServerError(400, 'Missing contact type query parameter');
+    }
+
+    try {
       const contactId = req.params.id;
+      infoLogger(
+        'getContact',
+        `Fetching contact ${contactId} of type ${contactType}`,
+        providerConfig.apiKey,
+      );
+
       const responeContact = await this.adapter.getContact(
         providerConfig,
         contactId,
+        contactType,
       );
 
       infoLogger('getContact', 'END', providerConfig.apiKey);
