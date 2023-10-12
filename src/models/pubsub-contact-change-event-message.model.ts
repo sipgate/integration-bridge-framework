@@ -1,4 +1,4 @@
-import { ContactChangeEvent } from './contacts-changed.model';
+import { ContactChangeEvent } from './contact-change-event.model';
 
 export type PubSubContactChangeEventMessage = {
   integrationName: string;

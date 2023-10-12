@@ -14,7 +14,7 @@ import {
   LoggedIntegrationEntity,
 } from '.';
 import { IntegrationEntityType } from './integration-entity.model';
-import { ContactChangeEvent } from './contacts-changed.model';
+import { ContactChangeEvent } from './contact-change-event.model';
 
 export interface Adapter {
   getToken?: (config: Config) => Promise<{ apiKey: string }>;

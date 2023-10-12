@@ -7,7 +7,7 @@ export * from './call-event.model';
 export * from './config.model';
 export * from './contact-cache.model';
 export * from './contact.model';
-export * from './contacts-changed.model';
+export * from './contact-change-event.model';
 export * from './controller.model';
 export * from './custom-router.model';
 export * from './server-error.model';

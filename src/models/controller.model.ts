@@ -35,8 +35,8 @@ import {
   PubSubContactsMessage,
   PubSubContactsState,
 } from './pubsub-contacts-message.model';
-import { PubSubContactsChangedClient } from './pubsub-contacts-changed-client.model';
-import { PubSubContactChangeEventMessage } from './pubsub-contacts-changed-message.model';
+import { PubSubContactChangeEventClient } from './pubsub-contact-change-event-client.model';
+import { PubSubContactChangeEventMessage } from './pubsub-contact-change-event-message.model';
 import { isEqual, uniqWith } from 'lodash';
 
 const CONTACT_FETCH_TIMEOUT = 5000;
@@ -56,7 +56,7 @@ export class Controller {
   private contactCache: ContactCache | null;
   private ajv: Ajv;
   private pubSubClient: PubSubClient | null = null;
-  private pubSubContactsChangedClient: PubSubContactsChangedClient | null =
+  private pubSubContactsChangedClient: PubSubContactChangeEventClient | null =
     null;
   private integrationName: string = 'UNKNOWN';
   private streamingPromises = new Map<string, Promise<void>>();
@@ -92,7 +92,7 @@ export class Controller {
         `Initialized PubSub client with topic ${topicName}`,
       );
 
-      this.pubSubContactsChangedClient = new PubSubContactsChangedClient(
+      this.pubSubContactsChangedClient = new PubSubContactChangeEventClient(
         contactsChangedTopicName,
       );
       infoLogger(

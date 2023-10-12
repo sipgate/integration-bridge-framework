@@ -1,10 +1,10 @@
 import { PubSub } from '@google-cloud/pubsub';
 import { timeout } from '../util/timeout';
-import { PubSubContactChangeEventMessage } from './pubsub-contacts-changed-message.model';
+import { PubSubContactChangeEventMessage } from './pubsub-contact-change-event-message.model';
 
 const PUBLISH_TIMEOUT = 10_000;
 
-export class PubSubContactsChangedClient {
+export class PubSubContactChangeEventClient {
   private client: PubSub;
   private topicName: string;
 
