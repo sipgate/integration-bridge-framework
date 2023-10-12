@@ -132,7 +132,10 @@ export function start(
   app.get('/account/id', (req, res, next) =>
     controller.getAccountId(req, res, next),
   );
-  app.post('/webhook', (req, res, next) => controller.handleWebhook(req, res));
+
+  app.post('/webhook', (req, res, next) =>
+    controller.handleWebhook(req, res, next),
+  );
 
   app.use(errorHandlerMiddleware);
 

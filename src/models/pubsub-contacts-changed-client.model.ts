@@ -1,6 +1,6 @@
 import { PubSub } from '@google-cloud/pubsub';
 import { timeout } from '../util/timeout';
-import { PubSubContactsChangedMessage } from './pubsub-contacts-changed-message.model';
+import { PubSubContactChangeEventMessage } from './pubsub-contacts-changed-message.model';
 
 const PUBLISH_TIMEOUT = 10_000;
 
@@ -13,7 +13,7 @@ export class PubSubContactsChangedClient {
     this.topicName = topicName;
   }
 
-  async publishMessage(message: PubSubContactsChangedMessage) {
+  async publishMessage(message: PubSubContactChangeEventMessage) {
     if (!this.topicName) {
       throw new Error('No pubsub topic name provided.');
     }

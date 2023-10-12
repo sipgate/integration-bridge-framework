@@ -9,10 +9,10 @@ import {
   CallEventWithIntegrationEntities,
   Contact,
   ContactCache,
+  ContactChangeEvent,
   ContactDelta,
   ContactTemplate,
   ContactUpdate,
-  ContactsChangedData,
   ServerError,
 } from '.';
 import { calendarEventsSchema, contactsSchema } from '../schemas';
@@ -36,6 +36,7 @@ import {
   PubSubContactsState,
 } from './pubsub-contacts-message.model';
 import { PubSubContactsChangedClient } from './pubsub-contacts-changed-client.model';
+import { PubSubContactChangeEventMessage } from './pubsub-contacts-changed-message.model';
 
 const CONTACT_FETCH_TIMEOUT = 5000;
 
@@ -1354,7 +1355,11 @@ export class Controller {
     }
   }
 
-  public async handleWebhook(req: Request, res: Response): Promise<void> {
+  public async handleWebhook(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
     if (!this.adapter.handleWebhook) {
       throw new ServerError(501, 'Webhook handling not implemented');
     }
@@ -1371,16 +1376,29 @@ export class Controller {
     infoLogger('handleWebhook', 'START', '');
 
     try {
-      const contactsChangedData: ContactsChangedData =
+      const changeEvents: ContactChangeEvent[] =
         await this.adapter.handleWebhook(req);
 
       infoLogger(
         'handleWebhook',
-        `Got ${contactsChangedData.data.length} changed contacts`,
+        `Got ${changeEvents.length} changed contacts`,
         '',
       );
 
-      this.pubSubContactsChangedClient?.publishMessage(contactsChangedData);
+      changeEvents.map((changeEvent: ContactChangeEvent) => {
+        infoLogger(
+          'handleWebhook',
+          `Publishing contact change event with accountId ${changeEvent.accountId} and contactId ${changeEvent.contactId}`,
+          '',
+        );
+
+        const message: PubSubContactChangeEventMessage = {
+          integrationName: this.integrationName,
+          ...changeEvent,
+        };
+
+        this.pubSubContactsChangedClient?.publishMessage(message);
+      });
 
       infoLogger('handleWebhook', 'END', '');
       res.sendStatus(200);
@@ -1391,7 +1409,7 @@ export class Controller {
         '',
         error || 'Unknown',
       );
-      res.sendStatus(500);
+      next(error);
     }
   }
 }
