@@ -85,4 +85,5 @@ export interface Adapter {
     res?: Response,
   ) => Promise<{ apiKey: string; apiUrl: string }>;
   handleWebhook?: (req: Request) => Promise<ContactsChangedData>;
+  verifyWebhookRequest?: (req: Request) => Promise<boolean>;
 }

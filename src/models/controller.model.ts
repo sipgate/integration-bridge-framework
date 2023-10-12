@@ -1350,11 +1350,20 @@ export class Controller {
   }
 
   public async handleWebhook(req: Request, res: Response): Promise<void> {
-    try {
-      if (!this.adapter.handleWebhook) {
-        throw new ServerError(501, 'Webhook handling not implemented');
-      }
+    if (!this.adapter.handleWebhook) {
+      throw new ServerError(501, 'Webhook handling not implemented');
+    }
 
+    if (!this.adapter.verifyWebhookRequest) {
+      throw new ServerError(501, 'Webhook verification not implemented');
+    }
+
+    const verified = await this.adapter.verifyWebhookRequest(req);
+    if (!verified) {
+      throw new ServerError(403, 'Webhook verification failed');
+    }
+
+    try {
       const contactsChangedData: ContactsChangedData =
         await this.adapter.handleWebhook(req);
 
