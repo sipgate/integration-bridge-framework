@@ -1331,12 +1331,17 @@ export class Controller {
     if (!providerConfig) {
       throw new ServerError(400, 'Missing parameters');
     }
+
     if (!this.adapter.getAccountId) {
       throw new ServerError(501, 'Fetching account id is not implemented');
     }
+
+    infoLogger('getAccountId', 'START', providerConfig.apiKey);
+
     try {
       const accountId = await this.adapter.getAccountId(providerConfig);
-      console.log('accountId', accountId);
+
+      infoLogger('getAccountId', 'END', providerConfig.apiKey);
       res.status(200).send(accountId.toString());
     } catch (error: any) {
       errorLogger(
@@ -1363,13 +1368,21 @@ export class Controller {
       throw new ServerError(403, 'Webhook verification failed');
     }
 
+    infoLogger('handleWebhook', 'START', '');
+
     try {
       const contactsChangedData: ContactsChangedData =
         await this.adapter.handleWebhook(req);
 
-      console.log('sending webhook to pubsub', contactsChangedData);
+      infoLogger(
+        'handleWebhook',
+        `Got ${contactsChangedData.data.length} changed contacts`,
+        '',
+      );
+
       this.pubSubContactsChangedClient?.publishMessage(contactsChangedData);
 
+      infoLogger('handleWebhook', 'END', '');
       res.sendStatus(200);
     } catch (error) {
       errorLogger(
