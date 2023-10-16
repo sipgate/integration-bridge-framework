@@ -1377,8 +1377,12 @@ export class Controller {
     try {
       const accountId = await this.adapter.getAccountId(providerConfig);
 
+      if (!accountId) {
+        throw new ServerError(500, 'AccountID not found');
+      }
+
       infoLogger('getAccountId', 'END', providerConfig.apiKey);
-      res.status(200).send(accountId.toString());
+      res.status(200).json(accountId.toString());
     } catch (error: any) {
       errorLogger(
         'getAccountId',
