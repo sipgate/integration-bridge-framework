@@ -1,10 +1,9 @@
 import { PubSub } from '@google-cloud/pubsub';
 import { timeout } from '../util/timeout';
-import { PubSubContactsMessage } from './pubsub-contacts-message.model';
 
 const PUBLISH_TIMEOUT = 10_000;
 
-export class PubSubClient {
+export class PubSubClient<T> {
   private client: PubSub;
   private topicName: string;
 
@@ -13,7 +12,7 @@ export class PubSubClient {
     this.topicName = topicName;
   }
 
-  async publishMessage(message: PubSubContactsMessage) {
+  async publishMessage(message: T) {
     if (!this.topicName) {
       throw new Error('No pubsub topic name provided.');
     }

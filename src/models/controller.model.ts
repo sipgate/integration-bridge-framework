@@ -1,5 +1,6 @@
 import Ajv from 'ajv';
 import { NextFunction, Request, Response } from 'express';
+import { isEqual, uniqWith } from 'lodash';
 import { stringify } from 'querystring';
 import {
   Adapter,
@@ -32,13 +33,11 @@ import { CacheItemStateType } from './cache-item-state.model';
 import { CalendarFilterOptions } from './calendar-filter-options.model';
 import { IntegrationErrorType } from './integration-error.model';
 import { PubSubClient } from './pubsub-client.model';
+import { PubSubContactChangeEventMessage } from './pubsub-contact-change-event-message.model';
 import {
   PubSubContactsMessage,
   PubSubContactsState,
 } from './pubsub-contacts-message.model';
-import { PubSubContactChangeEventClient } from './pubsub-contact-change-event-client.model';
-import { PubSubContactChangeEventMessage } from './pubsub-contact-change-event-message.model';
-import { isEqual, uniqWith } from 'lodash';
 
 const CONTACT_FETCH_TIMEOUT = 5000;
 
@@ -56,8 +55,9 @@ export class Controller {
   private adapter: Adapter;
   private contactCache: ContactCache | null;
   private ajv: Ajv;
-  private pubSubClient: PubSubClient | null = null;
-  private pubSubContactsChangedClient: PubSubContactChangeEventClient | null =
+  private pubSubContactStreamingClient: PubSubClient<PubSubContactsMessage> | null =
+    null;
+  private pubSubContactChangesClient: PubSubClient<PubSubContactChangeEventMessage> | null =
     null;
   private integrationName: string = 'UNKNOWN';
   private streamingPromises = new Map<string, Promise<void>>();
@@ -68,50 +68,57 @@ export class Controller {
     this.ajv = new Ajv();
 
     if (this.adapter.streamContacts) {
-      const {
-        PUBSUB_TOPIC_NAME: topicName,
-        INTEGRATION_NAME: integrationName,
-      } = process.env;
-
-      if (!topicName) {
-        throw new Error('No PUBSUB_TOPIC_NAME provided.');
-      }
-
-      if (!integrationName) {
-        throw new Error('No INTEGRATION_NAME provided.');
-      }
-
-      this.integrationName = integrationName;
-      this.pubSubClient = new PubSubClient(topicName);
-      infoLogger(
-        'Controller',
-        `Initialized PubSub client with topic ${topicName}`,
-      );
+      this.initContactStreaming();
     }
 
     if (this.adapter.handleWebhook) {
-      const {
-        PUBSUB_CONTACTS_CHANGED_TOPIC_NAME: contactsChangedTopicName,
-        INTEGRATION_NAME: integrationName,
-      } = process.env;
+      this.initContactChanges();
+    }
 
-      if (!contactsChangedTopicName) {
-        throw new Error('No PUBSUB_CONTACTS_CHANGED_TOPIC_NAME provided.');
-      }
+    if (this.adapter.streamContacts || this.adapter.handleWebhook) {
+      const { INTEGRATION_NAME: integrationName } = process.env;
 
       if (!integrationName) {
         throw new Error('No INTEGRATION_NAME provided.');
       }
-      this.integrationName = integrationName;
 
-      this.pubSubContactsChangedClient = new PubSubContactChangeEventClient(
-        contactsChangedTopicName,
-      );
-      infoLogger(
-        'Controller',
-        `Initialized PubSub client with topic ${contactsChangedTopicName}`,
-      );
+      this.integrationName = integrationName;
     }
+  }
+
+  private initContactStreaming() {
+    const {
+      PUBSUB_TOPIC_NAME: topicNameLegacy,
+      PUBSUB_TOPIC_NAME_CONTACT_STREAMING: topicName,
+    } = process.env;
+
+    const topicNameProvided = topicName ?? topicNameLegacy;
+
+    if (!topicNameProvided) {
+      throw new Error('No PUBSUB_TOPIC_NAME_CONTACT_STREAMING provided.');
+    }
+
+    this.pubSubContactStreamingClient = new PubSubClient(topicNameProvided);
+
+    infoLogger(
+      'Controller',
+      `Initialized PubSub client for topic ${topicName}`,
+    );
+  }
+
+  private initContactChanges() {
+    const { PUBSUB_TOPIC_NAME_CONTACT_CHANGES: topicName } = process.env;
+
+    if (!topicName) {
+      throw new Error('No PUBSUB_TOPIC_NAME_CONTACT_CHANGES provided.');
+    }
+
+    this.pubSubContactChangesClient = new PubSubClient(topicName);
+
+    infoLogger(
+      'Controller',
+      `Initialized PubSub client for topic ${topicName}`,
+    );
   }
 
   public async isValidToken(
@@ -314,7 +321,7 @@ export class Controller {
               integrationName: this.integrationName,
             };
 
-            await this.pubSubClient?.publishMessage(message);
+            await this.pubSubContactStreamingClient?.publishMessage(message);
           } catch (error) {
             errorLogger(
               'streamContacts',
@@ -330,7 +337,7 @@ export class Controller {
 
       const streamingPromise = streamContacts()
         .then(() =>
-          this.pubSubClient?.publishMessage({
+          this.pubSubContactStreamingClient?.publishMessage({
             userId: providerConfig.userId,
             timestamp,
             contacts: [],
@@ -345,7 +352,7 @@ export class Controller {
             providerConfig.apiKey,
             error,
           );
-          return this.pubSubClient?.publishMessage({
+          return this.pubSubContactStreamingClient?.publishMessage({
             userId: providerConfig.userId,
             timestamp,
             contacts: [],
@@ -1427,7 +1434,7 @@ export class Controller {
           ...changeEvent,
         };
 
-        this.pubSubContactsChangedClient?.publishMessage(message);
+        this.pubSubContactChangesClient?.publishMessage(message);
       });
 
       infoLogger('handleWebhook', 'END', '');
