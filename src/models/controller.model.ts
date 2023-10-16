@@ -501,14 +501,14 @@ export class Controller {
         providerConfig.apiKey,
       );
 
-      const responeContact = await this.adapter.getContact(
+      const contact = await this.adapter.getContact(
         providerConfig,
         contactId,
         contactType,
       );
 
       infoLogger('getContact', 'END', providerConfig.apiKey);
-      res.status(200).send(responeContact);
+      res.status(200).send(sanitizeContact(contact, providerConfig.locale));
     } catch (error: any) {
       // prevent logging of refresh errors
       if (
