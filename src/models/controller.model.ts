@@ -70,16 +70,11 @@ export class Controller {
     if (this.adapter.streamContacts) {
       const {
         PUBSUB_TOPIC_NAME: topicName,
-        PUBSUB_CONTACTS_CHANGED_TOPIC_NAME: contactsChangedTopicName,
         INTEGRATION_NAME: integrationName,
       } = process.env;
 
       if (!topicName) {
         throw new Error('No PUBSUB_TOPIC_NAME provided.');
-      }
-
-      if (!contactsChangedTopicName) {
-        throw new Error('No PUBSUB_CONTACTS_CHANGED_TOPIC_NAME provided.');
       }
 
       if (!integrationName) {
@@ -92,6 +87,22 @@ export class Controller {
         'Controller',
         `Initialized PubSub client with topic ${topicName}`,
       );
+    }
+
+    if (this.adapter.handleWebhook) {
+      const {
+        PUBSUB_CONTACTS_CHANGED_TOPIC_NAME: contactsChangedTopicName,
+        INTEGRATION_NAME: integrationName,
+      } = process.env;
+
+      if (!contactsChangedTopicName) {
+        throw new Error('No PUBSUB_CONTACTS_CHANGED_TOPIC_NAME provided.');
+      }
+
+      if (!integrationName) {
+        throw new Error('No INTEGRATION_NAME provided.');
+      }
+      this.integrationName = integrationName;
 
       this.pubSubContactsChangedClient = new PubSubContactChangeEventClient(
         contactsChangedTopicName,
