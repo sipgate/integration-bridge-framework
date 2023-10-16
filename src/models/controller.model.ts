@@ -407,11 +407,11 @@ export class Controller {
   ): Promise<void> {
     const { providerConfig } = req;
 
-    if (!providerConfig) {
-      throw new ServerError(400, 'Missing parameters');
-    }
-
     try {
+      if (!providerConfig) {
+        throw new ServerError(400, 'Missing parameters');
+      }
+
       infoLogger('getContactsDelta', 'START', providerConfig.apiKey);
 
       const fetchContactsDelta = async (): Promise<ContactDelta> => {
@@ -461,7 +461,7 @@ export class Controller {
       errorLogger(
         'getContacts',
         'Could not get contacts:',
-        providerConfig.apiKey,
+        providerConfig?.apiKey,
         error,
       );
       next(error);
@@ -474,26 +474,25 @@ export class Controller {
     next: NextFunction,
   ): Promise<void> {
     const { providerConfig } = req;
-
-    if (!providerConfig) {
-      throw new ServerError(400, 'Missing parameters');
-    }
-
-    if (!this.adapter.getContact) {
-      throw new ServerError(501, 'Getting single contact is not implemented');
-    }
-
-    infoLogger('getContact', 'START', providerConfig.apiKey);
-
-    const contactType: IntegrationEntityType | undefined = Object.values(
-      IntegrationEntityType,
-    ).find((value) => value === req.query.type?.toString());
-
-    if (!contactType) {
-      throw new ServerError(400, 'Missing contact type query parameter');
-    }
-
     try {
+      if (!providerConfig) {
+        throw new ServerError(400, 'Missing parameters');
+      }
+
+      if (!this.adapter.getContact) {
+        throw new ServerError(501, 'Getting single contact is not implemented');
+      }
+
+      infoLogger('getContact', 'START', providerConfig.apiKey);
+
+      const contactType: IntegrationEntityType | undefined = Object.values(
+        IntegrationEntityType,
+      ).find((value) => value === req.query.type?.toString());
+
+      if (!contactType) {
+        throw new ServerError(400, 'Missing contact type query parameter');
+      }
+
       const contactId = req.params.id;
       infoLogger(
         'getContact',
@@ -522,7 +521,7 @@ export class Controller {
       errorLogger(
         'getContact',
         'Could not get contact:',
-        providerConfig.apiKey,
+        providerConfig?.apiKey,
         error,
       );
       next(error);
@@ -1364,17 +1363,18 @@ export class Controller {
     next: NextFunction,
   ): Promise<void> {
     const { providerConfig } = req;
-    if (!providerConfig) {
-      throw new ServerError(400, 'Missing parameters');
-    }
-
-    if (!this.adapter.getAccountId) {
-      throw new ServerError(501, 'Fetching account id is not implemented');
-    }
-
-    infoLogger('getAccountId', 'START', providerConfig.apiKey);
 
     try {
+      if (!providerConfig) {
+        throw new ServerError(400, 'Missing parameters');
+      }
+
+      if (!this.adapter.getAccountId) {
+        throw new ServerError(501, 'Fetching account id is not implemented');
+      }
+
+      infoLogger('getAccountId', 'START', providerConfig.apiKey);
+
       const accountId = await this.adapter.getAccountId(providerConfig);
 
       if (!accountId) {
@@ -1399,36 +1399,24 @@ export class Controller {
     res: Response,
     next: NextFunction,
   ): Promise<void> {
-    if (!this.adapter.handleWebhook) {
-      throw new ServerError(501, 'Webhook handling not implemented');
-    }
-
-    if (!this.adapter.verifyWebhookRequest) {
-      throw new ServerError(501, 'Webhook verification not implemented');
-    }
-
-    let verified: boolean;
-
     try {
-      verified = await this.adapter.verifyWebhookRequest(req);
-    } catch (error) {
-      errorLogger(
-        'handleWebhook',
-        'Error while verifying webhook request:',
-        '',
-        error || 'Unknown',
-      );
-      throw new ServerError(403, 'Webhook verification failed');
-    }
+      if (!this.adapter.handleWebhook) {
+        throw new ServerError(501, 'Webhook handling not implemented');
+      }
 
-    if (!verified) {
-      errorLogger('handleWebhook', 'Webhook verification failed', '');
-      throw new ServerError(403, 'Webhook verification failed');
-    }
+      if (!this.adapter.verifyWebhookRequest) {
+        throw new ServerError(501, 'Webhook verification not implemented');
+      }
 
-    infoLogger('handleWebhook', 'START', '');
+      const verified = await this.adapter.verifyWebhookRequest(req);
 
-    try {
+      if (!verified) {
+        errorLogger('handleWebhook', 'Webhook verification failed', '');
+        throw new ServerError(403, 'Webhook verification failed');
+      }
+
+      infoLogger('handleWebhook', 'START', '');
+
       const changeEvents: ContactChangeEvent[] =
         await this.adapter.handleWebhook(req);
 
