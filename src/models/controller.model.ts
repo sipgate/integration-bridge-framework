@@ -1407,8 +1407,22 @@ export class Controller {
       throw new ServerError(501, 'Webhook verification not implemented');
     }
 
-    const verified = await this.adapter.verifyWebhookRequest(req);
+    let verified: boolean;
+
+    try {
+      verified = await this.adapter.verifyWebhookRequest(req);
+    } catch (error) {
+      errorLogger(
+        'handleWebhook',
+        'Error while verifying webhook request:',
+        '',
+        error || 'Unknown',
+      );
+      throw new ServerError(403, 'Webhook verification failed');
+    }
+
     if (!verified) {
+      errorLogger('handleWebhook', 'Webhook verification failed', '');
       throw new ServerError(403, 'Webhook verification failed');
     }
 
