@@ -1462,4 +1462,37 @@ export class Controller {
       next(error);
     }
   }
+
+  public async onConnected(
+    req: BridgeRequest<unknown>,
+    res: Response,
+    next: NextFunction,
+  ) {
+    const { providerConfig } = req;
+
+    try {
+      if (!providerConfig) {
+        throw new ServerError(400, 'Missing parameters');
+      }
+
+      if (!this.adapter.onConnected) {
+        infoLogger(
+          'onConnected',
+          'No onConnected handler defined',
+          providerConfig.apiKey,
+        );
+        return;
+      }
+
+      await this.adapter.onConnected(providerConfig);
+    } catch (error) {
+      errorLogger(
+        'onConnected',
+        'Could not handle onConnected event',
+        '',
+        error || 'Unknown',
+      );
+      next(error);
+    }
+  }
 }

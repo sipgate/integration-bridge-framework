@@ -88,6 +88,7 @@ export interface Adapter {
     req: Request,
     res?: Response,
   ) => Promise<{ apiKey: string; apiUrl: string }>;
+  onConnected?: (config: Config) => Promise<void>;
   handleWebhook?: (req: Request) => Promise<IntegrationsEvent[]>;
   verifyWebhookRequest?: (req: Request) => Promise<boolean>;
 }
