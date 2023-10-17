@@ -10,11 +10,13 @@ import {
   CallEventWithIntegrationEntities,
   Contact,
   ContactCache,
-  ContactChangeEvent,
   ContactDelta,
   ContactTemplate,
   ContactUpdate,
   IntegrationEntityType,
+  IntegrationsEvent,
+  PubSubClient,
+  PubSubIntegrationsEventMessage,
   ServerError,
 } from '.';
 import { calendarEventsSchema, contactsSchema } from '../schemas';
@@ -32,12 +34,11 @@ import {
 import { CacheItemStateType } from './cache-item-state.model';
 import { CalendarFilterOptions } from './calendar-filter-options.model';
 import { IntegrationErrorType } from './integration-error.model';
-import { PubSubClient } from './pubsub-client.model';
-import { PubSubContactChangeEventMessage } from './pubsub-contact-change-event-message.model';
+
 import {
   PubSubContactsMessage,
   PubSubContactsState,
-} from './pubsub-contacts-message.model';
+} from './pubsub/pubsub-contacts-message.model';
 
 const CONTACT_FETCH_TIMEOUT = 5000;
 
@@ -57,7 +58,7 @@ export class Controller {
   private ajv: Ajv;
   private pubSubContactStreamingClient: PubSubClient<PubSubContactsMessage> | null =
     null;
-  private pubSubContactChangesClient: PubSubClient<PubSubContactChangeEventMessage> | null =
+  private pubSubIntegrationEventsClient: PubSubClient<PubSubIntegrationsEventMessage> | null =
     null;
   private integrationName: string = 'UNKNOWN';
   private streamingPromises = new Map<string, Promise<void>>();
@@ -107,13 +108,13 @@ export class Controller {
   }
 
   private initContactChanges() {
-    const { PUBSUB_TOPIC_NAME_CONTACT_CHANGES: topicName } = process.env;
+    const { PUBSUB_TOPIC_NAME_INTEGRATION_EVENTS: topicName } = process.env;
 
     if (!topicName) {
-      throw new Error('No PUBSUB_TOPIC_NAME_CONTACT_CHANGES provided.');
+      throw new Error('No PUBSUB_TOPIC_NAME_INTEGRATION_EVENTS provided.');
     }
 
-    this.pubSubContactChangesClient = new PubSubClient(topicName);
+    this.pubSubIntegrationEventsClient = new PubSubClient(topicName);
 
     infoLogger(
       'Controller',
@@ -1411,36 +1412,42 @@ export class Controller {
       const verified = await this.adapter.verifyWebhookRequest(req);
 
       if (!verified) {
-        errorLogger('handleWebhook', 'Webhook verification failed', '');
+        errorLogger('handleWebhook', 'Webhook verification failed');
         throw new ServerError(403, 'Webhook verification failed');
       }
 
-      infoLogger('handleWebhook', 'START', '');
+      infoLogger('handleWebhook', 'START');
 
-      const changeEvents: ContactChangeEvent[] =
-        await this.adapter.handleWebhook(req);
+      const events: IntegrationsEvent[] = await this.adapter.handleWebhook(req);
 
-      infoLogger(
-        'handleWebhook',
-        `Got ${changeEvents.length} changed contacts`,
-        '',
+      infoLogger('handleWebhook', `Got ${events.length} events`);
+
+      const deduplicatedEvents = uniqWith(events, isEqual);
+
+      const publishResults = await Promise.allSettled(
+        deduplicatedEvents
+          .map<PubSubIntegrationsEventMessage>((event: IntegrationsEvent) => ({
+            integrationName: this.integrationName,
+            ...event,
+          }))
+          .map((message) => {
+            infoLogger(
+              'handleWebhook',
+              `Publishing event ${message.type} with accountId ${message.accountId}`,
+            );
+            return this.pubSubIntegrationEventsClient?.publishMessage(message);
+          }),
       );
 
-      const deduplicatedChangeEvents = uniqWith(changeEvents, isEqual);
-
-      deduplicatedChangeEvents.map((changeEvent: ContactChangeEvent) => {
-        infoLogger(
-          'handleWebhook',
-          `Publishing contact change event with accountId ${changeEvent.accountId} and contactId ${changeEvent.contactId}`,
-          '',
-        );
-
-        const message: PubSubContactChangeEventMessage = {
-          integrationName: this.integrationName,
-          ...changeEvent,
-        };
-
-        this.pubSubContactChangesClient?.publishMessage(message);
+      publishResults.forEach((result) => {
+        if (result.status === 'rejected') {
+          errorLogger(
+            'handleWebhook',
+            `Could not publish event ${result.reason.type} with accountId ${result.reason.accountId}`,
+            '',
+            result.reason,
+          );
+        }
       });
 
       infoLogger('handleWebhook', 'END', '');

@@ -1,5 +1,5 @@
 import { PubSub } from '@google-cloud/pubsub';
-import { timeout } from '../util/timeout';
+import { timeout } from '../../util/timeout';
 
 const PUBLISH_TIMEOUT = 10_000;
 
