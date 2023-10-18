@@ -7,7 +7,6 @@ import { TokenCacheStorage } from './cache';
 import { errorHandlerMiddleware, extractHeaderMiddleware } from './middlewares';
 import {
   Adapter,
-  BridgeRequest,
   BridgeRequestWithTimestamp,
   ContactCache,
   Controller,
@@ -136,10 +135,6 @@ export function start(
 
   app.post('/webhook', (req, res, next) =>
     controller.handleWebhook(req, res, next),
-  );
-
-  app.post('/on-connected', (req: BridgeRequest<unknown>, res, next) =>
-    controller.handleConnectedEvent(req, res, next),
   );
 
   app.use(errorHandlerMiddleware);
