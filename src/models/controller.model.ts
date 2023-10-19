@@ -244,8 +244,17 @@ export class Controller {
       }
 
       if (this.adapter.getToken && req.providerConfig) {
-        const { apiKey } = await this.adapter.getToken(req.providerConfig);
-        res.header('X-Provider-Key', apiKey);
+        try {
+          const { apiKey } = await this.adapter.getToken(req.providerConfig);
+          res.header('X-Provider-Key', apiKey);
+        } catch (error) {
+          errorLogger(
+            'getContacts',
+            'Could not get and refresh token',
+            providerConfig.apiKey,
+            error,
+          );
+        }
       }
 
       infoLogger('getContacts', 'END', providerConfig.apiKey);
@@ -374,8 +383,17 @@ export class Controller {
       this.streamingPromises.set(`${userId}:${timestamp}`, streamingPromise);
 
       if (this.adapter.getToken && req.providerConfig) {
-        const { apiKey } = await this.adapter.getToken(req.providerConfig);
-        res.header('X-Provider-Key', apiKey);
+        try {
+          const { apiKey } = await this.adapter.getToken(req.providerConfig);
+          res.header('X-Provider-Key', apiKey);
+        } catch (error) {
+          errorLogger(
+            'streamContacts',
+            'Could not get and refresh token',
+            providerConfig.apiKey,
+            error,
+          );
+        }
       }
 
       infoLogger('streamContacts', 'END', providerConfig.apiKey);
