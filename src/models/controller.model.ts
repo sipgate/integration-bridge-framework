@@ -1093,6 +1093,47 @@ export class Controller {
     }
   }
 
+  public async handleDisconnectedEvent(
+    req: BridgeRequest<unknown>,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
+    const { providerConfig: { apiKey = '' } = {} } = req;
+    try {
+      infoLogger('handleDisconnectedEvent', `START`, apiKey);
+
+      if (!this.adapter.handleDisconnectedEvent) {
+        throw new ServerError(
+          501,
+          'Handling disconnected event is not implemented',
+        );
+      }
+
+      if (!req.providerConfig) {
+        throw new ServerError(400, 'Missing config parameters');
+      }
+      infoLogger(
+        'handleDisconnectedEvent',
+        `Handling disconnected event`,
+        apiKey,
+      );
+
+      await this.adapter.handleDisconnectedEvent(req.providerConfig);
+
+      infoLogger('handleDisconnectedEvent', `END`, apiKey);
+      res.status(200).send();
+    } catch (error) {
+      errorLogger(
+        'handleDisconnectedEvent',
+        `Could not handle connected event:`,
+        apiKey,
+        error || 'Unknown',
+      );
+      errorLogger('handleDisconnectedEvent', 'Entity', apiKey, req.body);
+      next(error);
+    }
+  }
+
   /**
    * @deprecated Use createOrUpdateCallLogForEntities instead
    * @param req

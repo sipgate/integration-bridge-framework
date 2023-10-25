@@ -107,6 +107,10 @@ export function start(
     controller.handleConnectedEvent(req, res, next),
   );
 
+  app.post('/events/disconnected', (req, res, next) =>
+    controller.handleDisconnectedEvent(req, res, next),
+  );
+
   app.put('/call-log', (req, res, next) =>
     controller.createOrUpdateCallLogsForEntities(req, res, next),
   );

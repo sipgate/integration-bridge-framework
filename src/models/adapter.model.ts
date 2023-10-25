@@ -82,6 +82,7 @@ export interface Adapter {
     type: IntegrationEntityType,
   ) => Promise<LabeledIntegrationEntity | null>;
   handleConnectedEvent?: (config: Config) => Promise<void>;
+  handleDisconnectedEvent?: (config: Config) => Promise<void>;
   getHealth?: () => Promise<void>;
   getOAuth2RedirectUrl?: (req?: Request, res?: Response) => Promise<string>;
   handleOAuth2Callback?: (
