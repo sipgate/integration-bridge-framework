@@ -1,3 +1,7 @@
+import { APIContact, Contact } from '../models';
+import { parsePhoneNumber } from './phone-number-utils';
+import { isEqual, uniqWith } from 'lodash';
+
 export function getFullName(item: {
   firstName: string | null | undefined;
   lastName: string | null | undefined;
@@ -20,4 +24,15 @@ export function getFullName(item: {
   }
 
   return item.name ?? null;
+}
+
+export function sanitizeContact(contact: Contact, locale: string): Contact {
+  const result: APIContact = {
+    ...contact,
+    phoneNumbers: contact.phoneNumbers.map((phoneNumber) =>
+      parsePhoneNumber(phoneNumber, locale),
+    ),
+    relatesTo: uniqWith(contact.relatesTo, isEqual),
+  };
+  return result;
 }

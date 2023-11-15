@@ -1,4 +1,3 @@
-//import type { AxiosResponse } from 'axios';
 import { paginate, paginateGenerator } from './pagination';
 
 function* fetchDataGen(chunkSize: number, items: number): any {

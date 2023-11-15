@@ -5,7 +5,7 @@ import { APIPhoneNumber } from '../models/api-contact.model';
 const MIN_PHONE_NUMBER_LENGTH = 5;
 
 export const normalizePhoneNumber = (phoneNumber: string) =>
-  phoneNumber.replace(/[^\d\w\+]/g, '');
+  phoneNumber.replace(/[^\d\w+]/g, '');
 
 export const parsePhoneNumber = (
   { label, phoneNumber }: PhoneNumber,
@@ -23,7 +23,7 @@ export const parsePhoneNumber = (
 
     const phoneNumberRegion = parsedPhoneNumber.getRegionCode();
     const e164 = parsedPhoneNumber.getNumber('e164') ?? phoneNumber;
-    let newVar = {
+    const newVar = {
       label,
       type,
       e164: isNumberDirectDial ? phoneNumber : e164,

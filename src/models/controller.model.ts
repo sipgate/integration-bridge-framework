@@ -22,9 +22,7 @@ import {
 import { calendarEventsSchema, contactsSchema } from '../schemas';
 import { shouldSkipCallEvent } from '../util/call-event.util';
 import { errorLogger, infoLogger } from '../util/logger.util';
-import { parsePhoneNumber } from '../util/phone-number-utils';
 import { validate } from '../util/validate';
-import { APIContact } from './api-contact.model';
 import {
   BridgeRequest,
   BridgeRequestWithTimestamp,
@@ -39,18 +37,9 @@ import {
   PubSubContactsMessage,
   PubSubContactsState,
 } from './pubsub/pubsub-contacts-message.model';
+import { sanitizeContact } from '../util/contact.util';
 
 const CONTACT_FETCH_TIMEOUT = 5000;
-
-function sanitizeContact(contact: Contact, locale: string): Contact {
-  const result: APIContact = {
-    ...contact,
-    phoneNumbers: contact.phoneNumbers.map((phoneNumber) =>
-      parsePhoneNumber(phoneNumber, locale),
-    ),
-  };
-  return result;
-}
 
 export class Controller {
   private adapter: Adapter;
@@ -1378,7 +1367,7 @@ export class Controller {
   }
 
   public async oAuth2Callback(req: Request, res: Response): Promise<void> {
-    let {
+    const {
       OAUTH2_REDIRECT_URL: redirectUrl,
       OAUTH2_IDENTIFIER: oAuth2Identifier = 'UNKNOWN',
     } = process.env;

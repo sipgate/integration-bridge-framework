@@ -1,9 +1,7 @@
-import { Router } from 'express';
-import { Request, Response } from 'express';
+import { Request, Response, Router } from 'express';
 import * as util from 'util';
 import { IncomingWebhook } from '@slack/webhook';
-import { ServerError } from '../../models';
-import { CustomRouter } from '../../models/custom-router.model';
+import { CustomRouter, ServerError } from '../../models';
 
 export function slackNotificationRoute(
   slackWebhookUrl: string,

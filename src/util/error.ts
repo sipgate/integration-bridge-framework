@@ -32,10 +32,10 @@ export const throwAndDelegateError = (
   }
 
   const err = error as any;
-  var errorType: IntegrationErrorType | string | undefined = undefined;
+  let errorType: IntegrationErrorType | string | undefined = undefined;
 
   if (error instanceof DelegateToFrontedError) {
-    var delegateToFrontedError = error as DelegateToFrontedError;
+    const delegateToFrontedError = error as DelegateToFrontedError;
     errorType = delegateToFrontedError.errorType;
   } else {
     if (err.code || err.status || err.response?.status) {
