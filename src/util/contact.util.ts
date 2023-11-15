@@ -32,7 +32,9 @@ export function sanitizeContact(contact: Contact, locale: string): Contact {
     phoneNumbers: contact.phoneNumbers.map((phoneNumber) =>
       parsePhoneNumber(phoneNumber, locale),
     ),
-    relatesTo: uniqWith(contact.relatesTo, isEqual),
+    relatesTo: contact.relatesTo
+      ? uniqWith(contact.relatesTo, isEqual)
+      : undefined,
   };
   return result;
 }
