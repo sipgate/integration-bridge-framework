@@ -413,6 +413,8 @@ export class Controller {
         infoLogger('streamContacts', 'END', providerConfig.apiKey);
 
         res.status(200).send({ timestamp });
+
+        await streamingPromise;
       } catch (error: any) {
         // prevent logging of refresh errors
         if (
