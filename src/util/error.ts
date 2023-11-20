@@ -4,7 +4,7 @@ import {
   IntegrationErrorType,
   ServerError,
 } from '../models';
-import { errorLogger } from './logger.util';
+import { errorLogger, warnLogger } from './logger.util';
 
 export const throwAndDelegateError = (
   error: AxiosError | DelegateToFrontedError | ServerError | Error,
@@ -69,9 +69,9 @@ export const throwAndDelegateError = (
   }
 
   if (errorType !== undefined) {
-    errorLogger(
+    warnLogger(
       'throwAndDelegateError',
-      `Delegating error to frontend with code ${DELEGATE_TO_FRONTEND_CODE} and type ${errorType}`,
+      `Delegating crm error to frontend with code ${DELEGATE_TO_FRONTEND_CODE} and type ${errorType}`,
       apiKey,
     );
     throw new ServerError(DELEGATE_TO_FRONTEND_CODE, errorType);
