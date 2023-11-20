@@ -323,6 +323,7 @@ export class Controller {
                 throw new Error('Invalid contacts received');
               }
 
+              tracer.logInfo('Publish in Progress message');
               const message: PubSubContactsMessage = {
                 userId,
                 timestamp,
@@ -350,16 +351,17 @@ export class Controller {
         };
 
         const streamingPromise = streamContacts()
-          .then(() =>
-            this.pubSubContactStreamingClient?.publishMessage({
+          .then(() => {
+            tracer.logInfo('Publish Complete message');
+            return this.pubSubContactStreamingClient?.publishMessage({
               userId: providerConfig.userId,
               timestamp,
               contacts: [],
               state: PubSubContactsState.COMPLETE,
               integrationName: this.integrationName,
               traceparent: tracer.getTraceParent(),
-            }),
-          )
+            });
+          })
           .catch(async (error) => {
             tracer.setError('Could not stream contacts');
             errorLogger(
@@ -368,6 +370,7 @@ export class Controller {
               providerConfig.apiKey,
               error,
             );
+            tracer.logWarning('Publish Failed message');
             return this.pubSubContactStreamingClient?.publishMessage({
               userId: providerConfig.userId,
               timestamp,
