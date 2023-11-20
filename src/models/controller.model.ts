@@ -274,10 +274,12 @@ export class Controller {
     res: Response,
     next: NextFunction,
   ): Promise<void> {
+    console.log('traceIdFromHeader', req.headers.traceparent);
+
     const tracer = new Tracer(
       'streamContacts',
       req.headers.traceparent as string,
-      req.providerConfig?.apiKey || '',
+      req.providerConfig?.apiKey.substring(0, 10) || '',
     );
 
     return tracer.do(async () => {
