@@ -12,4 +12,5 @@ export type PubSubContactsMessage = {
   contacts: Contact[];
   state: PubSubContactsState;
   integrationName: string;
+  traceparent?: string;
 };

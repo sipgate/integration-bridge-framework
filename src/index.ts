@@ -16,6 +16,14 @@ import { CustomRouter } from './models/custom-router.model';
 import { CustomRoute } from './models/custom-routes.model';
 import { errorLogger, getTokenCache, infoLogger } from './util';
 import { getContactCache } from './util/get-contact-cache';
+import { otelSDK, tracingEnabled } from './tracing/tracing-initializer';
+
+if (tracingEnabled) {
+  otelSDK.start();
+  console.log('tracing enabled');
+} else {
+  console.log('tracing not enabled');
+}
 
 const PORT: number = Number(process.env.PORT) || 8080;
 
