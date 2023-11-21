@@ -1,5 +1,6 @@
 import { PubSub } from '@google-cloud/pubsub';
 import { timeout } from '../../util/timeout';
+import { context, propagation } from '@opentelemetry/api';
 
 const PUBLISH_TIMEOUT = 10_000;
 
@@ -16,6 +17,8 @@ export class PubSubClient<T> {
     if (!this.topicName) {
       throw new Error('No pubsub topic name provided.');
     }
+
+    propagation.inject(context.active(), message);
 
     const json = JSON.stringify(message);
     const dataBuffer = Buffer.from(json);
