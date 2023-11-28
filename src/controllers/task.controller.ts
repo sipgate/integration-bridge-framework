@@ -3,21 +3,26 @@ import { Adapter, BridgeRequest, IntegrationEntity } from '../models';
 
 type FollowUpType = 'call' | 'email' | 'meeting' | 'task' | 'note';
 
+// POST: Inhalt für CRM
 type FollowUpEvent = {
-  note: string;
+  content: string;
+  dueAt: Date;
+  title: string;
   type: FollowUpType;
-  due: Date;
 };
 
 type FollowUpWithIntegrationEntities = FollowUpEvent & {
   integrationEntities: IntegrationEntity[];
 };
 
+// GET: Return-Wert von Bridge
 export type Task = {
-  title: string;
-  note: string;
-  due: Date;
+  id: string;
+  content: string;
+  createdAt: Date;
+  dueAt: Date;
   link: string;
+  title: string;
 };
 
 export class TaskController {
