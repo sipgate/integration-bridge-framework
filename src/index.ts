@@ -25,6 +25,7 @@ import { CustomRouter } from './models/custom-router.model';
 import { CustomRoute } from './models/custom-routes.model';
 import { errorLogger, getTokenCache, infoLogger } from './util';
 import { getContactCache } from './util/get-contact-cache';
+import { TaskController } from './controllers/task.controller';
 
 const PORT: number = Number(process.env.PORT) || 8080;
 
@@ -53,6 +54,7 @@ export function start(
   tokenCache = getTokenCache();
 
   const controller: Controller = new Controller(adapter, contactCache);
+  const taskController: TaskController = new TaskController(adapter);
 
   app.get('/contacts', (req, res, next) =>
     controller.getContacts(req, res, next),
@@ -149,6 +151,10 @@ export function start(
   app.post('/webhook', (req, res, next) =>
     controller.handleWebhook(req, res, next),
   );
+
+  app.get('/tasks', taskController.findAllByQuery);
+
+  app.post('/tasks', taskController.create);
 
   app.use(errorHandlerMiddleware);
 
