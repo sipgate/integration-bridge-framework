@@ -21,3 +21,5 @@ export * from './storage-adapter.model';
 export * from './token-cache.model';
 export * from './token.model';
 export * from './user.model';
+export * from './follow-up.model';
+export * from './task.model';

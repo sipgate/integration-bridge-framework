@@ -10,12 +10,13 @@ import {
   ContactDelta,
   ContactTemplate,
   ContactUpdate,
+  FollowUpWithIntegrationEntities,
   LabeledIntegrationEntity,
   LoggedIntegrationEntity,
+  Task,
 } from '.';
 import { IntegrationEntityType } from './integration-entity.model';
 import { IntegrationsEvent } from './integrations-event.model';
-import { Task } from '../controllers/task.controller';
 
 export interface Adapter {
   getToken?: (config: Config) => Promise<{ apiKey: string }>;
@@ -92,6 +93,9 @@ export interface Adapter {
   ) => Promise<{ apiKey: string; apiUrl: string }>;
   handleWebhook?: (req: Request) => Promise<IntegrationsEvent[]>;
   verifyWebhookRequest?: (req: Request) => Promise<boolean>;
-  getTasks?: (req: Request) => Promise<Task[]>;
-  createFollowUp?: (req: Request) => Promise<string>;
+  getTasks?: (req: Request, config: Config) => Promise<Task[]>;
+  createFollowUp?: (
+    config: Config,
+    body: FollowUpWithIntegrationEntities,
+  ) => Promise<string>;
 }

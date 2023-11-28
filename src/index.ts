@@ -152,9 +152,11 @@ export function start(
     controller.handleWebhook(req, res, next),
   );
 
-  app.get('/tasks', taskController.findAllByQuery);
+  app.get('/tasks', (req, res, next) =>
+    taskController.findAllByQuery(req, res, next),
+  );
 
-  app.post('/tasks', taskController.create);
+  app.post('/tasks', (req, res, next) => taskController.create(req, res, next));
 
   app.use(errorHandlerMiddleware);
 
