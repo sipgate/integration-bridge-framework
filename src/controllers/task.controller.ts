@@ -4,6 +4,7 @@ import {
   BridgeRequest,
   FollowUpWithIntegrationEntities,
 } from '../models';
+import { infoLogger } from '../util';
 
 export class TaskController {
   constructor(private readonly adapter: Adapter) {}
@@ -25,8 +26,18 @@ export class TaskController {
       return;
     }
 
+    infoLogger('findAllByQuery', 'START', providerConfig.apiKey);
+
     try {
       const followUps = await this.adapter.getTasks(req, providerConfig);
+
+      infoLogger(
+        'findAllByQuery',
+        `Received ${followUps.length} follow ups`,
+        providerConfig.apiKey,
+      );
+
+      infoLogger('findAllByQuery', 'END', providerConfig.apiKey);
       res.json(followUps);
     } catch (err) {
       next(err);
