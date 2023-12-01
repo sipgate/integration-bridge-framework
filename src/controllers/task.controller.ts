@@ -26,18 +26,18 @@ export class TaskController {
       return;
     }
 
-    infoLogger('findAllByQuery', 'START', providerConfig.apiKey);
-
     try {
+      infoLogger('getTasks', 'START', providerConfig.apiKey);
+
       const followUps = await this.adapter.getTasks(req, providerConfig);
 
       infoLogger(
-        'findAllByQuery',
+        'getTasks',
         `Received ${followUps.length} follow ups`,
         providerConfig.apiKey,
       );
 
-      infoLogger('findAllByQuery', 'END', providerConfig.apiKey);
+      infoLogger('getTasks', 'END', providerConfig.apiKey);
       res.json(followUps);
     } catch (err) {
       next(err);
@@ -62,10 +62,21 @@ export class TaskController {
     }
 
     try {
+      infoLogger('createFollowUp', 'START', providerConfig.apiKey);
+
       const followUpId = await this.adapter.createFollowUp(
         providerConfig,
         req.body,
       );
+
+      infoLogger(
+        'createFollowUp',
+        `Created followup with id ${followUpId}`,
+        providerConfig.apiKey,
+      );
+
+      infoLogger('createFollowUp', 'END', providerConfig.apiKey);
+
       res.json({ followUpId });
     } catch (err) {
       next(err);

@@ -13,6 +13,7 @@ import cors from 'cors';
 import express from 'express';
 import { Server } from 'http';
 import { TokenCacheStorage } from './cache';
+import { TaskController } from './controllers/task.controller';
 import { errorHandlerMiddleware, extractHeaderMiddleware } from './middlewares';
 import {
   Adapter,
@@ -25,7 +26,6 @@ import { CustomRouter } from './models/custom-router.model';
 import { CustomRoute } from './models/custom-routes.model';
 import { errorLogger, getTokenCache, infoLogger } from './util';
 import { getContactCache } from './util/get-contact-cache';
-import { TaskController } from './controllers/task.controller';
 
 const PORT: number = Number(process.env.PORT) || 8080;
 
