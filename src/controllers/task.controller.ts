@@ -101,7 +101,16 @@ export class TaskController {
     }
 
     try {
+      infoLogger('getTaskMetadata', 'START', providerConfig.apiKey);
       const metadata = await this.adapter.getTaskMetadata(req, providerConfig);
+
+      infoLogger(
+        'getTaskMetadata',
+        `Found ${metadata.fields.length} fields for Task Object`,
+        providerConfig.apiKey,
+      );
+
+      infoLogger('getTaskMetadata', 'END', providerConfig.apiKey);
       res.json(metadata);
     } catch (err) {
       next(err);
