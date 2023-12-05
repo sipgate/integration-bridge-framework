@@ -60,4 +60,29 @@ export class TaskController {
       next(err);
     }
   }
+
+  async getTaskMetadata(
+    req: BridgeRequest<void>,
+    res: Response,
+    next: NextFunction,
+  ) {
+    const { providerConfig } = req;
+
+    if (!providerConfig) {
+      next(new Error('Provider config not found'));
+      return;
+    }
+
+    if (!this.adapter.getTaskMetadata) {
+      next(new Error('Method not implemented'));
+      return;
+    }
+
+    try {
+      const metadata = await this.adapter.getTaskMetadata(req, providerConfig);
+      res.json(metadata);
+    } catch (err) {
+      next(err);
+    }
+  }
 }

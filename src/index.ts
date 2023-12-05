@@ -158,6 +158,10 @@ export function start(
 
   app.post('/tasks', (req, res, next) => taskController.create(req, res, next));
 
+  app.get('/tasks/metadata', (req, res, next) =>
+    taskController.getTaskMetadata(req, res, next),
+  );
+
   app.use(errorHandlerMiddleware);
 
   customRouters.forEach(({ path, router }) => app.use(path, router));
