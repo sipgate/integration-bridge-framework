@@ -14,6 +14,7 @@ import {
   LabeledIntegrationEntity,
   LoggedIntegrationEntity,
   Task,
+  TaskMetadata,
 } from '.';
 import { IntegrationEntityType } from './integration-entity.model';
 import { IntegrationsEvent } from './integrations-event.model';
@@ -98,4 +99,5 @@ export interface Adapter {
     config: Config,
     body: FollowUpWithIntegrationEntities,
   ) => Promise<string>;
+  getTaskMetadata?: (req: Request, config: Config) => Promise<TaskMetadata>;
 }
