@@ -10,8 +10,10 @@ export type Task = {
 export type TaskMetadata = {
   fields: {
     label: string;
-    key: string;
     type: string;
-    options?: string[];
+    options?: {
+      label: string;
+      key: string;
+    }[];
   }[];
 };
