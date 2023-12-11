@@ -102,7 +102,7 @@ export class TaskController {
 
     try {
       infoLogger('getTaskMetadata', 'START', providerConfig.apiKey);
-      const metadata = await this.adapter.getTaskMetadata(req, providerConfig);
+      const metadata = await this.adapter.getTaskMetadata(providerConfig);
 
       infoLogger(
         'getTaskMetadata',
