@@ -1,4 +1,5 @@
 import { paginate, paginateGenerator } from './pagination';
+import { AxiosHeaders } from 'axios';
 
 function* fetchDataGen(chunkSize: number, items: number): any {
   let itemsLeft = items;
@@ -90,7 +91,9 @@ describe('pagination (accumulating)', () => {
         status: 200,
         statusText: 'OK',
         headers: {},
-        config: {},
+        config: {
+          headers: {} as AxiosHeaders,
+        },
       });
 
     const data = await paginate<Array<any>>(
@@ -129,7 +132,9 @@ describe('pagination (accumulating)', () => {
         status: 200,
         statusText: 'OK',
         headers: {},
-        config: {},
+        config: {
+          headers: {} as AxiosHeaders,
+        },
       });
 
     const data = await paginate<Array<any>>(
@@ -185,7 +190,9 @@ describe('pagination (accumulating)', () => {
           status: 500,
           statusText: 'ERROR',
           headers: {},
-          config: {},
+          config: {
+            headers: {},
+          },
         });
       } else {
         return Promise.resolve({
@@ -195,7 +202,9 @@ describe('pagination (accumulating)', () => {
           status: 200,
           statusText: 'OK',
           headers: {},
-          config: {},
+          config: {
+            headers: {} as AxiosHeaders,
+          },
         });
       }
     };
@@ -291,7 +300,9 @@ describe('pagination (generator)', () => {
         status: 200,
         statusText: 'OK',
         headers: {},
-        config: {},
+        config: {
+          headers: {} as AxiosHeaders,
+        },
       });
 
     const iterator = paginateGenerator(
@@ -333,7 +344,9 @@ describe('pagination (generator)', () => {
         status: 200,
         statusText: 'OK',
         headers: {},
-        config: {},
+        config: {
+          headers: {} as AxiosHeaders,
+        },
       });
 
     const iterator = paginateGenerator(
@@ -399,7 +412,9 @@ describe('pagination (generator)', () => {
           status: 200,
           statusText: 'OK',
           headers: {},
-          config: {},
+          config: {
+            headers: {} as AxiosHeaders,
+          },
         });
       }
     };
