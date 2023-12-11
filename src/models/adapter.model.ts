@@ -99,5 +99,5 @@ export interface Adapter {
     config: Config,
     body: FollowUpWithIntegrationEntities,
   ) => Promise<string>;
-  getTaskMetadata?: (req: Request, config: Config) => Promise<TaskMetadata>;
+  getTaskMetadata?: (config: Config) => Promise<TaskMetadata>;
 }
