@@ -23,7 +23,7 @@ export async function* paginateGenerator<T>(
   retryOnError?: RetryOnError,
   paginateId?: number,
 ) {
-  let response: AxiosResponse | undefined;
+  let response: AxiosResponse | undefined = undefined;
 
   while (!response || !isEof(response)) {
     try {
@@ -31,7 +31,7 @@ export async function* paginateGenerator<T>(
         await sleep(delayMs);
       }
 
-      const newResponse = await invokeNextRequest(response);
+      const newResponse: AxiosResponse = await invokeNextRequest(response);
       const responseData = extractDataFromResponse(newResponse);
 
       response = newResponse; // NOTE: due to potential retry (from within catch below), reassign response only as a last step
