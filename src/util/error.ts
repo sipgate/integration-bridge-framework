@@ -1,4 +1,4 @@
-import axios, { AxiosError } from 'axios';
+import { AxiosError, isAxiosError } from 'axios';
 import {
   DELEGATE_TO_FRONTEND_CODE,
   IntegrationErrorType,
@@ -12,7 +12,7 @@ export const throwAndDelegateError = (
   apiKey: string | undefined,
   logMessage?: string,
 ) => {
-  const errorMessage = axios.isAxiosError(error)
+  const errorMessage = isAxiosError(error)
     ? error.response?.data
       ? JSON.stringify(error.response?.data)
       : error.message
