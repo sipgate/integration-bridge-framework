@@ -7,10 +7,7 @@ import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentation
 const apikey = process.env.BACKEND_TRACING_API_KEY;
 
 const googleExporter = new OTLPTraceExporter({
-  url: 'https://gateway.clinq.com/backend-traces',
-  headers: {
-    apikey,
-  },
+  url: 'http://opentelemetry-collector.monitoring.svc.cluster.local:4318/v1/traces',
 });
 
 // const jaegerExporter = new OTLPTraceExporter({});
