@@ -28,20 +28,31 @@ export async function getOAuth2RedirectUrl(
   config: OAuthParams,
   req: Request,
   res: Response,
+  addState: boolean = true,
 ): Promise<string> {
   try {
     const nonce_string: string = Security.Nonce.nonce();
-    const state = JSON.stringify({
-      nonce: nonce_string,
-      accessTokenUrl: config.accesTokenUrl,
-      apiUrl: config.apiUrl,
-    });
-    const searchParamsAuth = new URLSearchParams({
-      response_type: 'code',
-      redirect_uri: config.redirect_uri,
-      client_id: config.client_id,
-      state,
-    });
+    let searchParams;
+    if (addState) {
+      const state = JSON.stringify({
+        nonce: nonce_string,
+        accessTokenUrl: config.accesTokenUrl,
+        apiUrl: config.apiUrl,
+      });
+      searchParams = {
+        response_type: 'code',
+        redirect_uri: config.redirect_uri,
+        client_id: config.client_id,
+        state,
+      };
+    } else {
+      searchParams = {
+        response_type: 'code',
+        redirect_uri: config.redirect_uri,
+        client_id: config.client_id,
+      };
+    }
+    const searchParamsAuth = new URLSearchParams(searchParams);
     Security.Nonce.setNonceCookie(
       req,
       res,
