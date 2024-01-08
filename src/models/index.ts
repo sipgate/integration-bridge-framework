@@ -12,6 +12,7 @@ export * from './contact.model';
 export * from './controller.model';
 export * from './custom-router.model';
 export * from './custom-routes.model';
+export * from './integration-defined-options.model';
 export * from './integration-entity.model';
 export * from './integration-error.model';
 export * from './integrations-event.model';

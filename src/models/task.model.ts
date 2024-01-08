@@ -6,14 +6,3 @@ export type Task = {
   link?: string;
   title: string;
 };
-
-export type TaskMetadata = {
-  fields: {
-    label: string;
-    type: string;
-    options?: {
-      label: string;
-      key: string;
-    }[];
-  }[];
-};
