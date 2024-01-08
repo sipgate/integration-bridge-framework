@@ -1,4 +1,4 @@
-export type IntegrationDefinedOptionsModel = {
+export type IntegrationDefinedOptions = {
   label: string;
   type: string;
   options?: {

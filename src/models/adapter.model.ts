@@ -11,10 +11,10 @@ import {
   ContactTemplate,
   ContactUpdate,
   FollowUpWithIntegrationEntities,
+  IntegrationDefinedOptions,
   LabeledIntegrationEntity,
   LoggedIntegrationEntity,
   Task,
-  TaskMetadata,
 } from '.';
 import { IntegrationEntityType } from './integration-entity.model';
 import { IntegrationsEvent } from './integrations-event.model';
@@ -99,5 +99,5 @@ export interface Adapter {
     config: Config,
     body: FollowUpWithIntegrationEntities,
   ) => Promise<string>;
-  getTaskMetadata?: (config: Config) => Promise<TaskMetadata>;
+  getTaskMetadata?: (config: Config) => Promise<IntegrationDefinedOptions>;
 }
