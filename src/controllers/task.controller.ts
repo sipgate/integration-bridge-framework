@@ -106,7 +106,7 @@ export class TaskController {
 
       infoLogger(
         'getTaskMetadata',
-        `Found ${metadata.fields.length} fields for Task Object`,
+        `Found ${metadata.options?.length} options for Task Object`,
         providerConfig.apiKey,
       );
 
