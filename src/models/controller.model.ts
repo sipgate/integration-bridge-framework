@@ -33,11 +33,11 @@ import { CacheItemStateType } from './cache-item-state.model';
 import { CalendarFilterOptions } from './calendar-filter-options.model';
 import { IntegrationErrorType } from './integration-error.model';
 
+import { sanitizeContact } from '../util/contact.util';
 import {
   PubSubContactsMessage,
   PubSubContactsState,
 } from './pubsub/pubsub-contacts-message.model';
-import { sanitizeContact } from '../util/contact.util';
 
 const CONTACT_FETCH_TIMEOUT = 5000;
 
@@ -92,7 +92,7 @@ export class Controller {
 
     infoLogger(
       'Controller',
-      `Initialized PubSub client for topic ${topicName}`,
+      `Initialized PubSub client for topic ${topicNameProvided}`,
     );
   }
 
