@@ -298,6 +298,35 @@ export class Controller {
         providerConfig.apiKey,
       );
 
+      const publishContacts = async (contacts: Contact[]) => {
+        try {
+          if (!validate(this.ajv, contactsSchema, contacts)) {
+            throw new Error('Invalid contacts received');
+          }
+
+          await this.pubSubContactStreamingClient?.publishMessage(
+            {
+              userId,
+              timestamp,
+              contacts: contacts.map((contact) =>
+                sanitizeContact(contact, providerConfig.locale),
+              ),
+              state: PubSubContactsState.IN_PROGRESS,
+              integrationName: this.integrationName,
+              // traceparent: tracer.getTraceParent(),
+            },
+            orderingKey,
+          );
+        } catch (error) {
+          errorLogger(
+            'streamContacts',
+            `Could not publish contacts`,
+            providerConfig.apiKey,
+            error,
+          );
+        }
+      };
+
       const streamContacts = async () => {
         if (!this.adapter.streamContacts) {
           throw new ServerError(501, 'Streaming contacts is not implemented');
@@ -305,39 +334,14 @@ export class Controller {
 
         const iterator = this.adapter.streamContacts(providerConfig);
 
-        let result = await iterator.next();
-        while (!result.done) {
+        let result;
+        do {
+          result = await iterator.next();
+
           const { value: contacts } = result;
 
-          try {
-            if (!validate(this.ajv, contactsSchema, contacts)) {
-              throw new Error('Invalid contacts received');
-            }
-
-            await this.pubSubContactStreamingClient?.publishMessage(
-              {
-                userId,
-                timestamp,
-                contacts: contacts.map((contact) =>
-                  sanitizeContact(contact, providerConfig.locale),
-                ),
-                state: PubSubContactsState.IN_PROGRESS,
-                integrationName: this.integrationName,
-                // traceparent: tracer.getTraceParent(),
-              },
-              orderingKey,
-            );
-          } catch (error) {
-            errorLogger(
-              'streamContacts',
-              `Could not publish contacts`,
-              providerConfig.apiKey,
-              error,
-            );
-          } finally {
-            result = await iterator.next();
-          }
-        }
+          if (contacts && contacts.length > 0) await publishContacts(contacts);
+        } while (!result.done);
       };
 
       const streamingPromise = streamContacts()
