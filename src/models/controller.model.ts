@@ -50,6 +50,8 @@ export class Controller {
   private pubSubIntegrationEventsClient: PubSubClient<PubSubIntegrationsEventMessage> | null =
     null;
   private integrationName: string = 'UNKNOWN';
+
+  // used for garbage collection reasons, to prevent long running promises from getting canceled
   private streamingPromises = new Map<string, Promise<void>>();
 
   constructor(adapter: Adapter, contactCache: ContactCache | null) {
@@ -288,10 +290,11 @@ export class Controller {
       }
 
       const timestamp = Date.now();
+      const orderingKey = `${userId}:${timestamp}`;
 
       infoLogger(
         'streamContacts',
-        `Starting contact streaming ${timestamp}`,
+        `Starting contact streaming ${timestamp} - orderingKey ${orderingKey}`,
         providerConfig.apiKey,
       );
 
@@ -303,7 +306,6 @@ export class Controller {
         const iterator = this.adapter.streamContacts(providerConfig);
 
         let result = await iterator.next();
-
         while (!result.done) {
           const { value: contacts } = result;
 
@@ -312,18 +314,19 @@ export class Controller {
               throw new Error('Invalid contacts received');
             }
 
-            const message: PubSubContactsMessage = {
-              userId,
-              timestamp,
-              contacts: contacts.map((contact) =>
-                sanitizeContact(contact, providerConfig.locale),
-              ),
-              state: PubSubContactsState.IN_PROGRESS,
-              integrationName: this.integrationName,
-              // traceparent: tracer.getTraceParent(),
-            };
-
-            await this.pubSubContactStreamingClient?.publishMessage(message);
+            await this.pubSubContactStreamingClient?.publishMessage(
+              {
+                userId,
+                timestamp,
+                contacts: contacts.map((contact) =>
+                  sanitizeContact(contact, providerConfig.locale),
+                ),
+                state: PubSubContactsState.IN_PROGRESS,
+                integrationName: this.integrationName,
+                // traceparent: tracer.getTraceParent(),
+              },
+              orderingKey,
+            );
           } catch (error) {
             errorLogger(
               'streamContacts',
@@ -339,14 +342,17 @@ export class Controller {
 
       const streamingPromise = streamContacts()
         .then(() => {
-          return this.pubSubContactStreamingClient?.publishMessage({
-            userId: providerConfig.userId,
-            timestamp,
-            contacts: [],
-            state: PubSubContactsState.COMPLETE,
-            integrationName: this.integrationName,
-            // traceparent: tracer.getTraceParent(),
-          });
+          return this.pubSubContactStreamingClient?.publishMessage(
+            {
+              userId: providerConfig.userId,
+              timestamp,
+              contacts: [],
+              state: PubSubContactsState.COMPLETE,
+              integrationName: this.integrationName,
+              // traceparent: tracer.getTraceParent(),
+            },
+            orderingKey,
+          );
         })
         .catch(async (error) => {
           errorLogger(
@@ -355,14 +361,17 @@ export class Controller {
             providerConfig.apiKey,
             error,
           );
-          return this.pubSubContactStreamingClient?.publishMessage({
-            userId: providerConfig.userId,
-            timestamp,
-            contacts: [],
-            state: PubSubContactsState.FAILED,
-            integrationName: this.integrationName,
-            // traceparent: tracer.getTraceParent(),
-          });
+          return this.pubSubContactStreamingClient?.publishMessage(
+            {
+              userId: providerConfig.userId,
+              timestamp,
+              contacts: [],
+              state: PubSubContactsState.FAILED,
+              integrationName: this.integrationName,
+              // traceparent: tracer.getTraceParent(),
+            },
+            orderingKey,
+          );
         })
         .catch((error) => {
           errorLogger(
