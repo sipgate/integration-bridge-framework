@@ -9,7 +9,9 @@ export class PubSubClient<T> {
   private topicName: string;
 
   constructor(topicName: string) {
-    this.client = new PubSub();
+    this.client = new PubSub({
+      apiEndpoint: 'europe-west3-pubsub.googleapis.com:443',
+    });
     this.topicName = topicName;
   }
 
