@@ -79,6 +79,7 @@ export async function handleOAuth2Callback(
   res: Response,
   checkNonceCookie: boolean = false,
   paramCommunication: GetAccessTokenParamCommunication = GetAccessTokenParamCommunication.BODY,
+  additionalHeaders: Record<string, any> = {},
 ): Promise<{ apiKey: string; apiUrl: string; query_params: any }> {
   try {
     if (req.query.error)
@@ -116,6 +117,7 @@ export async function handleOAuth2Callback(
       config.client_secret,
       config.redirect_uri,
       paramCommunication,
+      additionalHeaders,
     );
     return {
       apiKey: config.extractToken(response),
