@@ -143,6 +143,7 @@ async function getAccessToken(
   clientSecret: string,
   redirect_uri: string,
   paramCommunication: GetAccessTokenParamCommunication = GetAccessTokenParamCommunication.BODY,
+  additionalHeaders: Record<string, any> = {},
 ) {
   console.log(`Start: fetching access tokens`);
   const params = {
@@ -154,13 +155,27 @@ async function getAccessToken(
   };
   switch (paramCommunication) {
     case GetAccessTokenParamCommunication.QUERY_PARAM:
-      return await axios.post(accessTokenURL, {}, { params: params });
+      return await axios.post(
+        accessTokenURL,
+        {},
+        {
+          params: params,
+          ...(Object.keys(additionalHeaders) && { headers: additionalHeaders }),
+        },
+      );
     case GetAccessTokenParamCommunication.X_WWW_FORM_URL_ENCODED:
       return await axios.post(accessTokenURL, new URLSearchParams(params), {
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        headers: Object.assign(
+          {},
+          { 'Content-Type': 'application/x-www-form-urlencoded' },
+          additionalHeaders,
+        ),
       });
     case GetAccessTokenParamCommunication.BODY:
-      return await axios.post(accessTokenURL, params);
+      return await axios.post(accessTokenURL, {
+        params: params,
+        ...(Object.keys(additionalHeaders) && { headers: additionalHeaders }),
+      });
     default:
       throw Error('Unexpected parameter communication type');
   }
