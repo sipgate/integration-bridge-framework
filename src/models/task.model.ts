@@ -3,6 +3,7 @@ export type Task = {
   content: string;
   createdAt: Date;
   dueAt: Date;
-  link?: string;
   title: string;
+  type: string;
+  link?: string;
 };
