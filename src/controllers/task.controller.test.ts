@@ -1,23 +1,28 @@
 import { Response } from 'express';
-import { BridgeRequest, FollowUpWithIntegrationEntities } from '../models';
+import {
+  BridgeRequest,
+  FollowUpWithIntegrationEntities,
+  IdBridgeRequest,
+  Task,
+} from '../models';
 import { TaskController } from './task.controller';
 
 describe('Task Controller', () => {
   const mockAdapter = {
-    getTasks: jest.fn(),
-    findAllByQuery: jest.fn(),
+    getTask: jest.fn(),
+    findById: jest.fn(),
     createFollowUp: jest.fn(),
   };
   const mockNext = jest.fn();
 
-  describe('findAllByQuery', () => {
+  describe('findById', () => {
     beforeEach(() => jest.clearAllMocks());
 
     it('Should check for providerConfig', async () => {
       const controller = new TaskController(mockAdapter);
 
-      const result = await controller.findAllByQuery(
-        {} as BridgeRequest<void>,
+      const result = await controller.findById(
+        { params: { id: '123' } } as IdBridgeRequest<Task>,
         {} as Response,
         mockNext,
       );
@@ -26,11 +31,11 @@ describe('Task Controller', () => {
       expect(mockNext).toHaveBeenCalled();
     });
 
-    it('Should check if adapter.getTasks is implemented', async () => {
+    it('Should check if adapter.getTask is implemented', async () => {
       const controller = new TaskController({});
 
-      const result = await controller.findAllByQuery(
-        {} as BridgeRequest<void>,
+      const result = await controller.findById(
+        { params: { id: '123' } } as IdBridgeRequest<Task>,
         {} as Response,
         mockNext,
       );
@@ -39,12 +44,12 @@ describe('Task Controller', () => {
       expect(mockNext).toHaveBeenCalled();
     });
 
-    it('Should handle erroneous adapter.getTasks call', async () => {
+    it('Should handle erroneous adapter.getTask call', async () => {
       const controller = new TaskController(mockAdapter);
 
-      mockAdapter.getTasks.mockRejectedValue(null);
+      mockAdapter.getTask.mockRejectedValue(null);
 
-      const result = await controller.findAllByQuery(
+      const result = await controller.findById(
         {
           providerConfig: {
             userId: '123',
@@ -52,7 +57,8 @@ describe('Task Controller', () => {
             apiUrl: ':)',
             locale: 'de-DE',
           },
-        } as BridgeRequest<void>,
+          params: { id: '123' },
+        } as IdBridgeRequest<Task>,
         {} as Response,
         mockNext,
       );
@@ -65,7 +71,15 @@ describe('Task Controller', () => {
       const controller = new TaskController(mockAdapter);
       const mockResponse = { json: jest.fn() };
 
-      mockAdapter.getTasks.mockResolvedValue([]);
+      const mockTask: Task = {
+        id: '123',
+        content: 'string',
+        createdAt: 12345678,
+        dueAt: 12345678,
+        title: 'string',
+        type: 'string',
+      };
+      mockAdapter.getTask.mockResolvedValue(mockTask);
 
       const req = {
         providerConfig: {
@@ -74,20 +88,21 @@ describe('Task Controller', () => {
           apiUrl: ':)',
           locale: 'de-DE',
         },
-      } as BridgeRequest<void>;
+        params: { id: '123' },
+      } as IdBridgeRequest<Task>;
 
-      const result = await controller.findAllByQuery(
+      const result = await controller.findById(
         req,
         mockResponse as unknown as Response,
         mockNext,
       );
 
       expect(result).toBeUndefined();
-      expect(mockAdapter.getTasks).toHaveBeenCalledWith(
-        req,
+      expect(mockAdapter.getTask).toHaveBeenCalledWith(
         req.providerConfig,
+        req.params.id,
       );
-      expect(mockResponse.json).toHaveBeenCalledWith([]);
+      expect(mockResponse.json).toHaveBeenCalledWith(mockTask);
     });
   });
 

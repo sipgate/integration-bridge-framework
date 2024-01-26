@@ -94,7 +94,7 @@ export interface Adapter {
   ) => Promise<{ apiKey: string; apiUrl: string }>;
   handleWebhook?: (req: Request) => Promise<IntegrationsEvent[]>;
   verifyWebhookRequest?: (req: Request) => Promise<boolean>;
-  getTasks?: (req: Request, config: Config) => Promise<Task[]>;
+  getTask?: (config: Config, id: string) => Promise<Task>;
   createFollowUp?: (
     config: Config,
     body: FollowUpWithIntegrationEntities,
