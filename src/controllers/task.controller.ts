@@ -9,19 +9,18 @@ import { infoLogger } from '../util';
 export class TaskController {
   constructor(private readonly adapter: Adapter) {}
 
-  async findAllByQuery(
-    req: BridgeRequest<void>,
-    res: Response,
-    next: NextFunction,
-  ) {
-    const { providerConfig } = req;
+  async findById(req: BridgeRequest<void>, res: Response, next: NextFunction) {
+    const {
+      providerConfig,
+      params: { id },
+    } = req;
 
     if (!providerConfig) {
       next(new Error('Provider config not found'));
       return;
     }
 
-    if (!this.adapter.getTasks) {
+    if (!this.adapter.getTask) {
       next(new Error('Method not implemented'));
       return;
     }
@@ -29,16 +28,10 @@ export class TaskController {
     try {
       infoLogger('getTasks', 'START', providerConfig.apiKey);
 
-      const followUps = await this.adapter.getTasks(req, providerConfig);
+      const task = await this.adapter.getTask(providerConfig, id);
 
-      infoLogger(
-        'getTasks',
-        `Received ${followUps.length} follow ups`,
-        providerConfig.apiKey,
-      );
-
-      infoLogger('getTasks', 'END', providerConfig.apiKey);
-      res.json(followUps);
+      infoLogger('getTask', 'END', providerConfig.apiKey);
+      res.json(task);
     } catch (err) {
       next(err);
     }

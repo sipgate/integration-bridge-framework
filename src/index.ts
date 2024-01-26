@@ -153,7 +153,7 @@ export function start(
   );
 
   app.get('/tasks', (req, res, next) =>
-    taskController.findAllByQuery(req, res, next),
+    taskController.findById(req, res, next),
   );
 
   app.post('/tasks', (req, res, next) => taskController.create(req, res, next));
