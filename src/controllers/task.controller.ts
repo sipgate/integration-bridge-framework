@@ -3,13 +3,14 @@ import {
   Adapter,
   BridgeRequest,
   FollowUpWithIntegrationEntities,
+  Task,
 } from '../models';
 import { infoLogger } from '../util';
 
 export class TaskController {
   constructor(private readonly adapter: Adapter) {}
 
-  async findById(req: BridgeRequest<void>, res: Response, next: NextFunction) {
+  async findById(req: BridgeRequest<Task>, res: Response, next: NextFunction) {
     const {
       providerConfig,
       params: { id },
@@ -26,7 +27,7 @@ export class TaskController {
     }
 
     try {
-      infoLogger('getTasks', 'START', providerConfig.apiKey);
+      infoLogger('getTask', 'START', providerConfig.apiKey);
 
       const task = await this.adapter.getTask(providerConfig, id);
 

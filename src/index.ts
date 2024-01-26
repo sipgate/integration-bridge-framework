@@ -152,7 +152,7 @@ export function start(
     controller.handleWebhook(req, res, next),
   );
 
-  app.get('/tasks', (req, res, next) =>
+  app.get('/tasks/:id', (req, res, next) =>
     taskController.findById(req, res, next),
   );
 
