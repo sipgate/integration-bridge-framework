@@ -158,7 +158,7 @@ export function start(
 
   app.post('/tasks', (req, res, next) => taskController.create(req, res, next));
 
-  app.get('/tasks/metadata', (req, res, next) =>
+  app.get('/task-metadata', (req, res, next) =>
     taskController.getTaskMetadata(req, res, next),
   );
 
