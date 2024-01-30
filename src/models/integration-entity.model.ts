@@ -27,4 +27,6 @@ export enum IntegrationEntityType {
   CONTACTS_FOLDER = 'contacts_folder',
   // outlook and sipgate
   USERS = 'users',
+  //generic
+  TASKS = 'tasks',
 }
