@@ -79,6 +79,7 @@ export interface Adapter {
     config: Config,
     body: CallEvent,
   ) => Promise<LoggedIntegrationEntity>;
+  getCallLogMetadata?: (config: Config) => Promise<IntegrationDefinedOptions>;
   getEntity?: (
     providerConfig: Config,
     id: string,

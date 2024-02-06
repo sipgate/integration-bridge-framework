@@ -13,6 +13,7 @@ import cors from 'cors';
 import express from 'express';
 import { Server } from 'http';
 import { TokenCacheStorage } from './cache';
+import { CallLogController } from './controllers/call-log.controller';
 import { TaskController } from './controllers/task.controller';
 import { errorHandlerMiddleware, extractHeaderMiddleware } from './middlewares';
 import {
@@ -55,6 +56,7 @@ export function start(
 
   const controller: Controller = new Controller(adapter, contactCache);
   const taskController: TaskController = new TaskController(adapter);
+  const callLogController: CallLogController = new CallLogController(adapter);
 
   app.get('/contacts', (req, res, next) =>
     controller.getContacts(req, res, next),
@@ -123,11 +125,15 @@ export function start(
   );
 
   app.put('/call-log', (req, res, next) =>
-    controller.createOrUpdateCallLogsForEntities(req, res, next),
+    callLogController.createOrUpdateCallLogsForEntities(req, res, next),
   );
 
   app.put('/call-log/phoneNumber', (req, res, next) =>
-    controller.createCallLogForPhoneNumber(req, res, next),
+    callLogController.createCallLogForPhoneNumber(req, res, next),
+  );
+
+  app.get('/call-log-metadata', (req, res, next) =>
+    callLogController.getCallLogMetadata(req, res, next),
   );
 
   app.get('/health', (req, res, next) => controller.getHealth(req, res, next));
