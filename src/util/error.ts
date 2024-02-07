@@ -78,7 +78,7 @@ export const throwAndDelegateError = (
   }
   throw new ServerError(
     500,
-    `An internal error occurred: ${JSON.stringify(error)}`,
+    `An internal error occurred: ${JSON.stringify(error)}.`,
   );
 };
 
