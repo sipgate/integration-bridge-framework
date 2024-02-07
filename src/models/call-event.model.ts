@@ -31,9 +31,9 @@ export interface CallEvent {
   participants: CallParticipant[];
   note: string;
   state: CallState;
+  outcome?: string;
 }
 
 export interface CallEventWithIntegrationEntities extends CallEvent {
   integrationEntities: (IntegrationEntity | LoggedIntegrationEntity)[];
-  outcome?: string;
 }
