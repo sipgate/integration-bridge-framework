@@ -76,11 +76,15 @@ export const throwAndDelegateError = (
     );
     throw new ServerError(DELEGATE_TO_FRONTEND_CODE, errorType);
   }
-  throw new ServerError(500, 'An internal error occurred');
+  throw new ServerError(
+    500,
+    `An internal error occurred: ${JSON.stringify(error)}`,
+  );
 };
 
 export class DelegateToFrontedError extends ServerError {
   errorType: IntegrationErrorType;
+
   constructor(errorType: IntegrationErrorType) {
     super(DELEGATE_TO_FRONTEND_CODE, errorType);
 
