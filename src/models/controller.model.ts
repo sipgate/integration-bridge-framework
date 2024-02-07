@@ -1052,13 +1052,7 @@ export class Controller {
         'handleCallEvent',
         'Could not handle call event:',
         providerConfig?.apiKey,
-        error || 'Unknown',
-      );
-      errorLogger(
-        'handleCallEvent',
-        'Entity',
-        providerConfig?.apiKey,
-        req.body,
+        [error || 'Unknown', req.body],
       );
       next(error);
     }
