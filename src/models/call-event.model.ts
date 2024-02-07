@@ -35,4 +35,5 @@ export interface CallEvent {
 
 export interface CallEventWithIntegrationEntities extends CallEvent {
   integrationEntities: (IntegrationEntity | LoggedIntegrationEntity)[];
+  outcome?: string;
 }
