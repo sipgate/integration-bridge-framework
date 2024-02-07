@@ -1,4 +1,16 @@
 import { anonymizeKey } from './anonymize-key';
+import { context, trace } from '@opentelemetry/api';
+
+function addMessageToTraceSpan(
+  method: 'log' | 'error' | 'warn',
+  message: string,
+  args?: unknown[],
+) {
+  const span = trace.getSpan(context.active());
+  if (span) {
+    span.addEvent(method, { message, args: args ? args.join(',') : '' });
+  }
+}
 
 /**
  * Logging function equivalent to console.log
@@ -13,6 +25,8 @@ export const infoLogger = (
   apiKey?: string,
   ...args: unknown[]
 ): void => {
+  addMessageToTraceSpan('log', message, args);
+
   logger(console.info, source, message, apiKey, ...args);
 };
 
@@ -29,6 +43,8 @@ export const errorLogger = (
   apiKey?: string,
   ...args: unknown[]
 ): void => {
+  addMessageToTraceSpan('error', message, args);
+
   logger(console.error, source, message, apiKey, ...args);
 };
 
@@ -45,6 +61,8 @@ export const warnLogger = (
   apiKey?: string,
   ...args: unknown[]
 ): void => {
+  addMessageToTraceSpan('warn', message, args);
+
   logger(console.warn, source, message, apiKey, ...args);
 };
 
