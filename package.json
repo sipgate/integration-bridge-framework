@@ -79,7 +79,7 @@
     "@opentelemetry/sdk-trace-base": "^1.18.1",
     "@slack/webhook": "^6.1.0",
     "ajv": "^8.11.0",
-    "awesome-phonenumber": "^3.2.0",
+    "awesome-phonenumber": "^6.4.0",
     "axios": "^1.0.0",
     "body-parser": "^1.20.0",
     "compression": "^1.7.4",
