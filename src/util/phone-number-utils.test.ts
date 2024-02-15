@@ -76,8 +76,15 @@ describe('parsePhoneNumber', () => {
         parsePhoneNumber(
           { label: PhoneNumberLabel.WORK, phoneNumber: '415 CHOO CHOO' },
           'en-US',
+        ).localized,
+      ).toEqual('41524662466');
+
+      expect(
+        parsePhoneNumber(
+          { label: PhoneNumberLabel.WORK, phoneNumber: '415 CHOO CHOO' },
+          'en-US',
         ).e164,
-      ).toEqual('+141524662466');
+      ).toEqual('415 CHOO CHOO');
     });
   });
 
@@ -257,6 +264,33 @@ describe('parsePhoneNumber', () => {
           true,
         ).localized,
       ).toEqual('086 412 0894');
+    });
+  });
+
+  describe('deals correctly with sipgate special numbers', () => {
+    const specialNumbers = ['10005', '10000', '10020', '20000'];
+
+    it.each(specialNumbers)('parses %s correctly', (number) => {
+      expect(
+        parsePhoneNumber(
+          { label: PhoneNumberLabel.WORK, phoneNumber: number },
+          'de-DE',
+        ).e164,
+      ).toEqual(number);
+
+      expect(
+        parsePhoneNumber(
+          { label: PhoneNumberLabel.WORK, phoneNumber: number },
+          'de-DE',
+        ).localized,
+      ).toEqual(number);
+
+      expect(
+        parsePhoneNumber(
+          { label: PhoneNumberLabel.WORK, phoneNumber: number },
+          'en-GB',
+        ).e164,
+      ).toEqual(number);
     });
   });
 });

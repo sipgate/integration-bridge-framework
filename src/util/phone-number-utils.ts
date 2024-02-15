@@ -16,11 +16,13 @@ export const parsePhoneNumber = (
   const type = isNumberDirectDial
     ? PhoneNumberType.DIRECT_DIAL
     : PhoneNumberType.STANDARD;
+
   try {
     const region = locale.replace('_', '-').replace(/.+-/, '').toUpperCase();
     const parsedPhoneNumber = parse(phoneNumber, {
       regionCode: region,
     });
+
     const nationalNumber = parsedPhoneNumber.number?.national;
 
     const phoneNumberRegion = parsedPhoneNumber.regionCode;
@@ -29,7 +31,7 @@ export const parsePhoneNumber = (
     return {
       label,
       type,
-      e164: isNumberDirectDial ? phoneNumber : e164,
+      e164: parsedPhoneNumber.valid ? e164 : phoneNumber,
       localized:
         ignoreRegion || region === phoneNumberRegion
           ? nationalNumber ?? phoneNumber
