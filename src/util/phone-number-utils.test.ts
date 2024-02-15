@@ -225,6 +225,29 @@ describe('parsePhoneNumber', () => {
         ).e164,
       ).toEqual('22');
     });
+
+    it('formats emergency numbers correctly', () => {
+      expect(
+        parsePhoneNumber(
+          { label: PhoneNumberLabel.WORK, phoneNumber: '112' },
+          'de-DE',
+        ).e164,
+      ).toEqual('112');
+
+      expect(
+        parsePhoneNumber(
+          { label: PhoneNumberLabel.WORK, phoneNumber: '110' },
+          'de-DE',
+        ).localized,
+      ).toEqual('110');
+
+      expect(
+        parsePhoneNumber(
+          { label: PhoneNumberLabel.WORK, phoneNumber: '911' },
+          'en-US',
+        ).localized,
+      ).toEqual('911');
+    });
   });
 
   it('returns national number for localized if ignoreRegion flag is set', () => {
@@ -293,65 +316,65 @@ describe('parsePhoneNumber', () => {
       ).toEqual(number);
     });
   });
-
-  describe.skip('test like sipgate java', () => {
-    expect(
-      parsePhoneNumber(
-        { label: PhoneNumberLabel.WORK, phoneNumber: '02089939152' },
-        'de-DE',
-      ).e164,
-    ).toEqual('+492089939152');
-    expect(
-      parsePhoneNumber(
-        { label: PhoneNumberLabel.WORK, phoneNumber: '00492089939152' },
-        'de-DE',
-      ).e164,
-    ).toEqual('+492089939152');
-    expect(
-      parsePhoneNumber(
-        { label: PhoneNumberLabel.WORK, phoneNumber: '+492089939152' },
-        'de-DE',
-      ).e164,
-    ).toEqual('+492089939152');
-    expect(
-      parsePhoneNumber(
-        { label: PhoneNumberLabel.WORK, phoneNumber: '492089939152' },
-        'de-DE',
-      ).e164,
-    ).toEqual('+492089939152');
-    expect(
-      parsePhoneNumber(
-        { label: PhoneNumberLabel.WORK, phoneNumber: '04922579' },
-        'de-DE',
-      ).e164,
-    ).toEqual('+494922579');
-
-    it('Telefonnummer Borkum von local ohne führende 0', () => {
-      expect(
-        parsePhoneNumber(
-          { phoneNumber: '4922579', label: PhoneNumberLabel.WORK },
-          'de-DE',
-        ).e164,
-      ).toEqual('+494922579');
-    });
-
-    it('Telefonnummer Borkum von e164 dekoriert', () => {
-      expect(
-        parsePhoneNumber(
-          { label: PhoneNumberLabel.WORK, phoneNumber: '00494922579' },
-          'de-DE',
-        ).e164,
-      ).toEqual('+494922579');
-
-      expect(
-        parsePhoneNumber(
-          {
-            phoneNumber: '+494922579',
-            label: PhoneNumberLabel.WORK,
-          },
-          'de-DE',
-        ).e164,
-      ).toEqual('+494922579');
-    });
-  });
+  //
+  // describe.skip('test like sipgate java', () => {
+  //   expect(
+  //     parsePhoneNumber(
+  //       { label: PhoneNumberLabel.WORK, phoneNumber: '02089939152' },
+  //       'de-DE',
+  //     ).e164,
+  //   ).toEqual('+492089939152');
+  //   expect(
+  //     parsePhoneNumber(
+  //       { label: PhoneNumberLabel.WORK, phoneNumber: '00492089939152' },
+  //       'de-DE',
+  //     ).e164,
+  //   ).toEqual('+492089939152');
+  //   expect(
+  //     parsePhoneNumber(
+  //       { label: PhoneNumberLabel.WORK, phoneNumber: '+492089939152' },
+  //       'de-DE',
+  //     ).e164,
+  //   ).toEqual('+492089939152');
+  //   expect(
+  //     parsePhoneNumber(
+  //       { label: PhoneNumberLabel.WORK, phoneNumber: '492089939152' },
+  //       'de-DE',
+  //     ).e164,
+  //   ).toEqual('+492089939152');
+  //   expect(
+  //     parsePhoneNumber(
+  //       { label: PhoneNumberLabel.WORK, phoneNumber: '04922579' },
+  //       'de-DE',
+  //     ).e164,
+  //   ).toEqual('+494922579');
+  //
+  //   it('Telefonnummer Borkum von local ohne führende 0', () => {
+  //     expect(
+  //       parsePhoneNumber(
+  //         { phoneNumber: '4922579', label: PhoneNumberLabel.WORK },
+  //         'de-DE',
+  //       ).e164,
+  //     ).toEqual('+494922579');
+  //   });
+  //
+  //   it('Telefonnummer Borkum von e164 dekoriert', () => {
+  //     expect(
+  //       parsePhoneNumber(
+  //         { label: PhoneNumberLabel.WORK, phoneNumber: '00494922579' },
+  //         'de-DE',
+  //       ).e164,
+  //     ).toEqual('+494922579');
+  //
+  //     expect(
+  //       parsePhoneNumber(
+  //         {
+  //           phoneNumber: '+494922579',
+  //           label: PhoneNumberLabel.WORK,
+  //         },
+  //         'de-DE',
+  //       ).e164,
+  //     ).toEqual('+494922579');
+  //   });
+  // });
 });
