@@ -1,26 +1,43 @@
 import { delay } from './delay';
+import { infoLogger } from '../logger.util';
 
-export type WannaRetryFn = (e: Error) => boolean;
-export type ProcessFn<T> = () => T;
+export interface RetryDecision {
+  wantRetry: boolean;
+  delayMs?: number;
+}
+
+export type RetryDecider = (e: unknown) => RetryDecision;
+export type BusinessLogic<T> = () => T;
 
 export async function retry<T>(
-  wannaRetry: WannaRetryFn,
+  businessLogic: BusinessLogic<T>,
+  retryDecider: RetryDecider,
   maxRetries: number,
-  process: ProcessFn<T>,
-  delayMs?: number,
 ): Promise<T> {
   let retries = 0;
 
   do {
     try {
-      return await process();
+      return await businessLogic();
     } catch (e: unknown) {
-      if (++retries <= maxRetries && wannaRetry(e as Error)) {
-        delayMs && (await delay(delayMs));
-        continue;
-      } else {
-        throw e;
+      if (++retries <= maxRetries) {
+        const { wantRetry, delayMs } = retryDecider(e);
+
+        if (wantRetry) {
+          infoLogger(
+            'retry',
+            `retry desired with delay of ${delayMs || 0}ms`,
+            undefined,
+            { error: e },
+          );
+
+          delayMs && (await delay(delayMs));
+
+          continue;
+        }
       }
+
+      throw e;
     }
     // eslint-disable-next-line  no-constant-condition
   } while (true);
