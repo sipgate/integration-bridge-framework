@@ -1,4 +1,10 @@
-import axios, { AxiosRequestConfig, AxiosResponse } from 'axios';
+import axios, {
+  AxiosError,
+  AxiosInstance,
+  AxiosRequestConfig,
+  AxiosResponse,
+  InternalAxiosRequestConfig,
+} from 'axios';
 import { RateLimiterMemory } from 'rate-limiter-flexible';
 import { infoLogger } from '../logger.util';
 
@@ -88,7 +94,7 @@ export class RateLimitedAxios {
 }
 
 export function useRateLimitInterceptor(
-  axiosInstance: any, // NOTE: we could specify AxiosInstance here, but as this lib requires axios as direct dependency (instead of as peerDependency), it will make clients break when they are specifying their own version of axios
+  axiosInstance: AxiosInstance,
   allowedCalls: number,
   intervalSeconds: number,
   enableLogging: boolean = false,
@@ -118,12 +124,58 @@ export function useRateLimitInterceptor(
     }
   };
 
-  const requestHandler = async (config: any) => {
+  const requestHandler = async (config: InternalAxiosRequestConfig) => {
     await checkRateLimitAndWait();
     return config;
   };
 
   axiosInstance.interceptors.request.use(requestHandler);
+
+  return axiosInstance;
+}
+
+export function useRetryOnErrorInterceptor(
+  axiosInstance: AxiosInstance,
+  retriesPerCall: number = 2,
+  retryCountHeader: string = 'X-CSR-Retry-Count',
+) {
+  axiosInstance.interceptors.request.use(
+    (config: InternalAxiosRequestConfig) => {
+      if (config.headers[retryCountHeader] !== undefined) {
+        config.headers[retryCountHeader] =
+          parseInt(config.headers[retryCountHeader]) + 1;
+      } else {
+        config.headers[retryCountHeader] = 0;
+      }
+
+      return config;
+    },
+  );
+
+  axiosInstance.interceptors.response.use(
+    (response) => response,
+    (error: AxiosError) => {
+      console.log(
+        'CAUGHT ERROR',
+        error.config?.url,
+        error.config?.params,
+        retriesPerCall,
+      );
+
+      if (
+        error.config &&
+        error.config.headers[retryCountHeader] !== undefined &&
+        parseInt(error.config.headers[retryCountHeader]) < retriesPerCall
+      ) {
+        console.log('RETRYING');
+        return axiosInstance.request(error.config);
+      }
+
+      console.log('BAILOUT');
+
+      return Promise.reject(error);
+    },
+  );
 
   return axiosInstance;
 }
