@@ -86,3 +86,44 @@ export class RateLimitedAxios {
     return axios.patch(url, data, config);
   }
 }
+
+export function useRateLimitInterceptor(
+  axiosInstance: any, // NOTE: we could specify AxiosInstance here, but as this lib requires axios as direct dependency (instead of as peerDependency), it will make clients break when they are specifying their own version of axios
+  allowedCalls: number,
+  intervalSeconds: number,
+  enableLogging: boolean = false,
+  key: string = DEFAULT_KEY,
+) {
+  const rateLimiter = new RateLimiterMemory({
+    points: allowedCalls,
+    duration: intervalSeconds,
+  });
+
+  const checkRateLimitAndWait = async () => {
+    try {
+      await rateLimiter.consume(key, 1);
+    } catch (rateLimiterRes: any) {
+      enableLogging &&
+        infoLogger(
+          'checkRateLimitAndWait',
+          `Waiting ${rateLimiterRes.msBeforeNext} to respect rate limit`,
+          key ? key : '',
+        );
+
+      await new Promise((resolve) => {
+        setTimeout(resolve, rateLimiterRes.msBeforeNext);
+      });
+
+      await checkRateLimitAndWait();
+    }
+  };
+
+  const requestHandler = async (config: any) => {
+    await checkRateLimitAndWait();
+    return config;
+  };
+
+  axiosInstance.interceptors.request.use(requestHandler);
+
+  return axiosInstance;
+}
