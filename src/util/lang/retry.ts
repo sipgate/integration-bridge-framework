@@ -1,10 +1,10 @@
 import { delay } from './delay';
 import { infoLogger } from '../logger.util';
 
-export interface RetryDecision {
+export type RetryDecision = {
   wantRetry: boolean;
   delayMs?: number;
-}
+};
 
 export type RetryDecider = (e: unknown) => RetryDecision;
 export type BusinessLogic<T> = () => T;

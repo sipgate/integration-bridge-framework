@@ -93,16 +93,23 @@ export class RateLimitedAxios {
   }
 }
 
+export type RateLimitConfig = {
+  allowedCalls: number;
+  intervalSeconds: number;
+  enableLogging?: boolean;
+  key?: string;
+};
+
 export function useRateLimitInterceptor(
   axiosInstance: AxiosInstance,
-  allowedCalls: number,
-  intervalSeconds: number,
-  enableLogging: boolean = false,
-  key: string = randomUUID(),
-) {
+  config: RateLimitConfig,
+): AxiosInstance {
+  const enableLogging = !!config.enableLogging;
+  const key = config.key || randomUUID();
+
   const rateLimiter = new RateLimiterMemory({
-    points: allowedCalls,
-    duration: intervalSeconds,
+    points: config.allowedCalls,
+    duration: config.intervalSeconds,
   });
 
   const checkRateLimitAndWait = async () => {

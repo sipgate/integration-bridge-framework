@@ -2,10 +2,15 @@ import { AxiosError, AxiosInstance, InternalAxiosRequestConfig } from 'axios';
 import { infoLogger } from '../logger.util';
 import { delay } from '../lang/delay';
 
-export interface RetryDecision {
+export type RetryConfig = {
+  retryDecider: RetryDecider;
+  retryCountHeader?: string;
+};
+
+export type RetryDecision = {
   retryDesired: boolean;
   delayMs?: number;
-}
+};
 
 export type RetryDecider = (
   error: AxiosError,
@@ -28,9 +33,10 @@ function formatAxiosErrorForLogging(error: AxiosError) {
 
 export function useRetryOnErrorInterceptor(
   axiosInstance: AxiosInstance,
-  retryDecider: RetryDecider,
-  retryCountHeader: string = 'X-CSR-Retry-Count',
-) {
+  config: RetryConfig,
+): AxiosInstance {
+  const retryCountHeader = config.retryCountHeader || 'X-CSR-Retry-Count';
+
   axiosInstance.interceptors.request.use(
     (config: InternalAxiosRequestConfig) => {
       if (config.headers[retryCountHeader] !== undefined) {
@@ -58,7 +64,10 @@ export function useRetryOnErrorInterceptor(
       });
 
       if (retryCount !== undefined) {
-        const { retryDesired, delayMs } = retryDecider(error, retryCount);
+        const { retryDesired, delayMs } = config.retryDecider(
+          error,
+          retryCount,
+        );
 
         if (retryDesired && error.config) {
           infoLogger('axiosRetryInterceptor', 'retry desired', undefined, {
