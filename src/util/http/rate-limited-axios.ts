@@ -1,10 +1,10 @@
 import axios, {
-  AxiosError,
   AxiosInstance,
   AxiosRequestConfig,
   AxiosResponse,
   InternalAxiosRequestConfig,
 } from 'axios';
+import { randomUUID } from 'crypto';
 import { RateLimiterMemory } from 'rate-limiter-flexible';
 import { infoLogger } from '../logger.util';
 
@@ -98,7 +98,7 @@ export function useRateLimitInterceptor(
   allowedCalls: number,
   intervalSeconds: number,
   enableLogging: boolean = false,
-  key: string = DEFAULT_KEY,
+  key: string = randomUUID(),
 ) {
   const rateLimiter = new RateLimiterMemory({
     points: allowedCalls,
@@ -130,52 +130,6 @@ export function useRateLimitInterceptor(
   };
 
   axiosInstance.interceptors.request.use(requestHandler);
-
-  return axiosInstance;
-}
-
-export function useRetryOnErrorInterceptor(
-  axiosInstance: AxiosInstance,
-  retriesPerCall: number = 2,
-  retryCountHeader: string = 'X-CSR-Retry-Count',
-) {
-  axiosInstance.interceptors.request.use(
-    (config: InternalAxiosRequestConfig) => {
-      if (config.headers[retryCountHeader] !== undefined) {
-        config.headers[retryCountHeader] =
-          parseInt(config.headers[retryCountHeader]) + 1;
-      } else {
-        config.headers[retryCountHeader] = 0;
-      }
-
-      return config;
-    },
-  );
-
-  axiosInstance.interceptors.response.use(
-    (response) => response,
-    (error: AxiosError) => {
-      console.log(
-        'CAUGHT ERROR',
-        error.config?.url,
-        error.config?.params,
-        retriesPerCall,
-      );
-
-      if (
-        error.config &&
-        error.config.headers[retryCountHeader] !== undefined &&
-        parseInt(error.config.headers[retryCountHeader]) < retriesPerCall
-      ) {
-        console.log('RETRYING');
-        return axiosInstance.request(error.config);
-      }
-
-      console.log('BAILOUT');
-
-      return Promise.reject(error);
-    },
-  );
 
   return axiosInstance;
 }
