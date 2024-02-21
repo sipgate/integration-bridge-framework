@@ -47,6 +47,7 @@ export class RedisStorageAdapter implements StorageAdapter {
     if (!value) {
       return null;
     }
+
     const decompressed = await inflate(Buffer.from(value, 'base64'));
     const result = JSON.parse(decompressed.toString());
     return result;

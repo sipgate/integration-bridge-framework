@@ -274,8 +274,6 @@ export class Controller {
     res: Response,
     next: NextFunction,
   ): Promise<void> {
-    console.log('traceIdFromHeader', req.headers.traceparent);
-
     const { providerConfig } = req;
     try {
       if (!providerConfig) {
@@ -293,7 +291,7 @@ export class Controller {
 
       infoLogger(
         'streamContacts',
-        `Starting contact streaming ${timestamp} - orderingKey ${orderingKey}`,
+        `[${orderingKey}] Starting contact streaming`,
         providerConfig.apiKey,
       );
 
@@ -312,14 +310,13 @@ export class Controller {
               ),
               state: PubSubContactsState.IN_PROGRESS,
               integrationName: this.integrationName,
-              // traceparent: tracer.getTraceParent(),
             },
             orderingKey,
           );
         } catch (error) {
           errorLogger(
             'streamContacts',
-            `Could not publish contacts`,
+            `[${orderingKey}] Could not publish contacts`,
             providerConfig.apiKey,
             error,
           );
@@ -352,7 +349,6 @@ export class Controller {
               contacts: [],
               state: PubSubContactsState.COMPLETE,
               integrationName: this.integrationName,
-              // traceparent: tracer.getTraceParent(),
             },
             orderingKey,
           );
@@ -360,7 +356,7 @@ export class Controller {
         .catch(async (error) => {
           errorLogger(
             'streamContacts',
-            'Could not stream contacts',
+            `[${orderingKey}] Could not stream contacts`,
             providerConfig.apiKey,
             error,
           );
@@ -371,7 +367,6 @@ export class Controller {
               contacts: [],
               state: PubSubContactsState.FAILED,
               integrationName: this.integrationName,
-              // traceparent: tracer.getTraceParent(),
             },
             orderingKey,
           );
@@ -379,7 +374,7 @@ export class Controller {
         .catch((error) => {
           errorLogger(
             'streamContacts',
-            'Could not publish failed message',
+            `[${orderingKey}] Could not publish failed message`,
             providerConfig.apiKey,
             error,
           );
@@ -395,14 +390,18 @@ export class Controller {
         } catch (error) {
           errorLogger(
             'streamContacts',
-            'Could not get and refresh token',
+            `[${orderingKey}] Could not get and refresh token`,
             providerConfig.apiKey,
             error,
           );
         }
       }
 
-      infoLogger('streamContacts', 'END', providerConfig.apiKey);
+      infoLogger(
+        `[${orderingKey}] streamContacts`,
+        'END',
+        providerConfig.apiKey,
+      );
 
       res.status(200).send({ timestamp });
 
@@ -419,7 +418,7 @@ export class Controller {
 
       errorLogger(
         'streamContacts',
-        'Could not stream contacts',
+        `Could not stream contacts`,
         providerConfig?.apiKey,
         error,
       );

@@ -17,11 +17,6 @@ export class TokenCacheStorage implements TokenCache {
   public async get(key: string): Promise<TokenCacheItem | null> {
     const keyWithPrefix = this.buildKey(key);
     try {
-      infoLogger(
-        this.logPrefix,
-        'Trying to get token from cache',
-        keyWithPrefix,
-      );
       return await this.storage.get<TokenCacheItem>(keyWithPrefix);
     } catch (e) {
       errorLogger(
