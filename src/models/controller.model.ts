@@ -398,8 +398,8 @@ export class Controller {
       }
 
       infoLogger(
-        `[${orderingKey}] streamContacts`,
-        'END',
+        `streamContacts`,
+        `[${orderingKey}] END`,
         providerConfig.apiKey,
       );
 
