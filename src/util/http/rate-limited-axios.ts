@@ -4,9 +4,9 @@ import axios, {
   AxiosResponse,
   InternalAxiosRequestConfig,
 } from 'axios';
-import { randomUUID } from 'crypto';
 import { RateLimiterMemory } from 'rate-limiter-flexible';
 import { infoLogger } from '../logger.util';
+import { randomUUID } from 'crypto';
 
 const DEFAULT_KEY = 'DEFAULT_KEY';
 
@@ -97,15 +97,15 @@ export type RateLimitConfig = {
   allowedCalls: number;
   intervalSeconds: number;
   enableLogging?: boolean;
-  key?: string;
 };
 
 export function useRateLimitInterceptor(
   axiosInstance: AxiosInstance,
   config: RateLimitConfig,
+  key?: string,
 ): AxiosInstance {
+  const effectiveKey = key || randomUUID();
   const enableLogging = !!config.enableLogging;
-  const key = config.key || randomUUID();
 
   const rateLimiter = new RateLimiterMemory({
     points: config.allowedCalls,
@@ -114,13 +114,13 @@ export function useRateLimitInterceptor(
 
   const checkRateLimitAndWait = async () => {
     try {
-      await rateLimiter.consume(key, 1);
+      await rateLimiter.consume(effectiveKey, 1);
     } catch (rateLimiterRes: any) {
       enableLogging &&
         infoLogger(
-          'checkRateLimitAndWait',
+          'axiosRateLimitInterceptor',
           `Waiting ${rateLimiterRes.msBeforeNext} to respect rate limit`,
-          key ? key : '',
+          effectiveKey,
         );
 
       await new Promise((resolve) => {

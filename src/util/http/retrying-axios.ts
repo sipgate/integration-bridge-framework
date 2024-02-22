@@ -1,6 +1,7 @@
 import { AxiosError, AxiosInstance, InternalAxiosRequestConfig } from 'axios';
-import { infoLogger } from '../logger.util';
+import { infoLogger, warnLogger } from '../logger.util';
 import { delay } from '../lang/delay';
+import { randomUUID } from 'crypto';
 
 export type RetryDecision = {
   retryDesired: boolean;
@@ -34,8 +35,11 @@ function formatAxiosErrorForLogging(error: AxiosError) {
 export function useRetryOnErrorInterceptor(
   axiosInstance: AxiosInstance,
   config: RetryConfig,
+  key?: string,
 ): AxiosInstance {
-  const retryCountHeader = config.retryCountHeader || 'X-CSR-Retry-Count';
+  const effectiveKey = key || randomUUID();
+  const retryCountHeader =
+    config.retryCountHeader || 'X-SipgateIntegration-RetryCount';
 
   axiosInstance.interceptors.request.use(
     (config: InternalAxiosRequestConfig) => {
@@ -58,11 +62,6 @@ export function useRetryOnErrorInterceptor(
           ? parseInt(error.config.headers[retryCountHeader])
           : undefined;
 
-      infoLogger('axiosRetryInterceptor', 'caught error', undefined, {
-        error: formatAxiosErrorForLogging(error),
-        retryCount,
-      });
-
       if (retryCount !== undefined) {
         const { retryDesired, delayMs } = config.retryDecider(
           error,
@@ -70,15 +69,32 @@ export function useRetryOnErrorInterceptor(
         );
 
         if (retryDesired && error.config) {
-          infoLogger('axiosRetryInterceptor', 'retry desired', undefined, {
-            delayMs,
-          });
+          infoLogger(
+            'axiosRetryInterceptor',
+            'request was not successful - will retry',
+            effectiveKey,
+            {
+              status: error.response?.status,
+              retryCount,
+              delayMs,
+            },
+          );
 
           delayMs && (await delay(delayMs));
 
           return axiosInstance.request(error.config);
         }
       }
+
+      warnLogger(
+        'axiosRetryInterceptor',
+        'request finally failed with error',
+        effectiveKey,
+        {
+          error: formatAxiosErrorForLogging(error),
+          retryCount,
+        },
+      );
 
       return Promise.reject(error);
     },
