@@ -187,7 +187,9 @@ export class Controller {
           providerConfig,
         );
 
-        if (!validate(this.ajv, contactsSchema, fetchedContacts)) {
+        if (
+          !validate(this.ajv, contactsSchema, fetchedContacts, providerConfig)
+        ) {
           throw new ServerError(500, 'Invalid contacts received');
         }
 
@@ -297,7 +299,7 @@ export class Controller {
 
       const publishContacts = async (contacts: Contact[]) => {
         try {
-          if (!validate(this.ajv, contactsSchema, contacts)) {
+          if (!validate(this.ajv, contactsSchema, contacts, providerConfig)) {
             throw new Error('Invalid contacts received');
           }
 
@@ -453,7 +455,14 @@ export class Controller {
           parseInt(req.params.timestamp),
         );
 
-        if (!validate(this.ajv, contactsSchema, fetchedDelta.contacts)) {
+        if (
+          !validate(
+            this.ajv,
+            contactsSchema,
+            fetchedDelta.contacts,
+            providerConfig,
+          )
+        ) {
           throw new ServerError(500, 'Invalid contacts received');
         }
 
@@ -577,7 +586,12 @@ export class Controller {
         req.body,
       );
 
-      const valid = validate(this.ajv, contactsSchema, [contact]);
+      const valid = validate(
+        this.ajv,
+        contactsSchema,
+        [contact],
+        req.providerConfig,
+      );
 
       if (!valid) {
         errorLogger(
@@ -655,7 +669,12 @@ export class Controller {
         req.body,
       );
 
-      const valid = validate(this.ajv, contactsSchema, [contact]);
+      const valid = validate(
+        this.ajv,
+        contactsSchema,
+        [contact],
+        req.providerConfig,
+      );
       if (!valid) {
         errorLogger(
           'updateContact',
@@ -814,7 +833,12 @@ export class Controller {
       const calendarEvents: CalendarEvent[] =
         await this.adapter.getCalendarEvents(req.providerConfig, filter);
 
-      const valid = validate(this.ajv, calendarEventsSchema, calendarEvents);
+      const valid = validate(
+        this.ajv,
+        calendarEventsSchema,
+        calendarEvents,
+        req.providerConfig,
+      );
       if (!valid) {
         errorLogger(
           'getCalendarEvents',
@@ -871,7 +895,12 @@ export class Controller {
       const calendarEvent: CalendarEvent =
         await this.adapter.createCalendarEvent(req.providerConfig, req.body);
 
-      const valid = validate(this.ajv, calendarEventsSchema, [calendarEvent]);
+      const valid = validate(
+        this.ajv,
+        calendarEventsSchema,
+        [calendarEvent],
+        req.providerConfig,
+      );
       if (!valid) {
         errorLogger(
           'createCalendarEvent',
@@ -925,7 +954,12 @@ export class Controller {
           req.body,
         );
 
-      const valid = validate(this.ajv, calendarEventsSchema, [calendarEvent]);
+      const valid = validate(
+        this.ajv,
+        calendarEventsSchema,
+        [calendarEvent],
+        req.providerConfig,
+      );
       if (!valid) {
         errorLogger(
           'updateCalendarEvent',
