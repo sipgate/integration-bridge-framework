@@ -18,7 +18,7 @@ export function validate(
     if (!valid) {
       errorLogger(
         'validate',
-        `${schemaKeyRef.type.toLowerCase()}-validation failed: ${ajv.errorsText()}`,
+        `${schemaKeyRef.title.toLowerCase()}-validation failed: ${ajv.errorsText()}`,
         config.apiKey,
         ajv.errors,
       );
