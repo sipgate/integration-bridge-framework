@@ -14,12 +14,13 @@ export function validate(
       schemaKeyRef,
       data,
     );
+
     if (!valid) {
       errorLogger(
         'validate',
-        `${schemaKeyRef.type}: validation failed`,
+        `${schemaKeyRef.type.toLowerCase()}-validation failed: ${ajv.errorsText()}`,
         config.apiKey,
-        ajv.errorsText(),
+        ajv.errors,
       );
       return false;
     }
