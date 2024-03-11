@@ -1,4 +1,6 @@
-export const contactsSchema = {
+import { ValidationSchema } from './schema.model';
+
+export const contactsSchema: ValidationSchema = {
   title: 'Contacts',
   type: 'array',
   items: {

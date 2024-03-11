@@ -1,10 +1,11 @@
 import Ajv from 'ajv';
 import { Config } from '../models';
 import { errorLogger } from './logger.util';
+import { ValidationSchema } from '../schemas/schema.model';
 
 export function validate(
   ajv: Ajv,
-  schemaKeyRef: object | string | boolean,
+  schemaKeyRef: ValidationSchema,
   data: object,
   config: Config,
 ) {
@@ -16,8 +17,8 @@ export function validate(
     if (!valid) {
       errorLogger(
         'validate',
-        'Validation failed',
-        config?.apiKey,
+        `${schemaKeyRef.type}: validation failed`,
+        config.apiKey,
         ajv.errorsText(),
       );
       return false;
@@ -25,7 +26,13 @@ export function validate(
 
     return true;
   } catch (e) {
-    console.error('Error validating data', e, ajv.errorsText());
+    errorLogger(
+      'validate',
+      'Error validating data',
+      config.apiKey,
+      e,
+      ajv.errorsText(),
+    );
     // Ignore validation if validation is broken
     return true;
   }

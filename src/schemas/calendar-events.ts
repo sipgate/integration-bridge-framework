@@ -1,4 +1,6 @@
-export const calendarEventsSchema = {
+import { ValidationSchema } from './schema.model';
+
+export const calendarEventsSchema: ValidationSchema = {
   title: 'CalendarEvents',
   type: 'array',
   items: {
