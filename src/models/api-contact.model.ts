@@ -10,12 +10,8 @@ export interface APIPhoneNumber {
   type: PhoneNumberType;
   e164: string;
   localized: string;
-
-  /**
-   * @deprecated
-   * use 'e164' and 'localized' instead
-   */
-  phoneNumber: string;
+  rawNumber: string;
+  isRawNumberValid: boolean;
 }
 
 export type APIContact = BaseContact &

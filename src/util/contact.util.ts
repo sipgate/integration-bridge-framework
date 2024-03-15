@@ -27,7 +27,7 @@ export function getFullName(item: {
 }
 
 export function sanitizeContact(contact: Contact, locale: string): Contact {
-  const result: APIContact = {
+  const result: Contact = {
     ...contact,
     phoneNumbers: contact.phoneNumbers.map((phoneNumber) =>
       parsePhoneNumber(phoneNumber, locale),

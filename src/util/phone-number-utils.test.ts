@@ -316,65 +316,33 @@ describe('parsePhoneNumber', () => {
       ).toEqual(number);
     });
   });
-  //
-  // describe.skip('test like sipgate java', () => {
-  //   expect(
-  //     parsePhoneNumber(
-  //       { label: PhoneNumberLabel.WORK, phoneNumber: '02089939152' },
-  //       'de-DE',
-  //     ).e164,
-  //   ).toEqual('+492089939152');
-  //   expect(
-  //     parsePhoneNumber(
-  //       { label: PhoneNumberLabel.WORK, phoneNumber: '00492089939152' },
-  //       'de-DE',
-  //     ).e164,
-  //   ).toEqual('+492089939152');
-  //   expect(
-  //     parsePhoneNumber(
-  //       { label: PhoneNumberLabel.WORK, phoneNumber: '+492089939152' },
-  //       'de-DE',
-  //     ).e164,
-  //   ).toEqual('+492089939152');
-  //   expect(
-  //     parsePhoneNumber(
-  //       { label: PhoneNumberLabel.WORK, phoneNumber: '492089939152' },
-  //       'de-DE',
-  //     ).e164,
-  //   ).toEqual('+492089939152');
-  //   expect(
-  //     parsePhoneNumber(
-  //       { label: PhoneNumberLabel.WORK, phoneNumber: '04922579' },
-  //       'de-DE',
-  //     ).e164,
-  //   ).toEqual('+494922579');
-  //
-  //   it('Telefonnummer Borkum von local ohne führende 0', () => {
-  //     expect(
-  //       parsePhoneNumber(
-  //         { phoneNumber: '4922579', label: PhoneNumberLabel.WORK },
-  //         'de-DE',
-  //       ).e164,
-  //     ).toEqual('+494922579');
-  //   });
-  //
-  //   it('Telefonnummer Borkum von e164 dekoriert', () => {
-  //     expect(
-  //       parsePhoneNumber(
-  //         { label: PhoneNumberLabel.WORK, phoneNumber: '00494922579' },
-  //         'de-DE',
-  //       ).e164,
-  //     ).toEqual('+494922579');
-  //
-  //     expect(
-  //       parsePhoneNumber(
-  //         {
-  //           phoneNumber: '+494922579',
-  //           label: PhoneNumberLabel.WORK,
-  //         },
-  //         'de-DE',
-  //       ).e164,
-  //     ).toEqual('+494922579');
-  //   });
-  // });
+
+  describe('parses all real-world examples correctly', () => {
+    const cases = [
+      ['mobileNumber', 'tel: 01721234567'],
+      ['mobile Number', 'tel: 01721234568'],
+      ['phoneNumberFormatGermanDIN5008WithHyphen', '030 12345-67'],
+      ['phoneNumberFormatGermanDIN5008WithHyphen', '05444 347687-350'],
+      ['phoneNumberFormatGermanDIN5008WithHyphen', '0764 812632-41'],
+      ['phoneNumberFormatGermanDIN5008WithContentNumber', '0900 5 123456'],
+      ['phoneNumberFormatGermanDIN5008', '0873 376461'],
+      ['phoneNumberFormatGermanDIN5008', '03748 37682358'],
+      ['phoneNumberFormatGermanDIN5008SpecialNumbers', '0180 2 12334'],
+      ['phoneNumberFormatGermanDIN5008SpecialNumbers', '0800 5 23234213'],
+      [
+        'phoneNumberFormatGermanDIN5008InternationalCorrespondence',
+        '+49 30 3432622-113',
+      ],
+    ];
+
+    it.each(cases)('parses %s correctly', ([label, phoneNumber]) => {
+      console.log(label);
+      expect(
+        parsePhoneNumber(
+          { label: PhoneNumberLabel.WORK, phoneNumber: phoneNumber },
+          'de-DE',
+        ).isRawNumberValid,
+      ).toEqual(true);
+    });
+  });
 });

@@ -36,7 +36,8 @@ export const parsePhoneNumber = (
         ignoreRegion || region === phoneNumberRegion
           ? nationalNumber ?? phoneNumber
           : parsedPhoneNumber.number?.international ?? phoneNumber,
-      phoneNumber: e164,
+      rawNumber: phoneNumber,
+      isRawNumberValid: parsedPhoneNumber.valid,
     };
   } catch {
     errorLogger(
@@ -51,7 +52,8 @@ export const parsePhoneNumber = (
       type,
       e164: phoneNumber,
       localized: phoneNumber,
-      phoneNumber: phoneNumber,
+      rawNumber: phoneNumber,
+      isRawNumberValid: false,
     };
   }
 };
