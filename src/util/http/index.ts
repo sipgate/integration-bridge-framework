@@ -6,4 +6,6 @@ export { Pagination, RateLimitedAxios, getSubdomain };
 
 export * from './pagination';
 export * from './rate-limited-axios';
+export * from './retrying-axios';
+export * from './default-axios';
 export * from './url';

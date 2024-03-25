@@ -1,6 +1,12 @@
-import axios, { AxiosRequestConfig, AxiosResponse } from 'axios';
+import axios, {
+  AxiosInstance,
+  AxiosRequestConfig,
+  AxiosResponse,
+  InternalAxiosRequestConfig,
+} from 'axios';
 import { RateLimiterMemory } from 'rate-limiter-flexible';
 import { infoLogger } from '../logger.util';
+import { randomUUID } from 'crypto';
 
 const DEFAULT_KEY = 'DEFAULT_KEY';
 
@@ -85,4 +91,52 @@ export class RateLimitedAxios {
     await this.checkRateLimitAndWait(key);
     return axios.patch(url, data, config);
   }
+}
+
+export type RateLimitConfig = {
+  allowedCalls: number;
+  intervalSeconds: number;
+  enableLogging?: boolean;
+};
+
+export function useRateLimitInterceptor(
+  axiosInstance: AxiosInstance,
+  config: RateLimitConfig,
+  key?: string,
+): AxiosInstance {
+  const effectiveKey = key || randomUUID();
+  const enableLogging = !!config.enableLogging;
+
+  const rateLimiter = new RateLimiterMemory({
+    points: config.allowedCalls,
+    duration: config.intervalSeconds,
+  });
+
+  const checkRateLimitAndWait = async () => {
+    try {
+      await rateLimiter.consume(effectiveKey, 1);
+    } catch (rateLimiterRes: any) {
+      enableLogging &&
+        infoLogger(
+          'axiosRateLimitInterceptor',
+          `Waiting ${rateLimiterRes.msBeforeNext} to respect rate limit`,
+          effectiveKey,
+        );
+
+      await new Promise((resolve) => {
+        setTimeout(resolve, rateLimiterRes.msBeforeNext);
+      });
+
+      await checkRateLimitAndWait();
+    }
+  };
+
+  const requestHandler = async (config: InternalAxiosRequestConfig) => {
+    await checkRateLimitAndWait();
+    return config;
+  };
+
+  axiosInstance.interceptors.request.use(requestHandler);
+
+  return axiosInstance;
 }
