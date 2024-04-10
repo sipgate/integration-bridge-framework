@@ -32,6 +32,7 @@ function formatDuration(durationInMilliSeconds: number): string {
     .substring(0, 2);
   return `${minutes}:${seconds} min`;
 }
+
 export const getTextDescriptionForCallevent = (
   callEvent: CallEvent,
 ): string => {
@@ -39,33 +40,17 @@ export const getTextDescriptionForCallevent = (
   const duration = formatDuration(callEvent.endTime - callEvent.startTime);
   const directionInfo =
     callEvent.direction === CallDirection.IN ? 'eingehender' : 'ausgehender';
-  let callDescription: string;
-  if (callEvent.direction === CallDirection.IN) {
-    callDescription = ` von ${
-      callEvent.participants.find((x) => x.type == CallParticipantType.REMOTE)
-        ?.phoneNumber
-    } auf 
-    ${
-      callEvent.participants.find((x) => x.type == CallParticipantType.LOCAL)
-        ?.phoneNumber
-    }`;
-  } else {
-    callDescription = ` von ${
-      callEvent.participants.find((x) => x.type == CallParticipantType.LOCAL)
-        ?.phoneNumber
-    } auf 
-    ${
-      callEvent.participants.find((x) => x.type == CallParticipantType.REMOTE)
-        ?.phoneNumber
-    }`;
-  }
-
+  const { from, to } = getCallMembers(callEvent);
+  const fromDescription = from ? ` von ${from}` : '';
+  const toDescription = to ? ` auf ${to}` : '';
+  const callDescription = `${fromDescription}${toDescription}`;
   const callState =
     callEvent.state === 'MISSED' ? 'Nicht angenommener ' : 'Angenommener';
   const durationInfo =
     callEvent.state === 'MISSED' ? '' : ` ,Dauer: ${duration}`;
-  return `${callState} ${directionInfo} Anruf ${callDescription} am ${date.toLocaleString(
+  const result = `${callState} ${directionInfo} Anruf ${callDescription} am ${date.toLocaleString(
     'de',
     { timeZone: 'Europe/Berlin' },
   )} ${durationInfo}`;
+  return result;
 };
