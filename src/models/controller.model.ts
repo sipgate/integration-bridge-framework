@@ -1337,7 +1337,7 @@ export class Controller {
 
       const { apiKey } = await this.adapter.handleOAuth2Callback(req, res);
 
-      return apiKey;
+      res.send(apiKey);
     } catch (error) {
       errorLogger(
         'oAuth2Callback',
