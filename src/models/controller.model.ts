@@ -1329,7 +1329,7 @@ export class Controller {
     }
   }
 
-  public async oAuth2Token(req: Request, res: Response): Promise<string> {
+  public async oAuth2Token(req: Request, res: Response): Promise<void> {
     try {
       if (!this.adapter.handleOAuth2Callback) {
         throw new ServerError(501, 'OAuth2 flow not implemented');
