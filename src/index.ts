@@ -150,6 +150,8 @@ export function start(
     controller.oAuth2Callback(req, res),
   );
 
+  app.get('/oauth2/token', (req, res) => controller.oAuth2Token(req, res));
+
   app.get('/account/id', (req, res, next) =>
     controller.getAccountId(req, res, next),
   );
