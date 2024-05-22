@@ -73,6 +73,7 @@ export const throwAndDelegateError = (
       'throwAndDelegateError',
       `Delegating crm error to frontend with code ${DELEGATE_TO_FRONTEND_CODE} and type ${errorType}`,
       apiKey,
+      logMessage,
     );
     throw new ServerError(DELEGATE_TO_FRONTEND_CODE, errorType);
   }

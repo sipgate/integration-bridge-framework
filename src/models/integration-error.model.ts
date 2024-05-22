@@ -7,6 +7,7 @@ export enum IntegrationErrorType {
   INTEGRATION_ERROR_FORBIDDEN = 'integration/error/forbidden',
   INTEGRATION_ERROR_UNAVAILABLE = 'integration/error/unavailable',
   INTEGRATION_ERROR_LICENSE_ACCESS_LIMITED = 'integration/error/license-access-limited',
+  INTEGRATION_CONFIGURATION_ERROR = 'integration/configuration-error',
 
   ENTITY_ERROR_CONFLICT = 'entity/error/conflict',
   ENTITY_NOT_FOUND = 'entity/not-found',
