@@ -35,6 +35,7 @@ export function sanitizeContact(contact: Contact, locale: string): Contact {
     relatesTo: contact.relatesTo
       ? uniqWith(contact.relatesTo, isEqual)
       : undefined,
+    name: contact.name ?? getFullName(contact),
   };
   return result;
 }

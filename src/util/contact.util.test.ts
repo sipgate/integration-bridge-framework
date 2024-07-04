@@ -113,5 +113,19 @@ describe('ContactUtil', () => {
         },
       ]);
     });
+
+    it('should return full name if name is not set', () => {
+      const mockContact = {
+        firstName: 'firstName',
+        lastName: 'lastName',
+        email: 'email',
+        phoneNumbers: [],
+        relatesTo: [],
+      } as unknown as Contact;
+
+      expect(sanitizeContact(mockContact, 'de-DE').name).toEqual(
+        'firstName lastName',
+      );
+    });
   });
 });
