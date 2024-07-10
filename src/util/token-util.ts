@@ -1,8 +1,9 @@
-import { infoLogger, tokenCache } from '..';
+import { infoLogger, PubSubClient, tokenCache } from '..';
 import { TokenCacheStorage } from '../cache';
 import { MemoryStorageAdapter, RedisStorageAdapter } from '../cache/storage';
 import { Config, ServerError } from '../models';
 import { Token } from '../models/token.model';
+import assert from 'node:assert';
 
 const REFRESH_MARKER_TTL = 5;
 const DEFAULT_TTL = 3540;
@@ -115,4 +116,30 @@ export async function getFreshAccessToken(
   const newToken = await getNewToken(config, refreshFn);
 
   return newToken.accessToken;
+}
+
+export async function updateToken(
+  config: Config,
+  accessToken: string,
+  providerKey: string,
+) {
+  if (!tokenCache) {
+    throw new ServerError(
+      500,
+      'Tried getting token from cache while cache was undefined.',
+    );
+  }
+  const newToken = { accessToken, isPending: false };
+  await tokenCache.set(providerKey, newToken, getTokenCacheTtl());
+  const { PUBSUB_TOPIC_NAME_UPDATE_PROVIDER_KEY } = process.env;
+  assert(
+    PUBSUB_TOPIC_NAME_UPDATE_PROVIDER_KEY,
+    'PUBSUB_TOPIC_NAME_UPDATE_PROVIDER_KEY is not defined',
+  );
+  const pubSubClient = new PubSubClient(PUBSUB_TOPIC_NAME_UPDATE_PROVIDER_KEY);
+  await pubSubClient.publishMessage({
+    userID: config.userId,
+    providerKey,
+    accessToken,
+  });
 }
