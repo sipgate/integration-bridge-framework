@@ -141,7 +141,7 @@ export async function updateProviderKey(
 
   const pubSubClient = new PubSubClient(PUBSUB_TOPIC_NAME_UPDATE_PROVIDER_KEY);
   await pubSubClient.publishMessage({
-    userID: config.userId,
+    userId: config.userId,
     providerKey,
     accessToken,
   });
