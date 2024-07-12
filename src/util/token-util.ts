@@ -132,8 +132,11 @@ export async function updateProviderKey(
 
   const newToken = { accessToken, isPending: false };
   await tokenCache.set(providerKey, newToken, getTokenCacheTtl());
-  const { PUBSUB_TOPIC_NAME_UPDATE_PROVIDER_KEY } = process.env;
 
+  const { INTEGRATION_NAME } = process.env;
+  assert(INTEGRATION_NAME, 'INTEGRATION_NAME is not defined');
+
+  const { PUBSUB_TOPIC_NAME_UPDATE_PROVIDER_KEY } = process.env;
   assert(
     PUBSUB_TOPIC_NAME_UPDATE_PROVIDER_KEY,
     'PUBSUB_TOPIC_NAME_UPDATE_PROVIDER_KEY is not defined',
@@ -142,7 +145,7 @@ export async function updateProviderKey(
   const pubSubClient = new PubSubClient(PUBSUB_TOPIC_NAME_UPDATE_PROVIDER_KEY);
   await pubSubClient.publishMessage({
     userId: config.userId,
+    integrationName: INTEGRATION_NAME,
     providerKey,
-    accessToken,
   });
 }
