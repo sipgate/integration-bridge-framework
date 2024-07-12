@@ -118,7 +118,7 @@ export async function getFreshAccessToken(
   return newToken.accessToken;
 }
 
-export async function updateToken(
+export async function updateProviderKey(
   config: Config,
   accessToken: string,
   providerKey: string,
@@ -129,13 +129,16 @@ export async function updateToken(
       'Tried getting token from cache while cache was undefined.',
     );
   }
+
   const newToken = { accessToken, isPending: false };
   await tokenCache.set(providerKey, newToken, getTokenCacheTtl());
   const { PUBSUB_TOPIC_NAME_UPDATE_PROVIDER_KEY } = process.env;
+
   assert(
     PUBSUB_TOPIC_NAME_UPDATE_PROVIDER_KEY,
     'PUBSUB_TOPIC_NAME_UPDATE_PROVIDER_KEY is not defined',
   );
+
   const pubSubClient = new PubSubClient(PUBSUB_TOPIC_NAME_UPDATE_PROVIDER_KEY);
   await pubSubClient.publishMessage({
     userID: config.userId,
