@@ -5,6 +5,7 @@ import { HttpInstrumentation } from '@opentelemetry/instrumentation-http';
 import { ExpressInstrumentation } from '@opentelemetry/instrumentation-express';
 import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node';
 const apikey = process.env.BACKEND_TRACING_API_KEY;
+const tracingEnabledEnv = process.env.BACKEND_TRACING_ENABLED;
 
 const googleExporter = new OTLPTraceExporter({
   url: 'http://opentelemetry-collector.monitoring.svc.cluster.local:4318/v1/traces',
@@ -24,7 +25,7 @@ export const otelSDK = new NodeSDK({
   ],
 });
 
-export const tracingEnabled = !!apikey;
+export const tracingEnabled = !!apikey || tracingEnabledEnv === 'true';
 
 // gracefully shut down the SDK on process exit
 process.on('SIGTERM', () => {
