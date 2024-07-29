@@ -33,6 +33,6 @@ export class MemoryStorageAdapter implements StorageAdapter {
   }
 
   public async delete(key: string): Promise<void> {
-    this.cache.del(key);
+    this.cache.delete(key);
   }
 }
