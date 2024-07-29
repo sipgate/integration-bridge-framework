@@ -21,8 +21,11 @@ export class MemoryStorageAdapter implements StorageAdapter {
   }
 
   public async get<T>(key: string): Promise<T | null> {
-    const cached = await this.cache.get<T>(key);
-    return cached ?? null;
+    if (this.cache.has(key)) {
+      return this.cache.get(key) as T;
+    }
+
+    return null;
   }
 
   public async set<T>(key: string, value: T): Promise<void> {
