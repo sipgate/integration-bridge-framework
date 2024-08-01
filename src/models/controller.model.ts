@@ -313,7 +313,6 @@ export class Controller {
             throw new Error('Invalid contacts received');
           }
 
-          console.log('Publishing contacts', contacts.length);
           await this.pubSubContactStreamingClient?.publishMessage(
             {
               userId,
