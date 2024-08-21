@@ -46,5 +46,5 @@ export const parsePhoneNumber = (
 };
 
 export const isDirectDial = (phoneNumber: string) => {
-  return phoneNumber.length < MIN_PHONE_NUMBER_LENGTH;
+  return phoneNumber.length <= MIN_PHONE_NUMBER_LENGTH;
 };
