@@ -56,8 +56,3 @@ export type ContactUpdate = ContactTemplate & {
 };
 
 export type Contact = ContactTemplate & ContactResult;
-
-export type ContactDelta = {
-  contacts: Contact[];
-  deleted: string[];
-};

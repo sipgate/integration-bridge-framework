@@ -1,40 +1,19 @@
-import Ajv from 'ajv';
-import { Config } from '../models';
+import { ZodSchema } from 'zod';
+import { Config, ServerError } from '../models';
 import { errorLogger } from './logger.util';
-import { ValidationSchema } from '../schemas/schema.model';
 
 export function validate(
-  ajv: Ajv,
-  schemaKeyRef: ValidationSchema,
-  data: object,
+  schema: ZodSchema,
+  data: unknown,
   config: Config,
+  errorMessage: string,
 ) {
-  try {
-    const valid: boolean | PromiseLike<boolean> = ajv.validate(
-      schemaKeyRef,
-      data,
-    );
+  const parseResult = schema.safeParse(data);
 
-    if (!valid) {
-      errorLogger(
-        'validate',
-        `${schemaKeyRef.title.toLowerCase()}-validation failed: ${ajv.errorsText()}`,
-        config.apiKey,
-        ajv.errors,
-      );
-      return false;
-    }
-
-    return true;
-  } catch (e) {
-    errorLogger(
-      'validate',
-      'Error validating data',
-      config.apiKey,
-      e,
-      ajv.errorsText(),
-    );
-    // Ignore validation if validation is broken
-    return true;
+  if (parseResult.error) {
+    errorLogger('validate', parseResult.error.message, config.apiKey);
+    throw new ServerError(500, `${errorMessage}: ${parseResult.error.message}`);
   }
+
+  return parseResult.data;
 }

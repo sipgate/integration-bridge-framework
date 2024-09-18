@@ -18,7 +18,6 @@ import { TaskController } from './controllers/task.controller';
 import { errorHandlerMiddleware, extractHeaderMiddleware } from './middlewares';
 import {
   Adapter,
-  BridgeRequestWithTimestamp,
   ContactCache,
   Controller,
   IntegrationEntityBridgeRequest,
@@ -82,30 +81,10 @@ export function start(
     controller.streamContacts(req, res, next),
   );
 
-  app.get('/contacts-delta', (req: BridgeRequestWithTimestamp, res, next) =>
-    controller.getContactsDelta(req, res, next),
-  );
-
   app.get(
     '/entity/:type/:id',
     (req: IntegrationEntityBridgeRequest, res, next) =>
       controller.getEntity(req, res, next),
-  );
-
-  app.get('/calendar', (req, res, next) =>
-    controller.getCalendarEvents(req, res, next),
-  );
-
-  app.post('/calendar', (req, res, next) =>
-    controller.createCalendarEvent(req, res, next),
-  );
-
-  app.put('/calendar/:id', (req, res, next) =>
-    controller.updateCalendarEvent(req, res, next),
-  );
-
-  app.delete('/calendar/:id', (req, res, next) =>
-    controller.deleteCalendarEvent(req, res, next),
   );
 
   app.post('/events/calls', (req, res, next) =>

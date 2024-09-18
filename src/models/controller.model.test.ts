@@ -6,8 +6,6 @@ import {
   createResponse,
 } from 'node-mocks-http';
 import {
-  CalendarEvent,
-  CalendarEventTemplate,
   CallDirection,
   CallEvent,
   CallParticipantType,
@@ -18,7 +16,7 @@ import {
 import { ContactCacheStorage } from '../cache';
 import { MemoryStorageAdapter } from '../cache/storage';
 import { APIContact } from './api-contact.model';
-import { BridgeRequest, IdBridgeRequest } from './bridge-request.model';
+import { BridgeRequest } from './bridge-request.model';
 import { PhoneNumberLabel, PhoneNumberType } from './contact.model';
 
 const contactsMock: APIContact[] = [
@@ -66,23 +64,6 @@ const contactsReadonlyMock: APIContact[] = [
   },
 ];
 
-const calendarEventMock: CalendarEvent = {
-  id: 'abc123',
-  title: 'My Event',
-  description: 'Awesome event',
-  eventUrl: 'https://wwww.google.com',
-  start: 123456789,
-  end: 123456789,
-};
-
-const calendarWithMissingField: Partial<CalendarEvent> = {
-  title: 'My Event',
-  description: 'Awesome event',
-  eventUrl: 'https://wwww.google.com',
-  start: 123456789,
-  end: 123456789,
-};
-
 const contactsMinimumMock: APIContact[] = [
   {
     id: '123',
@@ -128,688 +109,439 @@ const ERROR_MESSAGE: string = 'Error!';
 console.log = jest.fn();
 jest.useFakeTimers();
 
-describe('getContacts', () => {
-  let request: MockRequest<BridgeRequest<unknown>>;
-  let response: MockResponse<Response>;
-  let next: jest.Mock;
+describe('controller.model tests', () => {
+  describe('getContacts', () => {
+    let request: MockRequest<BridgeRequest<unknown>>;
+    let response: MockResponse<Response>;
+    let next: jest.Mock;
 
-  beforeAll(() => {
-    process.env.OAUTH2_REDIRECT_URL = 'http://example.com';
-    process.env.OAUTH2_IDENTIFIER = 'TEST';
-  });
-
-  beforeEach(() => {
-    request = createRequest({
-      providerConfig: {
-        apiKey: 'a1b2c3',
-        apiUrl: 'http://example.com',
-        locale: 'de_DE',
-      },
+    beforeAll(() => {
+      process.env.OAUTH2_REDIRECT_URL = 'http://example.com';
+      process.env.OAUTH2_IDENTIFIER = 'TEST';
     });
-    response = createResponse();
-    next = jest.fn();
-  });
 
-  it('should handle contacts', async () => {
-    const controller: Controller = new Controller(
-      {
-        getContacts: () => Promise.resolve(contactsMock),
-      },
-      new ContactCacheStorage(new MemoryStorageAdapter()),
-    );
-
-    await controller.getContacts(request, response, next);
-
-    const data: Contact[] = response._getData();
-
-    expect(next).not.toBeCalled();
-    expect(data).toEqual(contactsMock);
-  });
-
-  it('should handle readonly contacts', async () => {
-    const controller: Controller = new Controller(
-      {
-        getContacts: () => Promise.resolve(contactsReadonlyMock),
-      },
-      new ContactCacheStorage(new MemoryStorageAdapter()),
-    );
-
-    await controller.getContacts(request, response, next);
-
-    const data: Contact[] = response._getData();
-
-    expect(next).not.toBeCalled();
-    expect(data).toEqual(contactsReadonlyMock);
-  });
-
-  it('should handle contacts with minimum fields', async () => {
-    const controller: Controller = new Controller(
-      {
-        getContacts: () => Promise.resolve(contactsMinimumMock),
-      },
-      new ContactCacheStorage(new MemoryStorageAdapter()),
-    );
-
-    await controller.getContacts(request, response, next);
-
-    const data: Contact[] = response._getData();
-
-    expect(next).not.toBeCalled();
-    expect(data).toEqual(contactsMinimumMock);
-  });
-
-  it('should handle invalid contacts with missing fields', async () => {
-    console.error = jest.fn();
-
-    const contactsBrokenMock = [...contactsWithMissingField] as Contact[];
-
-    const controller: Controller = new Controller(
-      {
-        getContacts: () => Promise.resolve(contactsBrokenMock),
-      },
-      new ContactCacheStorage(new MemoryStorageAdapter()),
-    );
-
-    await controller.getContacts(request, response, next);
-
-    expect(next).toBeCalled();
-  });
-
-  it('should handle an error when retrieving contacts', async () => {
-    console.error = jest.fn();
-
-    const controller: Controller = new Controller(
-      {
-        getContacts: () => Promise.reject(ERROR_MESSAGE),
-      },
-      new ContactCacheStorage(new MemoryStorageAdapter()),
-    );
-
-    await controller.getContacts(request, response, next);
-
-    expect(next).toBeCalledWith(ERROR_MESSAGE);
-  });
-});
-
-describe('getCalendarEvents', () => {
-  let request: MockRequest<BridgeRequest<unknown>>;
-  let response: MockResponse<Response>;
-  let next: jest.Mock;
-
-  beforeEach(() => {
-    request = createRequest({
-      providerConfig: {
-        apiKey: 'a1b2c3',
-        apiUrl: 'http://example.com',
-        locale: 'de_DE',
-      },
+    beforeEach(() => {
+      request = createRequest({
+        providerConfig: {
+          apiKey: 'a1b2c3',
+          apiUrl: 'http://example.com',
+          locale: 'de_DE',
+        },
+      });
+      response = createResponse();
+      next = jest.fn();
     });
-    response = createResponse();
-    next = jest.fn();
-  });
 
-  it('should handle calendar events', async () => {
-    const controller: Controller = new Controller(
-      {
-        getCalendarEvents: () => Promise.resolve([calendarEventMock]),
-      },
-      new ContactCacheStorage(new MemoryStorageAdapter()),
-    );
+    it('should handle contacts', async () => {
+      const controller: Controller = new Controller(
+        {
+          getContacts: () => Promise.resolve(contactsMock),
+        },
+        new ContactCacheStorage(new MemoryStorageAdapter()),
+      );
 
-    await controller.getCalendarEvents(request, response, next);
+      await controller.getContacts(request, response, next);
 
-    const data: CalendarEvent[] = response._getData();
+      const data: Contact[] = response._getData();
 
-    expect(next).not.toBeCalled();
-    expect(data).toEqual([calendarEventMock]);
-  });
-
-  it('should handle invalid calendar events', async () => {
-    console.error = jest.fn();
-
-    const calendarEventsBrokenMock = [
-      { ...calendarWithMissingField },
-    ] as CalendarEvent[];
-
-    const controller: Controller = new Controller(
-      {
-        getCalendarEvents: () => Promise.resolve(calendarEventsBrokenMock),
-      },
-      new ContactCacheStorage(new MemoryStorageAdapter()),
-    );
-
-    await controller.getCalendarEvents(request, response, next);
-
-    expect(next).toBeCalled();
-  });
-
-  it('should handle an error when retrieving calendar events', async () => {
-    console.error = jest.fn();
-
-    const controller: Controller = new Controller(
-      {
-        getCalendarEvents: () => Promise.reject(ERROR_MESSAGE),
-      },
-      new ContactCacheStorage(new MemoryStorageAdapter()),
-    );
-
-    await controller.getCalendarEvents(request, response, next);
-
-    expect(next).toBeCalledWith(ERROR_MESSAGE);
-  });
-});
-
-describe('createCalendarEvent', () => {
-  let request: MockRequest<BridgeRequest<CalendarEventTemplate>>;
-  let response: MockResponse<Response>;
-  let next: jest.Mock;
-
-  beforeEach(() => {
-    request = createRequest({
-      providerConfig: {
-        apiKey: 'a1b2c3',
-        apiUrl: 'http://example.com',
-        locale: 'de_DE',
-      },
+      expect(next).not.toBeCalled();
+      expect(data).toEqual(contactsMock);
     });
-    response = createResponse();
-    next = jest.fn();
-  });
 
-  it('should create calendar events', async () => {
-    const controller: Controller = new Controller(
-      {
-        createCalendarEvent: () => Promise.resolve(calendarEventMock),
-      },
-      new ContactCacheStorage(new MemoryStorageAdapter()),
-    );
+    it('should handle readonly contacts', async () => {
+      const controller: Controller = new Controller(
+        {
+          getContacts: () => Promise.resolve(contactsReadonlyMock),
+        },
+        new ContactCacheStorage(new MemoryStorageAdapter()),
+      );
 
-    await controller.createCalendarEvent(request, response, next);
+      await controller.getContacts(request, response, next);
 
-    const data: CalendarEvent = response._getData();
+      const data: Contact[] = response._getData();
 
-    expect(next).not.toBeCalled();
-    expect(data).toEqual(calendarEventMock);
-  });
-
-  it('should handle invalid calendar events', async () => {
-    console.error = jest.fn();
-
-    const calendarEventBrokenMock = {
-      ...calendarWithMissingField,
-    } as CalendarEvent;
-
-    const controller: Controller = new Controller(
-      {
-        createCalendarEvent: () => Promise.resolve(calendarEventBrokenMock),
-      },
-      new ContactCacheStorage(new MemoryStorageAdapter()),
-    );
-
-    await controller.createCalendarEvent(request, response, next);
-
-    expect(next).toBeCalled();
-  });
-
-  it('should handle an error when creating calendar events', async () => {
-    console.error = jest.fn();
-
-    const controller: Controller = new Controller(
-      {
-        createCalendarEvent: () => Promise.reject(ERROR_MESSAGE),
-      },
-      new ContactCacheStorage(new MemoryStorageAdapter()),
-    );
-
-    await controller.createCalendarEvent(request, response, next);
-
-    expect(next).toBeCalledWith(ERROR_MESSAGE);
-  });
-});
-
-describe('updateCalendarEvent', () => {
-  let request: MockRequest<IdBridgeRequest<CalendarEventTemplate>>;
-  let response: MockResponse<Response>;
-  let next: jest.Mock;
-
-  beforeEach(() => {
-    request = createRequest({
-      providerConfig: {
-        apiKey: 'a1b2c3',
-        apiUrl: 'http://example.com',
-        locale: 'de_DE',
-      },
+      expect(next).not.toBeCalled();
+      expect(data).toEqual(contactsReadonlyMock);
     });
-    response = createResponse();
-    next = jest.fn();
-  });
 
-  it('should update calendar events', async () => {
-    const controller: Controller = new Controller(
-      {
-        updateCalendarEvent: () => Promise.resolve(calendarEventMock),
-      },
-      new ContactCacheStorage(new MemoryStorageAdapter()),
-    );
+    it('should handle contacts with minimum fields', async () => {
+      const controller: Controller = new Controller(
+        {
+          getContacts: () => Promise.resolve(contactsMinimumMock),
+        },
+        new ContactCacheStorage(new MemoryStorageAdapter()),
+      );
 
-    await controller.updateCalendarEvent(request, response, next);
+      await controller.getContacts(request, response, next);
 
-    const data: CalendarEvent = response._getData();
+      const data: Contact[] = response._getData();
 
-    expect(next).not.toBeCalled();
-    expect(data).toEqual(calendarEventMock);
-  });
-
-  it('should handle invalid calendar events', async () => {
-    console.error = jest.fn();
-
-    const calendarEventBrokenMock = {
-      ...calendarWithMissingField,
-    } as CalendarEvent;
-
-    const controller: Controller = new Controller(
-      {
-        updateCalendarEvent: () => Promise.resolve(calendarEventBrokenMock),
-      },
-      new ContactCacheStorage(new MemoryStorageAdapter()),
-    );
-
-    await controller.updateCalendarEvent(request, response, next);
-
-    expect(next).toBeCalled();
-  });
-
-  it('should handle an error when updating calendar events', async () => {
-    console.error = jest.fn();
-
-    const controller: Controller = new Controller(
-      {
-        updateCalendarEvent: () => Promise.reject(ERROR_MESSAGE),
-      },
-      new ContactCacheStorage(new MemoryStorageAdapter()),
-    );
-
-    await controller.updateCalendarEvent(request, response, next);
-
-    expect(next).toBeCalledWith(ERROR_MESSAGE);
-  });
-});
-
-describe('deleteCalendarEvent', () => {
-  let request: MockRequest<IdBridgeRequest<unknown>>;
-  let response: MockResponse<Response>;
-  let next: jest.Mock;
-
-  beforeEach(() => {
-    request = createRequest({
-      providerConfig: {
-        apiKey: 'a1b2c3',
-        apiUrl: 'http://example.com',
-        locale: 'de_DE',
-      },
+      expect(next).not.toBeCalled();
+      expect(data).toEqual(contactsMinimumMock);
     });
-    response = createResponse();
-    next = jest.fn();
-  });
 
-  it('should delete calendar events', async () => {
-    const controller: Controller = new Controller(
-      {
-        deleteCalendarEvent: () => Promise.resolve(),
-      },
-      new ContactCacheStorage(new MemoryStorageAdapter()),
-    );
+    it('should handle invalid contacts with missing fields', async () => {
+      console.error = jest.fn();
 
-    await controller.deleteCalendarEvent(request, response, next);
+      const contactsBrokenMock = [...contactsWithMissingField] as Contact[];
 
-    expect(next).not.toBeCalled();
-    expect(response._getStatusCode()).toEqual(200);
-  });
+      const controller: Controller = new Controller(
+        {
+          getContacts: () => Promise.resolve(contactsBrokenMock),
+        },
+        new ContactCacheStorage(new MemoryStorageAdapter()),
+      );
 
-  it('should handle an error when deleting calendar events', async () => {
-    console.error = jest.fn();
+      await controller.getContacts(request, response, next);
 
-    const controller: Controller = new Controller(
-      {
-        deleteCalendarEvent: () => Promise.reject(ERROR_MESSAGE),
-      },
-      new ContactCacheStorage(new MemoryStorageAdapter()),
-    );
-
-    await controller.deleteCalendarEvent(request, response, next);
-
-    expect(next).toBeCalledWith(ERROR_MESSAGE);
-  });
-});
-
-describe('getOAuth2RedirectUrl', () => {
-  let request: MockRequest<BridgeRequest<unknown>>;
-  let response: MockResponse<Response>;
-  let next: jest.Mock;
-
-  beforeEach(() => {
-    request = createRequest();
-    response = createResponse();
-    next = jest.fn();
-  });
-
-  it('should handle OAuth2 callback', async () => {
-    const mockHandleOAuth2Callback = jest.fn(async () =>
-      Promise.resolve({
-        apiKey: 'key',
-        apiUrl: 'url',
-      }),
-    );
-
-    const controller: Controller = new Controller(
-      {
-        handleOAuth2Callback: mockHandleOAuth2Callback,
-      },
-      new ContactCacheStorage(new MemoryStorageAdapter()),
-    );
-
-    await controller.oAuth2Callback(request, response);
-
-    expect(mockHandleOAuth2Callback).toBeCalled();
-    expect(next).not.toBeCalled();
-  });
-
-  it('should handle a custom redirect url', async () => {
-    const mockRedirectUrl = 'http://example.com?name=TEST&key=key&url=url';
-    const mockRedirect = jest.fn();
-    const mockHandleOAuth2Callback = jest.fn(async (req: Request) =>
-      Promise.resolve({
-        apiKey: 'key',
-        apiUrl: 'url',
-      }),
-    );
-
-    const controller: Controller = new Controller(
-      {
-        handleOAuth2Callback: mockHandleOAuth2Callback,
-      },
-      new ContactCacheStorage(new MemoryStorageAdapter()),
-    );
-
-    request = createRequest({
-      query: {
-        redirectUrl: mockRedirectUrl,
-      },
+      expect(next).toBeCalled();
     });
-    response = { redirect: mockRedirect } as any;
-    await controller.oAuth2Callback(request, response);
 
-    expect(mockHandleOAuth2Callback).toBeCalled();
-    expect(mockRedirect).toBeCalledWith(mockRedirectUrl);
-    expect(next).not.toBeCalled();
-  });
-});
+    it('should handle an error when retrieving contacts', async () => {
+      console.error = jest.fn();
 
-describe('getHealth', () => {
-  let request: MockRequest<BridgeRequest<unknown>>;
-  let response: MockResponse<Response>;
-  let next: jest.Mock;
+      const controller: Controller = new Controller(
+        {
+          getContacts: () => Promise.reject(ERROR_MESSAGE),
+        },
+        new ContactCacheStorage(new MemoryStorageAdapter()),
+      );
 
-  beforeEach(() => {
-    request = createRequest();
-    response = createResponse();
-    next = jest.fn();
-  });
+      await controller.getContacts(request, response, next);
 
-  it('should implement a default function', async () => {
-    const controller: Controller = new Controller(
-      {
-        getContacts: () => Promise.resolve(contactsMock),
-      },
-      new ContactCacheStorage(new MemoryStorageAdapter()),
-    );
-
-    await controller.getHealth(request, response, next);
-
-    expect(next).not.toBeCalled();
-    expect(response.statusCode).toBe(200);
-  });
-
-  it('should accept a custom function', async () => {
-    const getHealthMock: () => Promise<void> = jest.fn();
-
-    const controller: Controller = new Controller(
-      {
-        getContacts: () => Promise.resolve(contactsMock),
-        getHealth: getHealthMock,
-      },
-      new ContactCacheStorage(new MemoryStorageAdapter()),
-    );
-
-    await controller.getHealth(request, response, next);
-
-    expect(getHealthMock).toBeCalled();
-    expect(next).not.toBeCalled();
-    expect(response.statusCode).toBe(200);
-  });
-
-  it('should handle an error', async () => {
-    console.error = jest.fn();
-
-    const controller: Controller = new Controller(
-      {
-        getContacts: () => Promise.reject(),
-        getHealth: () => Promise.reject(new Error('Error')),
-      },
-      new ContactCacheStorage(new MemoryStorageAdapter()),
-    );
-
-    await controller.getHealth(request, response, next);
-
-    expect(next).toBeCalled();
-  });
-});
-
-describe('handleCallEvent', () => {
-  let request: MockRequest<BridgeRequest<CallEvent>>;
-  let response: MockResponse<Response>;
-  let next: jest.Mock;
-
-  beforeEach(() => {
-    response = createResponse();
-    next = jest.fn();
-  });
-
-  it('should ignore a call event with a remote direct dial', async () => {
-    request = createRequest({
-      providerConfig: {
-        apiKey: 'a1b2c3',
-        apiUrl: 'http://example.com',
-        locale: 'de_DE',
-      },
-      body: {
-        participants: [
-          {
-            type: CallParticipantType.LOCAL,
-            phoneNumber: '1234567890',
-          },
-          {
-            type: CallParticipantType.REMOTE,
-            phoneNumber: '13',
-          },
-        ],
-        id: '',
-        startTime: 0,
-        endTime: 0,
-        direction: CallDirection.IN,
-        note: '',
-        state: CallState.BUSY,
-      },
+      expect(next).toBeCalledWith(ERROR_MESSAGE);
     });
-    const controller: Controller = new Controller(
-      {
-        handleCallEvent: (config, event) => Promise.resolve(''),
-      },
-      new ContactCacheStorage(new MemoryStorageAdapter()),
-    );
-
-    await controller.handleCallEvent(request, response, next);
-
-    const data: string = response._getData();
-
-    expect(next).not.toBeCalled();
-    expect(data).toEqual('Skipping call event');
   });
 
-  it('should handle a call event', async () => {
-    request = createRequest({
-      providerConfig: {
-        apiKey: 'a1b2c3',
-        apiUrl: 'http://example.com',
-        locale: 'de_DE',
-      },
-      body: {
-        participants: [
-          {
-            type: CallParticipantType.LOCAL,
-            phoneNumber: '1234567890',
-          },
-          {
-            type: CallParticipantType.REMOTE,
-            phoneNumber: '0123456789',
-          },
-        ],
-        id: '',
-        startTime: 0,
-        endTime: 0,
-        direction: CallDirection.IN,
-        note: '',
-        state: CallState.BUSY,
-      },
+  describe('getOAuth2RedirectUrl', () => {
+    let request: MockRequest<BridgeRequest<unknown>>;
+    let response: MockResponse<Response>;
+    let next: jest.Mock;
+
+    beforeEach(() => {
+      request = createRequest();
+      response = createResponse();
+      next = jest.fn();
     });
-    const controller: Controller = new Controller(
-      {
-        handleCallEvent: (config, event) => Promise.resolve('callRef'),
-      },
-      new ContactCacheStorage(new MemoryStorageAdapter()),
-    );
 
-    await controller.handleCallEvent(request, response, next);
+    it('should handle OAuth2 callback', async () => {
+      const mockHandleOAuth2Callback = jest.fn(async () =>
+        Promise.resolve({
+          apiKey: 'key',
+          apiUrl: 'url',
+        }),
+      );
 
-    const data: string = response._getData();
+      const controller: Controller = new Controller(
+        {
+          handleOAuth2Callback: mockHandleOAuth2Callback,
+        },
+        new ContactCacheStorage(new MemoryStorageAdapter()),
+      );
 
-    expect(next).not.toBeCalled();
-    expect(data).toEqual('callRef');
-  });
+      await controller.oAuth2Callback(request, response);
 
-  it('should handle adapter not implementing the feature', async () => {
-    request = createRequest({
-      providerConfig: {
-        apiKey: 'a1b2c3',
-        apiUrl: 'http://example.com',
-        locale: 'de_DE',
-      },
+      expect(mockHandleOAuth2Callback).toBeCalled();
+      expect(next).not.toBeCalled();
     });
-    const controller: Controller = new Controller(
-      {},
-      new ContactCacheStorage(new MemoryStorageAdapter()),
-    );
 
-    await controller.handleCallEvent(request, response, next);
+    it('should handle a custom redirect url', async () => {
+      const mockRedirectUrl = 'http://example.com?name=TEST&key=key&url=url';
+      const mockRedirect = jest.fn();
+      const mockHandleOAuth2Callback = jest.fn(async (req: Request) =>
+        Promise.resolve({
+          apiKey: 'key',
+          apiUrl: 'url',
+        }),
+      );
 
-    expect(next).toBeCalled();
-  });
+      const controller: Controller = new Controller(
+        {
+          handleOAuth2Callback: mockHandleOAuth2Callback,
+        },
+        new ContactCacheStorage(new MemoryStorageAdapter()),
+      );
 
-  it('should handle config being missing', async () => {
-    request = createRequest({});
-    const controller: Controller = new Controller(
-      {
-        handleCallEvent: (config, event) => Promise.resolve('callRef'),
-      },
-      new ContactCacheStorage(new MemoryStorageAdapter()),
-    );
+      request = createRequest({
+        query: {
+          redirectUrl: mockRedirectUrl,
+        },
+      });
+      response = { redirect: mockRedirect } as any;
+      await controller.oAuth2Callback(request, response);
 
-    await controller.handleCallEvent(request, response, next);
-
-    expect(next).toBeCalled();
-  });
-});
-
-describe('updateCallEvent', () => {
-  let request: MockRequest<BridgeRequest<CallEvent>>;
-  let response: MockResponse<Response>;
-  let next: jest.Mock;
-
-  beforeEach(() => {
-    response = createResponse();
-    next = jest.fn();
-  });
-
-  it('should handle a call event', async () => {
-    request = createRequest({
-      providerConfig: {
-        apiKey: 'a1b2c3',
-        apiUrl: 'http://example.com',
-        locale: 'de_DE',
-      },
-      body: {
-        participants: [
-          {
-            type: CallParticipantType.LOCAL,
-            phoneNumber: '1234567890',
-          },
-          {
-            type: CallParticipantType.REMOTE,
-            phoneNumber: '0123456789',
-          },
-        ],
-        id: '',
-        startTime: 0,
-        endTime: 0,
-        direction: CallDirection.IN,
-        note: '',
-        state: CallState.BUSY,
-      },
+      expect(mockHandleOAuth2Callback).toBeCalled();
+      expect(mockRedirect).toBeCalledWith(mockRedirectUrl);
+      expect(next).not.toBeCalled();
     });
-    const controller: Controller = new Controller(
-      {
-        updateCallEvent: (config, id, event) => Promise.resolve(),
-      },
-      new ContactCacheStorage(new MemoryStorageAdapter()),
-    );
-
-    await controller.updateCallEvent(request, response, next);
-
-    const data: string = response._getData();
-
-    expect(next).not.toBeCalled();
-    expect(data).toEqual('');
   });
 
-  it('should handle adapter not implementing the feature', async () => {
-    request = createRequest({
-      providerConfig: {
-        apiKey: 'a1b2c3',
-        apiUrl: 'http://example.com',
-        locale: 'de_DE',
-      },
+  describe('getHealth', () => {
+    let request: MockRequest<BridgeRequest<unknown>>;
+    let response: MockResponse<Response>;
+    let next: jest.Mock;
+
+    beforeEach(() => {
+      request = createRequest();
+      response = createResponse();
+      next = jest.fn();
     });
-    const controller: Controller = new Controller(
-      {},
-      new ContactCacheStorage(new MemoryStorageAdapter()),
-    );
 
-    await controller.updateCallEvent(request, response, next);
+    it('should implement a default function', async () => {
+      const controller: Controller = new Controller(
+        {
+          getContacts: () => Promise.resolve(contactsMock),
+        },
+        new ContactCacheStorage(new MemoryStorageAdapter()),
+      );
 
-    expect(next).toBeCalled();
+      await controller.getHealth(request, response, next);
+
+      expect(next).not.toBeCalled();
+      expect(response.statusCode).toBe(200);
+    });
+
+    it('should accept a custom function', async () => {
+      const getHealthMock: () => Promise<void> = jest.fn();
+
+      const controller: Controller = new Controller(
+        {
+          getContacts: () => Promise.resolve(contactsMock),
+          getHealth: getHealthMock,
+        },
+        new ContactCacheStorage(new MemoryStorageAdapter()),
+      );
+
+      await controller.getHealth(request, response, next);
+
+      expect(getHealthMock).toBeCalled();
+      expect(next).not.toBeCalled();
+      expect(response.statusCode).toBe(200);
+    });
+
+    it('should handle an error', async () => {
+      console.error = jest.fn();
+
+      const controller: Controller = new Controller(
+        {
+          getContacts: () => Promise.reject(),
+          getHealth: () => Promise.reject(new Error('Error')),
+        },
+        new ContactCacheStorage(new MemoryStorageAdapter()),
+      );
+
+      await controller.getHealth(request, response, next);
+
+      expect(next).toBeCalled();
+    });
   });
 
-  it('should handle config being missing', async () => {
-    request = createRequest({});
-    const controller: Controller = new Controller(
-      {
-        updateCallEvent: (config, id, event) => Promise.resolve(),
-      },
-      new ContactCacheStorage(new MemoryStorageAdapter()),
-    );
+  describe('handleCallEvent', () => {
+    let request: MockRequest<BridgeRequest<CallEvent>>;
+    let response: MockResponse<Response>;
+    let next: jest.Mock;
 
-    await controller.updateCallEvent(request, response, next);
+    beforeEach(() => {
+      response = createResponse();
+      next = jest.fn();
+    });
 
-    expect(next).toBeCalled();
+    it('should ignore a call event with a remote direct dial', async () => {
+      request = createRequest({
+        providerConfig: {
+          apiKey: 'a1b2c3',
+          apiUrl: 'http://example.com',
+          locale: 'de_DE',
+        },
+        body: {
+          participants: [
+            {
+              type: CallParticipantType.LOCAL,
+              phoneNumber: '1234567890',
+            },
+            {
+              type: CallParticipantType.REMOTE,
+              phoneNumber: '13',
+            },
+          ],
+          id: '',
+          startTime: 0,
+          endTime: 0,
+          direction: CallDirection.IN,
+          note: '',
+          state: CallState.BUSY,
+        },
+      });
+      const controller: Controller = new Controller(
+        {
+          handleCallEvent: (config, event) => Promise.resolve(''),
+        },
+        new ContactCacheStorage(new MemoryStorageAdapter()),
+      );
+
+      await controller.handleCallEvent(request, response, next);
+
+      const data: string = response._getData();
+
+      expect(next).not.toBeCalled();
+      expect(data).toEqual('Skipping call event');
+    });
+
+    it('should handle a call event', async () => {
+      request = createRequest({
+        providerConfig: {
+          apiKey: 'a1b2c3',
+          apiUrl: 'http://example.com',
+          locale: 'de_DE',
+        },
+        body: {
+          participants: [
+            {
+              type: CallParticipantType.LOCAL,
+              phoneNumber: '1234567890',
+            },
+            {
+              type: CallParticipantType.REMOTE,
+              phoneNumber: '0123456789',
+            },
+          ],
+          id: '',
+          startTime: 0,
+          endTime: 0,
+          direction: CallDirection.IN,
+          note: '',
+          state: CallState.BUSY,
+        },
+      });
+      const controller: Controller = new Controller(
+        {
+          handleCallEvent: (config, event) => Promise.resolve('callRef'),
+        },
+        new ContactCacheStorage(new MemoryStorageAdapter()),
+      );
+
+      await controller.handleCallEvent(request, response, next);
+
+      const data: string = response._getData();
+
+      expect(next).not.toBeCalled();
+      expect(data).toEqual('callRef');
+    });
+
+    it('should handle adapter not implementing the feature', async () => {
+      request = createRequest({
+        providerConfig: {
+          apiKey: 'a1b2c3',
+          apiUrl: 'http://example.com',
+          locale: 'de_DE',
+        },
+      });
+      const controller: Controller = new Controller(
+        {},
+        new ContactCacheStorage(new MemoryStorageAdapter()),
+      );
+
+      await controller.handleCallEvent(request, response, next);
+
+      expect(next).toBeCalled();
+    });
+
+    it('should handle config being missing', async () => {
+      request = createRequest({});
+      const controller: Controller = new Controller(
+        {
+          handleCallEvent: (config, event) => Promise.resolve('callRef'),
+        },
+        new ContactCacheStorage(new MemoryStorageAdapter()),
+      );
+
+      await controller.handleCallEvent(request, response, next);
+
+      expect(next).toBeCalled();
+    });
+  });
+
+  describe('updateCallEvent', () => {
+    let request: MockRequest<BridgeRequest<CallEvent>>;
+    let response: MockResponse<Response>;
+    let next: jest.Mock;
+
+    beforeEach(() => {
+      response = createResponse();
+      next = jest.fn();
+    });
+
+    it('should handle a call event', async () => {
+      request = createRequest({
+        providerConfig: {
+          apiKey: 'a1b2c3',
+          apiUrl: 'http://example.com',
+          locale: 'de_DE',
+        },
+        body: {
+          participants: [
+            {
+              type: CallParticipantType.LOCAL,
+              phoneNumber: '1234567890',
+            },
+            {
+              type: CallParticipantType.REMOTE,
+              phoneNumber: '0123456789',
+            },
+          ],
+          id: '',
+          startTime: 0,
+          endTime: 0,
+          direction: CallDirection.IN,
+          note: '',
+          state: CallState.BUSY,
+        },
+      });
+      const controller: Controller = new Controller(
+        {
+          updateCallEvent: (config, id, event) => Promise.resolve(),
+        },
+        new ContactCacheStorage(new MemoryStorageAdapter()),
+      );
+
+      await controller.updateCallEvent(request, response, next);
+
+      const data: string = response._getData();
+
+      expect(next).not.toBeCalled();
+      expect(data).toEqual('');
+    });
+
+    it('should handle adapter not implementing the feature', async () => {
+      request = createRequest({
+        providerConfig: {
+          apiKey: 'a1b2c3',
+          apiUrl: 'http://example.com',
+          locale: 'de_DE',
+        },
+      });
+      const controller: Controller = new Controller(
+        {},
+        new ContactCacheStorage(new MemoryStorageAdapter()),
+      );
+
+      await controller.updateCallEvent(request, response, next);
+
+      expect(next).toBeCalled();
+    });
+
+    it('should handle config being missing', async () => {
+      request = createRequest({});
+      const controller: Controller = new Controller(
+        {
+          updateCallEvent: (config, id, event) => Promise.resolve(),
+        },
+        new ContactCacheStorage(new MemoryStorageAdapter()),
+      );
+
+      await controller.updateCallEvent(request, response, next);
+
+      expect(next).toBeCalled();
+    });
   });
 });

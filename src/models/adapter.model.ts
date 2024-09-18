@@ -1,13 +1,9 @@
 import { Request, Response } from 'express';
 import {
-  CalendarEvent,
-  CalendarEventTemplate,
-  CalendarFilterOptions,
   CallEvent,
   CallEventWithIntegrationEntities,
   Config,
   Contact,
-  ContactDelta,
   ContactTemplate,
   ContactUpdate,
   FollowUpWithIntegrationEntities,
@@ -29,10 +25,6 @@ export interface Adapter {
     type: IntegrationEntityType,
   ) => Promise<Contact>;
   getContacts?: (config: Config) => Promise<Contact[]>;
-  getContactsDelta?: (
-    config: Config,
-    timestamp: number,
-  ) => Promise<ContactDelta>;
   streamContacts?: (config: Config) => AsyncGenerator<Contact[], void, unknown>;
   createContact?: (
     config: Config,
@@ -44,21 +36,6 @@ export interface Adapter {
     contact: ContactUpdate,
   ) => Promise<Contact>;
   deleteContact?: (config: Config, id: string) => Promise<void>;
-  getCalendarEvents?: (
-    config: Config,
-    options?: CalendarFilterOptions | null,
-  ) => Promise<CalendarEvent[]>;
-  createCalendarEvent?: (
-    config: Config,
-    event: CalendarEventTemplate,
-  ) => Promise<CalendarEvent>;
-  updateCalendarEvent?: (
-    config: Config,
-    id: string,
-    event: CalendarEventTemplate,
-  ) => Promise<CalendarEvent>;
-
-  deleteCalendarEvent?: (config: Config, id: string) => Promise<void>;
   /**
    * @deprecated handleCallEvent should be replaced by createOrUpdateCallLogForEntities
    */

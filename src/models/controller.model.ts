@@ -1,15 +1,11 @@
-import Ajv from 'ajv';
 import { NextFunction, Request, Response } from 'express';
 import { isEqual, uniqWith } from 'lodash';
 import { stringify } from 'querystring';
 import {
   Adapter,
-  CalendarEvent,
-  CalendarEventTemplate,
   CallEvent,
   Contact,
   ContactCache,
-  ContactDelta,
   ContactTemplate,
   ContactUpdate,
   IntegrationEntityType,
@@ -18,18 +14,19 @@ import {
   PubSubIntegrationsEventMessage,
   ServerError,
 } from '.';
-import { calendarEventsSchema, contactsSchema } from '../schemas';
+import {
+  contactCreateSchema,
+  contactSchema,
+  contactsGetSchema,
+} from '../schemas';
 import { shouldSkipCallEvent } from '../util/call-event.util';
 import { errorLogger, infoLogger } from '../util/logger.util';
-import { validate } from '../util/validate';
 import {
   BridgeRequest,
-  BridgeRequestWithTimestamp,
   IdBridgeRequest,
   IntegrationEntityBridgeRequest,
 } from './bridge-request.model';
 import { CacheItemStateType } from './cache-item-state.model';
-import { CalendarFilterOptions } from './calendar-filter-options.model';
 import { IntegrationErrorType } from './integration-error.model';
 
 import { sanitizeContact } from '../util/contact.util';
@@ -43,7 +40,6 @@ const CONTACT_FETCH_TIMEOUT = 5000;
 export class Controller {
   private adapter: Adapter;
   private contactCache: ContactCache | null;
-  private ajv: Ajv;
   private pubSubContactStreamingClient: PubSubClient<PubSubContactsMessage> | null =
     null;
   private pubSubIntegrationEventsClient: PubSubClient<PubSubIntegrationsEventMessage> | null =
@@ -58,7 +54,6 @@ export class Controller {
   constructor(adapter: Adapter, contactCache: ContactCache | null) {
     this.adapter = adapter;
     this.contactCache = contactCache;
-    this.ajv = new Ajv();
 
     if (this.adapter.streamContacts) {
       this.initContactStreaming();
@@ -197,13 +192,16 @@ export class Controller {
           providerConfig,
         );
 
-        if (
-          !validate(this.ajv, contactsSchema, fetchedContacts, providerConfig)
-        ) {
-          throw new ServerError(500, 'Invalid contacts received');
-        }
+        const { error: parsingError, data: parsedContacts } =
+          contactsGetSchema.safeParse(fetchedContacts);
 
-        return fetchedContacts.map((contact) =>
+        if (parsingError)
+          throw new ServerError(
+            500,
+            `Invalid contacts received: ${parsingError.message}`,
+          );
+
+        return parsedContacts.map((contact) =>
           sanitizeContact(contact, providerConfig.locale),
         );
       };
@@ -309,15 +307,20 @@ export class Controller {
 
       const publishContacts = async (contacts: Contact[]) => {
         try {
-          if (!validate(this.ajv, contactsSchema, contacts, providerConfig)) {
-            throw new Error('Invalid contacts received');
-          }
+          const { error: parsingError, data: parsedContacts } =
+            contactsGetSchema.safeParse(contacts);
+
+          if (parsingError)
+            throw new ServerError(
+              500,
+              `Invalid contacts received: ${parsingError.message}`,
+            );
 
           await this.pubSubContactStreamingClient?.publishMessage(
             {
               userId,
               timestamp,
-              contacts: contacts.map((contact) =>
+              contacts: parsedContacts.map((contact) =>
                 sanitizeContact(contact, providerConfig.locale),
               ),
               state: PubSubContactsState.IN_PROGRESS,
@@ -474,81 +477,6 @@ export class Controller {
     }
   }
 
-  public async getContactsDelta(
-    req: BridgeRequestWithTimestamp,
-    res: Response,
-    next: NextFunction,
-  ): Promise<void> {
-    const { providerConfig } = req;
-
-    try {
-      if (!providerConfig) {
-        throw new ServerError(400, 'Missing parameters');
-      }
-
-      infoLogger('getContactsDelta', 'START', providerConfig.apiKey);
-
-      const fetchContactsDelta = async (): Promise<ContactDelta> => {
-        if (!this.adapter.getContactsDelta) {
-          throw new ServerError(
-            501,
-            'Fetching contacts delta is not implemented',
-          );
-        }
-
-        const fetchedDelta: ContactDelta = await this.adapter.getContactsDelta(
-          providerConfig,
-          parseInt(req.params.timestamp),
-        );
-
-        if (
-          !validate(
-            this.ajv,
-            contactsSchema,
-            fetchedDelta.contacts,
-            providerConfig,
-          )
-        ) {
-          throw new ServerError(500, 'Invalid contacts received');
-        }
-
-        return {
-          ...fetchedDelta,
-          contacts: fetchedDelta.contacts.map((x) =>
-            sanitizeContact(x, providerConfig.locale),
-          ),
-        };
-      };
-
-      const responseDelta = await fetchContactsDelta();
-
-      if (this.adapter.getToken && req.providerConfig) {
-        const { apiKey } = await this.adapter.getToken(req.providerConfig);
-        res.header('X-Provider-Key', apiKey);
-      }
-
-      infoLogger('getContactsDelta', 'END', providerConfig.apiKey);
-      res.status(200).send(responseDelta);
-    } catch (error: any) {
-      // prevent logging of refresh errors
-      if (
-        error instanceof ServerError &&
-        error.message === IntegrationErrorType.INTEGRATION_REFRESH_ERROR
-      ) {
-        next(error);
-        return;
-      }
-
-      errorLogger(
-        'getContacts',
-        'Could not get contacts:',
-        providerConfig?.apiKey,
-        error,
-      );
-      next(error);
-    }
-  }
-
   public async getContact(
     req: BridgeRequest<unknown>,
     res: Response,
@@ -625,37 +553,40 @@ export class Controller {
       if (!req.providerConfig) {
         throw new ServerError(400, 'Missing config parameters');
       }
+
+      const parseResultContactCreate = contactCreateSchema.safeParse(req.body);
+
+      if (parseResultContactCreate.error)
+        throw new ServerError(
+          400,
+          `Invalid contactCreate received: ${parseResultContactCreate.error.message}`,
+        );
+
       infoLogger('createContact', 'Creating contact', apiKey);
 
       const contact: Contact = await this.adapter.createContact(
         req.providerConfig,
-        req.body,
+        parseResultContactCreate.data,
       );
 
-      const valid = validate(
-        this.ajv,
-        contactsSchema,
-        [contact],
-        req.providerConfig,
-      );
+      const parseResultReturnContact = contactSchema.safeParse(contact);
 
-      if (!valid) {
-        errorLogger(
-          'createContact',
-          'Invalid contact provided by adapter',
-          apiKey,
-          this.ajv.errorsText(),
+      if (parseResultReturnContact.error)
+        throw new ServerError(
+          500,
+          `Invalid contact returned from bridge: ${parseResultReturnContact.error.message}`,
         );
-        throw new ServerError(400, 'Invalid contact provided by adapter');
-      }
 
       infoLogger(
         'createContact',
-        `Contact with id ${contact.id} created`,
+        `Contact with id ${parseResultReturnContact.data.id} created`,
         apiKey,
       );
 
-      const sanitizedContact: Contact = sanitizeContact(contact, locale);
+      const sanitizedContact: Contact = sanitizeContact(
+        parseResultReturnContact.data,
+        locale,
+      );
 
       if (this.adapter.getToken && req.providerConfig) {
         const { apiKey } = await this.adapter.getToken(req.providerConfig);
@@ -707,37 +638,40 @@ export class Controller {
         throw new ServerError(400, 'Missing config parameters');
       }
 
+      const parseResultContactUpdate = contactCreateSchema.safeParse(req.body);
+
+      if (parseResultContactUpdate.error)
+        throw new ServerError(
+          400,
+          `Invalid contactUpdate received: ${parseResultContactUpdate.error.message}`,
+        );
+
       infoLogger('updateContact', 'Updating contact', apiKey);
 
       const contact: Contact = await this.adapter.updateContact(
         req.providerConfig,
         req.params.id,
-        req.body,
+        { ...parseResultContactUpdate.data, id: req.params.id }, // todo: remove id from contactUpdate type
       );
 
-      const valid = validate(
-        this.ajv,
-        contactsSchema,
-        [contact],
-        req.providerConfig,
-      );
-      if (!valid) {
-        errorLogger(
-          'updateContact',
-          'Invalid contact provided by adapter',
-          apiKey,
-          this.ajv.errorsText(),
+      const parseResultReturnContact = contactSchema.safeParse(contact);
+
+      if (parseResultReturnContact.error)
+        throw new ServerError(
+          500,
+          `Invalid contact returned from bridge: ${parseResultReturnContact.error.message}`,
         );
-        throw new ServerError(400, 'Invalid contact provided by adapter');
-      }
 
       infoLogger(
         'updateContact',
-        `Contact with id ${contact.id} updated`,
+        `Contact with id ${parseResultReturnContact.data.id} updated`,
         apiKey,
       );
 
-      const sanitizedContact: Contact = sanitizeContact(contact, locale);
+      const sanitizedContact: Contact = sanitizeContact(
+        parseResultReturnContact.data,
+        locale,
+      );
 
       if (this.adapter.getToken && req.providerConfig) {
         const { apiKey } = await this.adapter.getToken(req.providerConfig);
@@ -835,231 +769,6 @@ export class Controller {
       errorLogger(
         'deleteContact',
         'Could not delete contact:',
-        apiKey,
-        error || 'Unknown',
-      );
-      next(error);
-    }
-  }
-
-  public async getCalendarEvents(
-    req: BridgeRequest<unknown>,
-    res: Response,
-    next: NextFunction,
-  ): Promise<void> {
-    const {
-      providerConfig: { apiKey = '' } = {},
-      query: { start, end },
-    } = req;
-    try {
-      infoLogger('getCalendarEvents', 'START', apiKey);
-
-      if (!this.adapter.getCalendarEvents) {
-        throw new ServerError(
-          501,
-          'Fetching calendar events is not implemented',
-        );
-      }
-
-      if (!req.providerConfig) {
-        errorLogger('getCalendarEvents', 'Missing config parameters', apiKey);
-        throw new ServerError(400, 'Missing config parameters');
-      }
-
-      infoLogger('getCalendarEvents', 'Fetching calendar events', apiKey);
-
-      const filter: CalendarFilterOptions | null =
-        typeof start === 'string' && typeof end === 'string'
-          ? {
-              start: Number(start),
-              end: Number(end),
-            }
-          : null;
-
-      const calendarEvents: CalendarEvent[] =
-        await this.adapter.getCalendarEvents(req.providerConfig, filter);
-
-      const valid = validate(
-        this.ajv,
-        calendarEventsSchema,
-        calendarEvents,
-        req.providerConfig,
-      );
-      if (!valid) {
-        errorLogger(
-          'getCalendarEvents',
-          `Invalid calendar events provided by adapter`,
-          apiKey,
-          this.ajv.errorsText(),
-        );
-        throw new ServerError(
-          400,
-          'Invalid calendar events provided by adapter',
-        );
-      }
-
-      infoLogger(
-        'getCalendarEvents',
-        `Found ${calendarEvents.length} events`,
-        apiKey,
-      );
-      res.status(200).send(calendarEvents);
-      infoLogger('getCalendarEvents', `END`, apiKey);
-    } catch (error) {
-      errorLogger(
-        'getCalendarEvents',
-        `Could not get calendar events:`,
-        apiKey,
-        error || 'Unknown',
-      );
-      next(error);
-    }
-  }
-
-  public async createCalendarEvent(
-    req: BridgeRequest<CalendarEventTemplate>,
-    res: Response,
-    next: NextFunction,
-  ): Promise<void> {
-    const { providerConfig: { apiKey = '' } = {} } = req;
-    try {
-      infoLogger('createCalendarEvent', `START`, apiKey);
-
-      if (!this.adapter.createCalendarEvent) {
-        throw new ServerError(
-          501,
-          'Creating calendar events is not implemented',
-        );
-      }
-
-      if (!req.providerConfig) {
-        throw new ServerError(400, 'Missing config parameters');
-      }
-
-      infoLogger('createCalendarEvent', `Creating calendar event`, apiKey);
-
-      const calendarEvent: CalendarEvent =
-        await this.adapter.createCalendarEvent(req.providerConfig, req.body);
-
-      const valid = validate(
-        this.ajv,
-        calendarEventsSchema,
-        [calendarEvent],
-        req.providerConfig,
-      );
-      if (!valid) {
-        errorLogger(
-          'createCalendarEvent',
-          'Invalid calendar event provided by adapter',
-          apiKey,
-          this.ajv.errorsText(),
-        );
-        throw new ServerError(
-          400,
-          'Invalid calendar event provided by adapter',
-        );
-      }
-      infoLogger('createCalendarEvent', `END`, apiKey);
-      res.status(200).send(calendarEvent);
-    } catch (error) {
-      errorLogger(
-        'createCalendarEvent',
-        'Could not create calendar event:',
-        apiKey,
-        error || 'Unknown',
-      );
-      errorLogger('createCalendarEvent', 'Entity', apiKey, req.body);
-      next(error);
-    }
-  }
-
-  public async updateCalendarEvent(
-    req: IdBridgeRequest<CalendarEventTemplate>,
-    res: Response,
-    next: NextFunction,
-  ): Promise<void> {
-    const { providerConfig: { apiKey = '' } = {} } = req;
-    try {
-      infoLogger('updateCalendarEvent', `START`, apiKey);
-      if (!this.adapter.updateCalendarEvent) {
-        throw new ServerError(
-          501,
-          'Updating calendar events is not implemented',
-        );
-      }
-
-      if (!req.providerConfig) {
-        throw new ServerError(400, 'Missing config parameters');
-      }
-      infoLogger('updateCalendarEvent', `Updating calendar event`, apiKey);
-
-      const calendarEvent: CalendarEvent =
-        await this.adapter.updateCalendarEvent(
-          req.providerConfig,
-          req.params.id,
-          req.body,
-        );
-
-      const valid = validate(
-        this.ajv,
-        calendarEventsSchema,
-        [calendarEvent],
-        req.providerConfig,
-      );
-      if (!valid) {
-        errorLogger(
-          'updateCalendarEvent',
-          `Invalid calendar event provided by adapter`,
-          apiKey,
-          this.ajv.errorsText(),
-        );
-        throw new ServerError(
-          400,
-          'Invalid calendar event provided by adapter',
-        );
-      }
-      infoLogger('updateCalendarEvent', `END`, apiKey);
-
-      res.status(200).send(calendarEvent);
-    } catch (error) {
-      errorLogger(
-        'updateCalendarEvent',
-        `Could not update calendar event:`,
-        apiKey,
-        error || 'Unknown',
-      );
-      errorLogger('updateCalendarEvent', 'Entity', apiKey, req.body);
-      next(error);
-    }
-  }
-
-  public async deleteCalendarEvent(
-    req: IdBridgeRequest<unknown>,
-    res: Response,
-    next: NextFunction,
-  ): Promise<void> {
-    const { providerConfig: { apiKey = '' } = {} } = req;
-    try {
-      infoLogger('deleteCalendarEvent', `START`, apiKey);
-
-      if (!this.adapter.deleteCalendarEvent) {
-        throw new ServerError(
-          501,
-          'Deleting calendar events is not implemented',
-        );
-      }
-
-      if (!req.providerConfig) {
-        throw new ServerError(400, 'Missing config parameters');
-      }
-      infoLogger('deleteCalendarEvent', `Deleting calendar event`, apiKey);
-      await this.adapter.deleteCalendarEvent(req.providerConfig, req.params.id);
-      infoLogger('deleteCalendarEvent', `END`, apiKey);
-      res.status(200).send();
-    } catch (error) {
-      errorLogger(
-        'deleteCalendarEvent',
-        `Could not delete calendar event:`,
         apiKey,
         error || 'Unknown',
       );
