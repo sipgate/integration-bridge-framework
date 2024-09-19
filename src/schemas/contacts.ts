@@ -75,14 +75,12 @@ export const contactSchema = z.object({
   contactUrl: z.string().nullable(),
   avatarUrl: z.string().nullable(),
   readonly: z.boolean().optional(),
-  phoneNumbers: z
-    .array(
-      z.object({
-        label: z.string(),
-        phoneNumber: z.string(),
-      }),
-    )
-    .nonempty(),
+  phoneNumbers: z.array(
+    z.object({
+      label: z.string(),
+      phoneNumber: z.string(),
+    }),
+  ),
 });
 
 export const contactsGetSchema = z.array(contactSchema);
@@ -95,12 +93,10 @@ export const contactCreateSchema = z.object({
   organization: z.string().nullable().optional().default(null),
   contactUrl: z.string().nullable().optional().default(null),
   avatarUrl: z.string().nullable().optional().default(null),
-  phoneNumbers: z
-    .array(
-      z.object({
-        label: z.string(),
-        phoneNumber: z.string(),
-      }),
-    )
-    .nonempty(),
+  phoneNumbers: z.array(
+    z.object({
+      label: z.string(),
+      phoneNumber: z.string(),
+    }),
+  ),
 });

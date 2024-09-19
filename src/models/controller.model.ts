@@ -310,11 +310,12 @@ export class Controller {
           const { error: parsingError, data: parsedContacts } =
             contactsGetSchema.safeParse(contacts);
 
-          if (parsingError)
+          if (parsingError) {
             throw new ServerError(
               500,
               `Invalid contacts received: ${parsingError.message}`,
             );
+          }
 
           await this.pubSubContactStreamingClient?.publishMessage(
             {
