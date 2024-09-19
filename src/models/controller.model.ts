@@ -344,6 +344,15 @@ export class Controller {
             orderingKey,
           );
         } catch (error) {
+          if (error instanceof ServerError) {
+            errorLogger(
+              'streamContacts',
+              `[${orderingKey}] Could not publish contacts`,
+              providerConfig.apiKey,
+              { message: error.message, status: error.status },
+            );
+          }
+
           errorLogger(
             'streamContacts',
             `[${orderingKey}] Could not publish contacts`,
