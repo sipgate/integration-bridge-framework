@@ -351,13 +351,13 @@ export class Controller {
               providerConfig.apiKey,
               { message: error.message, status: error.status },
             );
+            return;
           }
 
           errorLogger(
             'streamContacts',
-            `[${orderingKey}] Could not publish contacts`,
+            `[${orderingKey}] Could not publish contacts (${error})`,
             providerConfig.apiKey,
-            error,
           );
         }
       };

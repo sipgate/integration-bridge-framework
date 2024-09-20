@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { IntegrationEntityType } from '../models';
 
 // export const contactsSchema: ValidationSchema = {
 //   title: 'Contacts',
@@ -81,6 +82,7 @@ export const contactSchema = z.object({
       phoneNumber: z.string(),
     }),
   ),
+  type: z.nativeEnum(IntegrationEntityType).optional(),
 });
 
 export const contactsGetSchema = z.array(contactSchema);
@@ -99,4 +101,5 @@ export const contactCreateSchema = z.object({
       phoneNumber: z.string(),
     }),
   ),
+  type: z.nativeEnum(IntegrationEntityType).optional(),
 });
