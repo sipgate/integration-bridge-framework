@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { IntegrationEntityType } from '../models';
+import { IntegrationEntityType } from '../models/integration-entity.model';
 
 // export const contactsSchema: ValidationSchema = {
 //   title: 'Contacts',
