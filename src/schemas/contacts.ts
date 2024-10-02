@@ -66,6 +66,14 @@ import { IntegrationEntityType } from '../models/integration-entity.model';
 //   },
 // };
 
+const integrationEntitySchema = z.object({
+  id: z.string(),
+  type: z.nativeEnum(IntegrationEntityType),
+  source: z.string(),
+  label: z.string().optional(),
+  logId: z.string().optional(),
+});
+
 export const contactSchema = z.object({
   id: z.string(),
   name: z.string().nullable(),
@@ -83,6 +91,7 @@ export const contactSchema = z.object({
     }),
   ),
   type: z.nativeEnum(IntegrationEntityType).optional(),
+  relatesTo: z.array(integrationEntitySchema).optional(),
 });
 
 export const contactsGetSchema = z.array(contactSchema);
