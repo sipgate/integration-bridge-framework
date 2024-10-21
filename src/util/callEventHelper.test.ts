@@ -43,5 +43,24 @@ describe('callEventHelper', () => {
         'Angenommener ausgehender Anruf von 4921177722233 auf 4922199911122 am 1.1.2024, 11:00:00 Uhr, Dauer: 30:17 Minuten.',
       );
     });
+
+    it('should generate sane german text for incoming, missed callEvent', () => {
+      const callEvent = generateBaseCallEvent();
+      callEvent.state = CallState.MISSED;
+
+      expect(getTextDescriptionForCallevent(callEvent)).toEqual(
+        'Nicht angenommener eingehender Anruf von 4922199911122 auf 4921177722233 am 1.1.2024, 11:00:00 Uhr.',
+      );
+    });
+
+    it('should generate sane german text for outgoing, missed callEvent', () => {
+      const callEvent = generateBaseCallEvent();
+      callEvent.direction = CallDirection.OUT;
+      callEvent.state = CallState.MISSED;
+
+      expect(getTextDescriptionForCallevent(callEvent)).toEqual(
+        'Nicht angenommener ausgehender Anruf von 4921177722233 auf 4922199911122 am 1.1.2024, 11:00:00 Uhr.',
+      );
+    });
   });
 });
