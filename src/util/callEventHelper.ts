@@ -66,7 +66,7 @@ export const getTextDescriptionForCallevent = (
   const callDate = date.toLocaleString('de', { timeZone: 'Europe/Berlin' });
   const description = `${callState} ${directionInfo} Anruf ${callDescription} ${
     useGerman ? 'am' : 'at'
-  } ${callDate}${useGerman ? ' Uhr' : ''}${durationInfo}`;
+  } ${callDate}${useGerman ? ' Uhr' : ''}${durationInfo}.`;
 
   return description;
 };
