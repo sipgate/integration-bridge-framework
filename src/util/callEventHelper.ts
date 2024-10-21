@@ -30,14 +30,14 @@ const formatDuration = (
   durationInMilliSeconds: number,
   locale: string,
 ): string => {
-  const minutes = Math.floor(durationInMilliSeconds / (60 * 1000));
-  const seconds = Math.floor((durationInMilliSeconds - minutes * 60) / 1000)
-    .toString()
-    .padStart(2, '0')
-    .substring(0, 2);
+  const minutes = Math.floor(durationInMilliSeconds / 1000 / 60);
+  const seconds = (durationInMilliSeconds / 1000) % 60;
   const unit = startsWith(locale, 'de') ? 'Minuten' : 'minutes';
 
-  return `${minutes}:${seconds} ${unit}`;
+  return `${minutes}:${seconds
+    .toString()
+    .padStart(2, '0')
+    .substring(0, 2)} ${unit}`;
 };
 
 export const getTextDescriptionForCallevent = (

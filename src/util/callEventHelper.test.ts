@@ -8,8 +8,8 @@ import { getTextDescriptionForCallevent } from './callEventHelper';
 
 const generateBaseCallEvent = (): CallEvent => ({
   id: 'callEventId123',
-  startTime: 1704103200000,
-  endTime: 1704105000000,
+  startTime: 1705832625000,
+  endTime: 1705833276000,
   direction: CallDirection.IN,
   participants: [
     {
@@ -31,7 +31,7 @@ describe('callEventHelper', () => {
       const callEvent = generateBaseCallEvent();
 
       expect(getTextDescriptionForCallevent(callEvent)).toEqual(
-        'Angenommener eingehender Anruf von 4922199911122 auf 4921177722233 am 1.1.2024, 11:00:00 Uhr, Dauer: 30:17 Minuten.',
+        'Angenommener eingehender Anruf von 4922199911122 auf 4921177722233 am 21.1.2024, 11:23:45 Uhr, Dauer: 10:51 Minuten.',
       );
     });
 
@@ -40,7 +40,7 @@ describe('callEventHelper', () => {
       callEvent.direction = CallDirection.OUT;
 
       expect(getTextDescriptionForCallevent(callEvent)).toEqual(
-        'Angenommener ausgehender Anruf von 4921177722233 auf 4922199911122 am 1.1.2024, 11:00:00 Uhr, Dauer: 30:17 Minuten.',
+        'Angenommener ausgehender Anruf von 4921177722233 auf 4922199911122 am 21.1.2024, 11:23:45 Uhr, Dauer: 10:51 Minuten.',
       );
     });
 
@@ -49,7 +49,7 @@ describe('callEventHelper', () => {
       callEvent.state = CallState.MISSED;
 
       expect(getTextDescriptionForCallevent(callEvent)).toEqual(
-        'Nicht angenommener eingehender Anruf von 4922199911122 auf 4921177722233 am 1.1.2024, 11:00:00 Uhr.',
+        'Nicht angenommener eingehender Anruf von 4922199911122 auf 4921177722233 am 21.1.2024, 11:23:45 Uhr.',
       );
     });
 
@@ -59,7 +59,7 @@ describe('callEventHelper', () => {
       callEvent.state = CallState.MISSED;
 
       expect(getTextDescriptionForCallevent(callEvent)).toEqual(
-        'Nicht angenommener ausgehender Anruf von 4921177722233 auf 4922199911122 am 1.1.2024, 11:00:00 Uhr.',
+        'Nicht angenommener ausgehender Anruf von 4921177722233 auf 4922199911122 am 21.1.2024, 11:23:45 Uhr.',
       );
     });
   });
