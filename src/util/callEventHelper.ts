@@ -1,5 +1,10 @@
 import { startsWith } from 'lodash';
-import { CallEvent, CallParticipantType, CallDirection } from '../models';
+import {
+  CallEvent,
+  CallParticipantType,
+  CallDirection,
+  CallState,
+} from '../models';
 
 export interface CallMembers {
   from: string | undefined;
@@ -60,9 +65,11 @@ export const getTextDescriptionForCallevent = (
     fromDescription && toDescription ? ' ' : ''
   }${toDescription}`;
   const callState =
-    callEvent.state === 'MISSED' ? 'Nicht angenommener' : 'Angenommener';
+    callEvent.state === CallState.CONNECTED
+      ? 'Angenommener'
+      : 'Nicht angenommener';
   const durationInfo =
-    callEvent.state === 'MISSED' ? '' : `, Dauer: ${duration}`;
+    callEvent.state === CallState.CONNECTED ? `, Dauer: ${duration}` : '';
   const callDate = date.toLocaleString('de', { timeZone: 'Europe/Berlin' });
   const description = `${callState} ${directionInfo} Anruf ${callDescription} ${
     useGerman ? 'am' : 'at'
