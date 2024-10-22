@@ -45,25 +45,27 @@ const formatDuration = (
     .substring(0, 2)} ${unit}`;
 };
 
-export const getTextDescriptionForCallevent = (
+const getGermanTextDescriptionForCallEvent = (
   callEvent: CallEvent,
-  locale: string = 'de-DE',
+  locale: string,
 ): string => {
-  const useGerman = startsWith(locale, 'de');
-
   const date = new Date(callEvent.startTime);
   const duration = formatDuration(
     callEvent.endTime - callEvent.startTime,
     locale,
   );
+
   const directionInfo =
     callEvent.direction === CallDirection.IN ? 'eingehender' : 'ausgehender';
+
   const { from, to } = getCallMembers(callEvent);
   const fromDescription = from ? `von ${from}` : '';
   const toDescription = to ? `auf ${to}` : '';
+
   const callDescription = `${fromDescription}${
     fromDescription && toDescription ? ' ' : ''
   }${toDescription}`;
+
   const callState =
     callEvent.state === CallState.CONNECTED
       ? 'Angenommener'
@@ -71,9 +73,47 @@ export const getTextDescriptionForCallevent = (
   const durationInfo =
     callEvent.state === CallState.CONNECTED ? `, Dauer: ${duration}` : '';
   const callDate = date.toLocaleString('de', { timeZone: 'Europe/Berlin' });
-  const description = `${callState} ${directionInfo} Anruf ${callDescription} ${
-    useGerman ? 'am' : 'at'
-  } ${callDate}${useGerman ? ' Uhr' : ''}${durationInfo}.`;
+  const description = `${callState} ${directionInfo} Anruf ${callDescription} am ${callDate} Uhr${durationInfo}.`;
 
   return description;
+};
+
+const getEnglishTextDescriptionForCallEvent = (
+  callEvent: CallEvent,
+  locale: string,
+): string => {
+  const date = new Date(callEvent.startTime);
+  const duration = formatDuration(
+    callEvent.endTime - callEvent.startTime,
+    locale,
+  );
+
+  const directionInfo =
+    callEvent.direction === CallDirection.IN ? 'incoming' : 'outgoing';
+
+  const { from, to } = getCallMembers(callEvent);
+  const fromDescription = from ? `from ${from}` : '';
+  const toDescription = to ? `to ${to}` : '';
+
+  const callDescription = `${fromDescription}${
+    fromDescription && toDescription ? ' ' : ''
+  }${toDescription}`;
+
+  const callState =
+    callEvent.state === CallState.CONNECTED ? 'Answered' : 'Unanswered';
+  const durationInfo =
+    callEvent.state === CallState.CONNECTED ? `, duration: ${duration}` : '';
+  const callDate = date.toLocaleString('en', { timeZone: 'Europe/Berlin' });
+  const description = `${callState} ${directionInfo} call ${callDescription} on ${callDate}${durationInfo}.`;
+
+  return description;
+};
+
+export const getTextDescriptionForCallevent = (
+  callEvent: CallEvent,
+  locale: string = 'de-DE',
+): string => {
+  return startsWith(locale, 'de')
+    ? getGermanTextDescriptionForCallEvent(callEvent, locale)
+    : getEnglishTextDescriptionForCallEvent(callEvent, locale);
 };
