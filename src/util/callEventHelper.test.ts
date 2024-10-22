@@ -26,8 +26,8 @@ const generateBaseCallEvent = (): CallEvent => ({
 });
 
 describe('callEventHelper', () => {
-  describe('getTextDescriptionForCallevent', () => {
-    it('should generate sane german text for incoming, connected callEvent', () => {
+  describe('getTextDescriptionForCallevent for german', () => {
+    it('should generate sane description for incoming, connected callEvent', () => {
       const callEvent = generateBaseCallEvent();
 
       expect(getTextDescriptionForCallevent(callEvent)).toEqual(
@@ -35,7 +35,7 @@ describe('callEventHelper', () => {
       );
     });
 
-    it('should generate sane german text for outgoing, connected callEvent', () => {
+    it('should generate sane description for outgoing, connected callEvent', () => {
       const callEvent = generateBaseCallEvent();
       callEvent.direction = CallDirection.OUT;
 
@@ -44,7 +44,7 @@ describe('callEventHelper', () => {
       );
     });
 
-    it('should generate sane german text for incoming, missed callEvent', () => {
+    it('should generate sane description for incoming, missed callEvent', () => {
       const callEvent = generateBaseCallEvent();
       callEvent.state = CallState.MISSED;
 
@@ -53,7 +53,7 @@ describe('callEventHelper', () => {
       );
     });
 
-    it('should generate sane german text for outgoing, missed callEvent', () => {
+    it('should generate sane description for outgoing, missed callEvent', () => {
       const callEvent = generateBaseCallEvent();
       callEvent.direction = CallDirection.OUT;
       callEvent.state = CallState.MISSED;
@@ -63,7 +63,7 @@ describe('callEventHelper', () => {
       );
     });
 
-    it('should generate sane german text for incoming, busy callEvent', () => {
+    it('should generate sane description for incoming, busy callEvent', () => {
       const callEvent = generateBaseCallEvent();
       callEvent.state = CallState.BUSY;
 
@@ -72,7 +72,7 @@ describe('callEventHelper', () => {
       );
     });
 
-    it('should generate sane german text for outgoing, busy callEvent', () => {
+    it('should generate sane description for outgoing, busy callEvent', () => {
       const callEvent = generateBaseCallEvent();
       callEvent.direction = CallDirection.OUT;
       callEvent.state = CallState.BUSY;
@@ -82,7 +82,7 @@ describe('callEventHelper', () => {
       );
     });
 
-    it('should generate sane german text for incoming, not_found callEvent', () => {
+    it('should generate sane description for incoming, not_found callEvent', () => {
       const callEvent = generateBaseCallEvent();
       callEvent.state = CallState.NOT_FOUND;
 
@@ -91,7 +91,7 @@ describe('callEventHelper', () => {
       );
     });
 
-    it('should generate sane german text for outgoing, not_found callEvent', () => {
+    it('should generate sane description for outgoing, not_found callEvent', () => {
       const callEvent = generateBaseCallEvent();
       callEvent.direction = CallDirection.OUT;
       callEvent.state = CallState.NOT_FOUND;
