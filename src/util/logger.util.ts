@@ -8,7 +8,10 @@ function addMessageToTraceSpan(
 ) {
   const span = trace.getSpan(context.active());
   if (span) {
-    span.addEvent(method, { message, args: args ? args.join(',') : '' });
+    span.addEvent(method, {
+      message,
+      args: args ? args.map((arg) => JSON.stringify(arg)).join(',') : '',
+    });
   }
 }
 
