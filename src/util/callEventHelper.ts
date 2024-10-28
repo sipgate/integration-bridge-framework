@@ -37,7 +37,9 @@ export const getTextDescriptionForCallevent = (
   callEvent: CallEvent,
 ): string => {
   const date = new Date(callEvent.startTime);
-  const duration = formatDuration(callEvent.endTime - callEvent.startTime);
+  const duration = callEvent.endTime
+    ? formatDuration(callEvent.endTime - callEvent.startTime)
+    : 0;
   const directionInfo =
     callEvent.direction === CallDirection.IN ? 'eingehender' : 'ausgehender';
   const { from, to } = getCallMembers(callEvent);
