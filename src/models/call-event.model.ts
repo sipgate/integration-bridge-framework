@@ -26,11 +26,11 @@ export enum CallState {
 export interface CallEvent {
   id: string;
   startTime: number;
-  endTime: number;
   direction: CallDirection;
   participants: CallParticipant[];
   note: string;
   state: CallState;
+  endTime?: number;
   outcome?: string;
 }
 

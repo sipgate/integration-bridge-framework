@@ -50,8 +50,9 @@ const getGermanTextDescriptionForCallEvent = (
   locale: string,
 ): string => {
   const date = new Date(callEvent.startTime);
+
   const duration = formatDuration(
-    callEvent.endTime - callEvent.startTime,
+    callEvent.endTime ? callEvent.endTime - callEvent.startTime : 0,
     locale,
   );
 
@@ -84,7 +85,7 @@ const getEnglishTextDescriptionForCallEvent = (
 ): string => {
   const date = new Date(callEvent.startTime);
   const duration = formatDuration(
-    callEvent.endTime - callEvent.startTime,
+    callEvent.endTime ? callEvent.endTime - callEvent.startTime : 0,
     locale,
   );
 

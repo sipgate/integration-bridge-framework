@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { IntegrationEntityType } from '../models/integration-entity.model';
+import { IntegrationEntityType } from '../models/integration-entity.model'; // export const contactsSchema: ValidationSchema = {
 
 // export const contactsSchema: ValidationSchema = {
 //   title: 'Contacts',
@@ -70,8 +70,8 @@ const integrationEntitySchema = z.object({
   id: z.string(),
   type: z.nativeEnum(IntegrationEntityType),
   source: z.string(),
-  label: z.string().optional(),
-  logId: z.string().optional(),
+  label: z.string().optional().nullable(),
+  logId: z.string().optional().nullable(),
 });
 
 export const contactSchema = z.object({

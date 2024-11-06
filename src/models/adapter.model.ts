@@ -55,7 +55,7 @@ export interface Adapter {
   createCallLogForPhoneNumber?: (
     config: Config,
     body: CallEvent,
-  ) => Promise<LoggedIntegrationEntity>;
+  ) => Promise<LoggedIntegrationEntity | null>;
   getCallLogMetadata?: (config: Config) => Promise<IntegrationDefinedOptions>;
   getEntity?: (
     providerConfig: Config,
