@@ -16,6 +16,7 @@ export enum IntegrationErrorType {
   CONTACT_CREATE_ERROR_EMAIL_CONFLICT = 'contact/create-error/email-conflict',
   CONTACT_ERROR_TOO_MANY_NUMBERS = 'contact/error/too-many-numbers',
   CONTACT_ERROR_INVALID_PHONE_TYPE = 'contact/error/invalid-phone-type',
+  CONTACT_ERROR_PHONENUMBER_EXISTS = 'contact/error/phonenumber-exists',
 }
 
 export const DELEGATE_TO_FRONTEND_CODE = 452;
