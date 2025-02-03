@@ -4,6 +4,7 @@ import { stringify } from 'querystring';
 import {
   Adapter,
   CallEvent,
+  Config,
   Contact,
   ContactCache,
   ContactTemplate,
@@ -1003,6 +1004,55 @@ export class Controller {
       );
       infoLogger('getEntity', `END`, providerConfig?.apiKey);
       res.status(200).send(fetchedEntity);
+    } catch (error) {
+      errorLogger(
+        'getEntity',
+        'Could not get entity:',
+        providerConfig?.apiKey,
+        error,
+      );
+      next(error);
+    }
+  }
+
+  public async getEntitiesForContact(
+    req: {
+      providerConfig?: Config;
+      params: { id: string };
+    },
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
+    const { providerConfig } = req;
+    try {
+      infoLogger('getEntitiesForContact', `START`, providerConfig?.apiKey);
+
+      if (!providerConfig) {
+        throw new ServerError(400, 'Missing parameters');
+      }
+
+      if (!this.adapter.getEntitiesForContact) {
+        throw new ServerError(
+          501,
+          'Fetching Entities for contact is not implemented',
+        );
+      }
+
+      const fetchedEntities = await this.adapter.getEntitiesForContact(
+        providerConfig,
+        req.params.id,
+      );
+
+      infoLogger(
+        'getEntitiesForContact',
+        `successfully fetched ${fetchedEntities.length} entities`,
+        providerConfig.apiKey,
+        {
+          count: fetchedEntities.length,
+        },
+      );
+      infoLogger('getEntitiesForContact', `END`, providerConfig?.apiKey);
+      res.status(200).send(fetchedEntities);
     } catch (error) {
       errorLogger(
         'getEntity',

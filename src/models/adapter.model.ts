@@ -62,6 +62,10 @@ export interface Adapter {
     id: string,
     type: IntegrationEntityType,
   ) => Promise<LabeledIntegrationEntity | null>;
+  getEntitiesForContact?: (
+    config: Config,
+    contactId: string,
+  ) => Promise<LabeledIntegrationEntity[]>;
   handleConnectedEvent?: (config: Config) => Promise<void>;
   handleDisconnectedEvent?: (config: Config) => Promise<void>;
   getHealth?: () => Promise<void>;

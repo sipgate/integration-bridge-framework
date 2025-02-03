@@ -20,6 +20,7 @@ import {
   Adapter,
   ContactCache,
   Controller,
+  IntegrationEntitiesBridgeRequest,
   IntegrationEntityBridgeRequest,
 } from './models';
 import { CustomRouter } from './models/custom-router.model';
@@ -79,6 +80,12 @@ export function start(
 
   app.post('/contacts/stream', (req, res, next) =>
     controller.streamContacts(req, res, next),
+  );
+
+  app.get(
+    '/contacts/:id/entities',
+    (req: IntegrationEntitiesBridgeRequest, res, next) =>
+      controller.getEntitiesForContact(req, res, next),
   );
 
   app.get(

@@ -18,3 +18,8 @@ export interface BridgeRequestWithTimestamp extends BridgeRequest<unknown> {
 export interface IntegrationEntityBridgeRequest extends BridgeRequest<unknown> {
   params: { id: string; type: IntegrationEntityType };
 }
+
+export interface IntegrationEntitiesBridgeRequest
+  extends BridgeRequest<unknown> {
+  params: { id: string };
+}
