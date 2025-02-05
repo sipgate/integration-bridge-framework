@@ -5,15 +5,13 @@ export type IntegrationEntity = {
 };
 
 export type LabeledIntegrationEntity<
-  T extends IntegrationEntityType | unknown = unknown,
+  T extends IntegrationEntityType = IntegrationEntityType,
 > = {
   id: string;
   type: T;
   source: string;
   label: string;
-  additionalProperties?: T extends keyof AdditionalProperties
-    ? AdditionalProperties[T]
-    : unknown;
+  additionalProperties?: AdditionalProperties[T];
 };
 
 type AdditionalProperties = {
