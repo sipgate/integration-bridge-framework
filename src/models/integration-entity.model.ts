@@ -4,8 +4,32 @@ export type IntegrationEntity = {
   source: string;
 };
 
-export type LabeledIntegrationEntity = IntegrationEntity & {
+export type LabeledIntegrationEntity<
+  T extends IntegrationEntityType | unknown = unknown,
+> = {
+  id: string;
+  type: T;
+  source: string;
   label: string;
+  additionalProperties?: T extends keyof AdditionalProperties
+    ? AdditionalProperties[T]
+    : unknown;
+};
+
+type AdditionalProperties = {
+  [IntegrationEntityType.DEALS]: {
+    isOpen?: boolean;
+  };
+  [IntegrationEntityType.CONTACTS]?: never;
+  [IntegrationEntityType.COMPANIES]?: never;
+  [IntegrationEntityType.TICKETS]?: never;
+  [IntegrationEntityType.LEADS]?: never;
+  [IntegrationEntityType.ACCOUNTS]?: never;
+  [IntegrationEntityType.OPPORTUNITIES]?: never;
+  [IntegrationEntityType.CASES]?: never;
+  [IntegrationEntityType.CONTACTS_FOLDER]?: never;
+  [IntegrationEntityType.USERS]?: never;
+  [IntegrationEntityType.TASKS]?: never;
 };
 
 export type LoggedIntegrationEntity = IntegrationEntity & {
