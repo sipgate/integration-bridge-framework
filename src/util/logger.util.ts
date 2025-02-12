@@ -85,13 +85,19 @@ const logger = (
     message,
   );
 
+  let data: unknown[] | object | null = args;
+  const objectData = args.at(0);
+  if (objectData && typeof objectData === 'object') {
+    data = objectData;
+  }
+
   if (process.env.NODE_ENV == 'development') {
     logFn(formatedMessage, ...args);
   } else {
     logFn(
       JSON.stringify({
         message: formatedMessage,
-        data: args,
+        data,
       }),
     );
   }
