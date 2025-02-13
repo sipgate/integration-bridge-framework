@@ -1055,8 +1055,8 @@ export class Controller {
       res.status(200).send(fetchedEntities);
     } catch (error) {
       errorLogger(
-        'getEntity',
-        'Could not get entity:',
+        'getEntitiesForContact',
+        'Could not get entities for contact',
         providerConfig?.apiKey,
         error,
       );
