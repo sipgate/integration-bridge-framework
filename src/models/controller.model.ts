@@ -1150,9 +1150,9 @@ export class Controller {
         throw new ServerError(501, 'OAuth2 flow not implemented');
       }
 
-      const { apiKey } = await this.adapter.handleOAuth2Callback(req, res);
+      const credentials = await this.adapter.handleOAuth2Callback(req, res);
 
-      res.send(apiKey);
+      res.json(credentials);
     } catch (error) {
       errorLogger(
         'oAuth2Callback',
