@@ -4,7 +4,7 @@ import {
   IntegrationErrorType,
   ServerError,
 } from '../models';
-import { errorLogger, warnLogger } from './logger.util';
+import { errorLogger } from './logger.util';
 
 export const throwAndDelegateError = (
   error: AxiosError | DelegateToFrontedError | ServerError | Error,
@@ -12,75 +12,64 @@ export const throwAndDelegateError = (
   apiKey: string | undefined,
   logMessage?: string,
 ) => {
-  const errorMessage = isAxiosError(error)
-    ? error.response?.data
-      ? JSON.stringify(error.response?.data)
-      : error.message
-    : error.message;
-
-  if (logMessage) {
-    errorLogger(source, logMessage, apiKey, {
-      message: errorMessage,
-      error,
-      stackTrace: error.stack,
-    });
-  } else {
-    errorLogger(source, errorMessage, apiKey, {
-      error,
-      stackTrace: error.stack,
-    });
-  }
-
-  const err = error as any;
-  let errorType: IntegrationErrorType | string | undefined = undefined;
-
+  // if already dedicated FrontendError, just forward it
   if (error instanceof DelegateToFrontedError) {
-    const delegateToFrontedError = error as DelegateToFrontedError;
-    errorType = delegateToFrontedError.errorType;
-  } else {
-    if (err.code || err.status || err.response?.status) {
-      const status =
-        err.status ||
-        err.response?.status ||
-        (err.code ? parseInt(err.code) : 500);
-
-      switch (status) {
-        case 401:
-          errorType = IntegrationErrorType.INTEGRATION_REFRESH_ERROR;
-          break;
-        case 403:
-          errorType = IntegrationErrorType.INTEGRATION_ERROR_FORBIDDEN;
-          break;
-        case 404:
-          errorType = IntegrationErrorType.ENTITY_NOT_FOUND;
-          break;
-        case 409:
-          errorType = IntegrationErrorType.ENTITY_ERROR_CONFLICT;
-          break;
-        case 502:
-        case 503:
-        case 504:
-          errorType = IntegrationErrorType.INTEGRATION_ERROR_UNAVAILABLE;
-          break;
-        default:
-          throw new ServerError(status, `${source} (${errorMessage})`);
-      }
-    }
+    throw error;
   }
 
-  if (errorType !== undefined) {
-    warnLogger(
-      'throwAndDelegateError',
-      `Delegating crm error to frontend with code ${DELEGATE_TO_FRONTEND_CODE} and type ${errorType}`,
-      apiKey,
-      logMessage,
-    );
-    throw new ServerError(DELEGATE_TO_FRONTEND_CODE, errorType);
+  let errorType: IntegrationErrorType | string | undefined = undefined;
+  let status: number | string | undefined = 500;
+
+  // Extract the error information from the correct location
+  if (isAxiosError(error)) {
+    status = error.code;
+
+    errorLogger(source, error.message, apiKey, {
+      data: error.response?.data,
+      error,
+      stackTrace: error.stack,
+      message: logMessage,
+    });
   }
-  throw new ServerError(
-    500,
-    `An internal error occurred: ${JSON.stringify(error)}.`,
-  );
+
+  if (error instanceof ServerError) {
+    status = error.status;
+
+    errorLogger(source, error.message, apiKey, {
+      error,
+      stackTrace: error.stack,
+      message: logMessage,
+    });
+  }
+
+  // Try to interpret the status code and map it to a IntegrationErrorType
+  switch (status) {
+    case 401:
+      errorType = IntegrationErrorType.INTEGRATION_REFRESH_ERROR;
+      break;
+    case 403:
+      errorType = IntegrationErrorType.INTEGRATION_ERROR_FORBIDDEN;
+      break;
+    case 404:
+      errorType = IntegrationErrorType.ENTITY_NOT_FOUND;
+      break;
+    case 409:
+      errorType = IntegrationErrorType.ENTITY_ERROR_CONFLICT;
+      break;
+    case 502:
+    case 503:
+    case 504:
+      errorType = IntegrationErrorType.INTEGRATION_ERROR_UNAVAILABLE;
+      break;
+    default:
+      // No error code found, resorting to internal server error
+      throw new ServerError(
+        500,
+        `An internal error occurred: ${logMessage ?? error.message}`,
+      );
+  }
+
+  throw new ServerError(DELEGATE_TO_FRONTEND_CODE, errorType);
 };
 
 export class DelegateToFrontedError extends ServerError {
