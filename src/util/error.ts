@@ -11,6 +11,7 @@ export const throwAndDelegateError = (
   source: string,
   apiKey: string | undefined,
   logMessage?: string,
+  data?: object,
 ) => {
   // if already dedicated FrontendError, just forward it
   if (error instanceof DelegateToFrontedError) {
@@ -29,6 +30,7 @@ export const throwAndDelegateError = (
       error,
       stackTrace: error.stack,
       message: logMessage,
+      ...data,
     });
   }
 
@@ -39,6 +41,7 @@ export const throwAndDelegateError = (
       error,
       stackTrace: error.stack,
       message: logMessage,
+      ...data,
     });
   }
 
@@ -69,6 +72,12 @@ export const throwAndDelegateError = (
       );
   }
 
+  errorLogger(source, error.message, apiKey, {
+    error,
+    stackTrace: error.stack,
+    message: logMessage,
+    ...data,
+  });
   throw new ServerError(DELEGATE_TO_FRONTEND_CODE, errorType);
 };
 
