@@ -4,6 +4,7 @@ import { SimpleSpanProcessor } from '@opentelemetry/sdk-trace-base';
 import { HttpInstrumentation } from '@opentelemetry/instrumentation-http';
 import { ExpressInstrumentation } from '@opentelemetry/instrumentation-express';
 import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node';
+import { PubSubInstrumentation } from 'opentelemetry-instrumentation-pubsub';
 const apikey = process.env.BACKEND_TRACING_API_KEY;
 const tracingEnabledEnv = process.env.BACKEND_TRACING_ENABLED;
 
@@ -19,6 +20,7 @@ export const otelSDK = new NodeSDK({
   instrumentations: [
     new HttpInstrumentation(),
     new ExpressInstrumentation(),
+    new PubSubInstrumentation(),
     getNodeAutoInstrumentations({
       '@opentelemetry/instrumentation-fs': { enabled: false },
     }),

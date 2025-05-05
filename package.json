@@ -89,6 +89,7 @@
     "lodash": "^4.17.21",
     "lru-cache": "^7.13.1",
     "moment": "^2.29.4",
+    "opentelemetry-instrumentation-pubsub": "^2.1.0",
     "rate-limiter-flexible": "^2.3.11",
     "redis": "^4.2.0",
     "zod": "^3.23.8"
