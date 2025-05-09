@@ -35,6 +35,7 @@ import {
   PubSubContactsMessage,
   PubSubContactsState,
 } from './pubsub/pubsub-contacts-message.model';
+import { anonymizeKey } from '../util/anonymize-key';
 
 const CONTACT_FETCH_TIMEOUT = 5000;
 
@@ -999,10 +1000,16 @@ export class Controller {
 
       infoLogger(
         'getEntity',
-        `[${JSON.stringify(fetchedEntity)}] `,
+        `successfully got entity`,
         providerConfig.apiKey,
+        {
+          ...fetchedEntity,
+          label: anonymizeKey(fetchedEntity?.label),
+        },
       );
-      infoLogger('getEntity', `END`, providerConfig?.apiKey);
+
+      infoLogger('getEntity', `END`, providerConfig.apiKey);
+
       res.status(200).send(fetchedEntity);
     } catch (error) {
       errorLogger(
