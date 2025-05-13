@@ -1,5 +1,7 @@
-import { anonymizeKey } from './anonymize-key';
 import { context, trace } from '@opentelemetry/api';
+
+import { anonymizeKey } from './anonymize-key';
+import { integrationIdStorage } from '../middlewares';
 
 function addMessageToTraceSpan(
   method: 'log' | 'error' | 'warn',
@@ -20,19 +22,19 @@ function addMessageToTraceSpan(
  * @param source the context where the log originated from (usually the function name)
  * @param message the message of the log
  * @param apiKey the refreshToken
- * @param integrationUserId platypus user id
  * @param args additional data, will be stringified and appended
  */
 export const infoLogger = (
   source: string,
   message: string,
   apiKey?: string,
-  integrationUserId?: string,
   ...args: unknown[]
 ): void => {
-  addMessageToTraceSpan('log', message, [...args, integrationUserId]);
+  const userId = integrationIdStorage.getStore();
 
-  logger(console.info, source, message, apiKey, integrationUserId, ...args);
+  addMessageToTraceSpan('log', message, [...args, userId]);
+
+  logger(console.info, source, message, apiKey, ...args);
 };
 
 /**
@@ -40,19 +42,19 @@ export const infoLogger = (
  * @param source the context where the log originated from (usually the function name)
  * @param message the message of the log
  * @param apiKey the refreshToken
- * @param integrationUserId platypus user id
  * @param args additional data, will be stringified and appended
  */
 export const errorLogger = (
   source: string,
   message: string,
   apiKey?: string,
-  integrationUserId?: string,
   ...args: unknown[]
 ): void => {
-  addMessageToTraceSpan('error', message, [...args, integrationUserId]);
+  const userId = integrationIdStorage.getStore();
 
-  logger(console.error, source, message, apiKey, integrationUserId, ...args);
+  addMessageToTraceSpan('error', message, [...args, userId]);
+
+  logger(console.error, source, message, apiKey, ...args);
 };
 
 /**
@@ -60,19 +62,19 @@ export const errorLogger = (
  * @param source the context where the log originated from (usually the function name)
  * @param message the message of the log
  * @param apiKey the refreshToken
- * @param integrationUserId platypus user id
  * @param args additional data, will be stringified and appended
  */
 export const warnLogger = (
   source: string,
   message: string,
   apiKey?: string,
-  integrationUserId?: string,
   ...args: unknown[]
 ): void => {
-  addMessageToTraceSpan('warn', message, [...args, integrationUserId]);
+  const userId = integrationIdStorage.getStore();
 
-  logger(console.warn, source, message, apiKey, integrationUserId, ...args);
+  addMessageToTraceSpan('warn', message, [...args, userId]);
+
+  logger(console.warn, source, message, apiKey, ...args);
 };
 
 const logger = (
@@ -80,15 +82,15 @@ const logger = (
   source: string,
   message: string,
   apiKey: string | undefined,
-  integrationUserId: string | undefined,
   ...args: unknown[]
 ): void => {
   // eslint-disable-next-line no-console
   const anonymizedApiKey = apiKey ? anonymizeKey(apiKey) : undefined;
+  const userId = integrationIdStorage.getStore();
 
   const formatedMessage = constructLogMessage(
     anonymizedApiKey ? `[${anonymizedApiKey}]` : undefined,
-    integrationUserId ? `[${integrationUserId}]` : undefined,
+    userId ? `[${userId}]` : undefined,
     `[${source}]`,
     message,
   );
@@ -99,7 +101,7 @@ const logger = (
     logFn(
       JSON.stringify({
         message: formatedMessage,
-        data: { ...args, integrationUserId },
+        data: { ...args, integrationUserId: userId },
       }),
     );
   }

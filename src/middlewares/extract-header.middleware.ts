@@ -1,7 +1,10 @@
 import { NextFunction, Response } from 'express';
 import { BridgeRequest } from '../models';
+import { AsyncLocalStorage } from 'async_hooks';
 
 const DEFAULT_LOCALE = 'de-DE';
+
+export const integrationIdStorage = new AsyncLocalStorage<string>();
 
 export function extractHeaderMiddleware(
   req: BridgeRequest<any>,
@@ -20,5 +23,5 @@ export function extractHeaderMiddleware(
     locale,
   };
 
-  next();
+  integrationIdStorage.run(userId, () => next());
 }
