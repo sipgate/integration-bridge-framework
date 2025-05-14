@@ -6,27 +6,15 @@ import { playtypusUserIdStorage } from '../middlewares';
 function addMessageToTraceSpan(
   method: 'log' | 'error' | 'warn',
   message: string,
-  args: unknown[] = [],
+  args?: unknown[],
 ) {
   const span = trace.getSpan(context.active());
-  if (!span) {
-    return;
+  if (span) {
+    span.addEvent(method, {
+      message,
+      args: args ? args.map((arg) => JSON.stringify(arg)).join(',') : '',
+    });
   }
-
-  const data = args;
-  const userId = playtypusUserIdStorage.getStore();
-
-  if (userId) {
-    data.push({ platypusUserId: userId });
-  }
-
-  span.addEvent(method, {
-    message,
-    args:
-      data?.length !== 0
-        ? data.map((arg) => JSON.stringify(arg)).join(',')
-        : '',
-  });
 }
 
 /**
@@ -89,14 +77,7 @@ const logger = (
   apiKey: string | undefined,
   ...args: unknown[]
 ): void => {
-  // eslint-disable-next-line no-console
-  const anonymizedApiKey = apiKey ? anonymizeKey(apiKey) : undefined;
-
-  const formatedMessage = constructLogMessage(
-    anonymizedApiKey ? `[${anonymizedApiKey}]` : undefined,
-    `[${source}]`,
-    message,
-  );
+  const formatedMessage = constructLogMessage(`[${source}]`, message);
 
   if (process.env.NODE_ENV === 'development') {
     logFn(formatedMessage, ...args);
@@ -108,6 +89,12 @@ const logger = (
 
   if (userId) {
     data.platypusUserId = userId;
+  }
+
+  const anonymizedApiKey = apiKey ? anonymizeKey(apiKey) : undefined;
+
+  if (anonymizedApiKey) {
+    data.apiKey = anonymizedApiKey;
   }
 
   logFn(
