@@ -1,7 +1,7 @@
 import { context, trace } from '@opentelemetry/api';
 
 import { anonymizeKey } from './anonymize-key';
-import { integrationIdStorage } from '../middlewares';
+import { playtypusUserIdStorage } from '../middlewares';
 
 function addMessageToTraceSpan(
   method: 'log' | 'error' | 'warn',
@@ -30,7 +30,7 @@ export const infoLogger = (
   apiKey?: string,
   ...args: unknown[]
 ): void => {
-  const userId = integrationIdStorage.getStore();
+  const userId = playtypusUserIdStorage.getStore();
 
   addMessageToTraceSpan('log', message, [...args, userId]);
 
@@ -50,7 +50,7 @@ export const errorLogger = (
   apiKey?: string,
   ...args: unknown[]
 ): void => {
-  const userId = integrationIdStorage.getStore();
+  const userId = playtypusUserIdStorage.getStore();
 
   addMessageToTraceSpan('error', message, [...args, userId]);
 
@@ -70,7 +70,7 @@ export const warnLogger = (
   apiKey?: string,
   ...args: unknown[]
 ): void => {
-  const userId = integrationIdStorage.getStore();
+  const userId = playtypusUserIdStorage.getStore();
 
   addMessageToTraceSpan('warn', message, [...args, userId]);
 
@@ -86,7 +86,7 @@ const logger = (
 ): void => {
   // eslint-disable-next-line no-console
   const anonymizedApiKey = apiKey ? anonymizeKey(apiKey) : undefined;
-  const userId = integrationIdStorage.getStore();
+  const userId = playtypusUserIdStorage.getStore();
 
   const formatedMessage = constructLogMessage(
     anonymizedApiKey ? `[${anonymizedApiKey}]` : undefined,
