@@ -6,15 +6,27 @@ import { playtypusUserIdStorage } from '../middlewares';
 function addMessageToTraceSpan(
   method: 'log' | 'error' | 'warn',
   message: string,
-  args?: unknown[],
+  args: unknown[] = [],
 ) {
   const span = trace.getSpan(context.active());
-  if (span) {
-    span.addEvent(method, {
-      message,
-      args: args ? args.map((arg) => JSON.stringify(arg)).join(',') : '',
-    });
+  if (!span) {
+    return;
   }
+
+  const data = args;
+  const userId = playtypusUserIdStorage.getStore();
+
+  if (userId) {
+    data.push({ platypusUserId: userId });
+  }
+
+  span.addEvent(method, {
+    message,
+    args:
+      data?.length !== 0
+        ? data.map((arg) => JSON.stringify(arg)).join(',')
+        : '',
+  });
 }
 
 /**
@@ -30,9 +42,7 @@ export const infoLogger = (
   apiKey?: string,
   ...args: unknown[]
 ): void => {
-  const userId = playtypusUserIdStorage.getStore();
-
-  addMessageToTraceSpan('log', message, [...args, userId]);
+  addMessageToTraceSpan('log', message, [...args]);
 
   logger(console.info, source, message, apiKey, ...args);
 };
@@ -50,9 +60,7 @@ export const errorLogger = (
   apiKey?: string,
   ...args: unknown[]
 ): void => {
-  const userId = playtypusUserIdStorage.getStore();
-
-  addMessageToTraceSpan('error', message, [...args, userId]);
+  addMessageToTraceSpan('error', message, [...args]);
 
   logger(console.error, source, message, apiKey, ...args);
 };
@@ -70,13 +78,10 @@ export const warnLogger = (
   apiKey?: string,
   ...args: unknown[]
 ): void => {
-  const userId = playtypusUserIdStorage.getStore();
-
-  addMessageToTraceSpan('warn', message, [...args, userId]);
+  addMessageToTraceSpan('warn', message, [...args]);
 
   logger(console.warn, source, message, apiKey, ...args);
 };
-
 const logger = (
   logFn: (message?: any, ...optionalParams: any[]) => void,
   source: string,
@@ -86,33 +91,39 @@ const logger = (
 ): void => {
   // eslint-disable-next-line no-console
   const anonymizedApiKey = apiKey ? anonymizeKey(apiKey) : undefined;
-  const userId = playtypusUserIdStorage.getStore();
 
   const formatedMessage = constructLogMessage(
     anonymizedApiKey ? `[${anonymizedApiKey}]` : undefined,
-    userId ? `[${userId}]` : undefined,
     `[${source}]`,
     message,
   );
 
-  if (process.env.NODE_ENV == 'development') {
+  if (process.env.NODE_ENV === 'development') {
     logFn(formatedMessage, ...args);
-  } else {
-    logFn(
-      JSON.stringify({
-        message: formatedMessage,
-        data: { ...args, integrationUserId: userId },
-      }),
-    );
+    return;
   }
+
+  const data: Record<string, unknown> = { ...args };
+  const userId = playtypusUserIdStorage.getStore();
+
+  if (userId) {
+    data.platypusUserId = userId;
+  }
+
+  logFn(
+    JSON.stringify({
+      message: formatedMessage,
+      data,
+    }),
+  );
 };
 
 const constructLogMessage = (...args: unknown[]): string =>
   `${args
     .flat()
-    .filter((item) => item != undefined)
+    .filter((item) => item !== undefined)
     .map((item: unknown) => {
-      if (Array.isArray(item) && item.length == 0) return;
+      if (Array.isArray(item) && item.length === 0) return;
       return typeof item !== 'string' ? JSON.stringify(item) : item;
     })
     .join(' ')}`;
