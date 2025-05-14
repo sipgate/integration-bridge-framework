@@ -113,7 +113,7 @@ const logger = (
   logFn(
     JSON.stringify({
       message: formatedMessage,
-      data,
+      ...data,
     }),
   );
 };
