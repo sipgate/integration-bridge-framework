@@ -4,7 +4,7 @@ import { AsyncLocalStorage } from 'async_hooks';
 
 const DEFAULT_LOCALE = 'de-DE';
 
-export const playtypusUserIdStorage = new AsyncLocalStorage<string>();
+export const userIdStorage = new AsyncLocalStorage<string>();
 
 export function extractHeaderMiddleware(
   req: BridgeRequest<any>,
@@ -23,5 +23,5 @@ export function extractHeaderMiddleware(
     locale,
   };
 
-  playtypusUserIdStorage.run(userId, () => next());
+  userIdStorage.run(userId, () => next());
 }

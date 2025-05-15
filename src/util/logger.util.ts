@@ -1,7 +1,7 @@
 import { context, trace } from '@opentelemetry/api';
 
 import { anonymizeKey } from './anonymize-key';
-import { playtypusUserIdStorage } from '../middlewares';
+import { userIdStorage } from '../middlewares';
 
 function addMessageToTraceSpan(
   method: 'log' | 'error' | 'warn',
@@ -85,10 +85,10 @@ const logger = (
   }
 
   const data: Record<string, unknown> = { ...args };
-  const userId = playtypusUserIdStorage.getStore();
+  const userId = userIdStorage.getStore();
 
   if (userId) {
-    data.platypusUserId = userId;
+    data.userId = userId;
   }
 
   const anonymizedApiKey = apiKey ? anonymizeKey(apiKey) : undefined;
