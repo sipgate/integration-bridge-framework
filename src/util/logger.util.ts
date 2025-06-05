@@ -1,4 +1,4 @@
-import { context, trace } from '@opentelemetry/api';
+import { context, propagation, trace } from '@opentelemetry/api';
 
 import { anonymizeKey } from './anonymize-key';
 import { userIdStorage } from '../middlewares';
@@ -83,13 +83,7 @@ const logger = (
     logFn(formatedMessage, ...args);
     return;
   }
-
   const data: Record<string, unknown> = { ...args };
-  const userId = userIdStorage.getStore();
-
-  if (userId) {
-    data.userId = userId;
-  }
 
   const anonymizedApiKey = apiKey ? anonymizeKey(apiKey) : undefined;
 
@@ -97,9 +91,29 @@ const logger = (
     data.apiKey = anonymizedApiKey;
   }
 
+  const object: Record<string, unknown> = {};
+  propagation.inject(context.active(), object);
+
+  // format tracing info for gcloud logging
+  let traceProp = {};
+  if (object.traceparent && typeof object.traceparent === 'string') {
+    const [, traceId, spanId] = object.traceparent.split('-');
+
+    traceProp =
+      process.env.NODE_ENV === 'production'
+        ? {
+            'logging.googleapis.com/trace': `projects/clinq-services/traces/${traceId}`,
+            'logging.googleapis.com/spanId': spanId,
+            'logging.googleapis.com/sampled': false,
+          }
+        : {};
+  }
+
   logFn(
     JSON.stringify({
+      ...traceProp,
       message: formatedMessage,
+      userId: userIdStorage.getStore(),
       ...data,
     }),
   );
