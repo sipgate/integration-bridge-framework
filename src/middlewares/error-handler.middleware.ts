@@ -8,7 +8,7 @@ export function errorHandlerMiddleware(
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   next: NextFunction,
 ): void {
-  if (error instanceof ServerError) {
+  if (error instanceof ServerError && error.status >= 400) {
     res.status(error.status).send(error.message);
     return;
   }
