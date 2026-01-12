@@ -30,6 +30,11 @@ export type PhoneNumber = {
   phoneNumber: string;
 };
 
+export enum ContactScope {
+  PRIVATE = 'PRIVATE',
+  SHARED = 'SHARED',
+}
+
 export type BaseContact = {
   name: string | null;
   firstName: string | null;
@@ -37,6 +42,7 @@ export type BaseContact = {
   email: string | null;
   organization: string | null;
   type?: IntegrationEntityType;
+  scope?: ContactScope;
 };
 
 export type ContactResult = {
