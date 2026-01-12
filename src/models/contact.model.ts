@@ -33,6 +33,7 @@ export type PhoneNumber = {
 export enum ContactScope {
   PRIVATE = 'PRIVATE',
   SHARED = 'SHARED',
+  INTERNAL = 'INTERNAL',
 }
 
 export type BaseContact = {
