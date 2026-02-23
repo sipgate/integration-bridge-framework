@@ -1,5 +1,7 @@
+import { context, propagation, trace } from '@opentelemetry/api';
+
 import { anonymizeKey } from './anonymize-key';
-import { context, trace } from '@opentelemetry/api';
+import { userIdStorage } from '../middlewares';
 
 function addMessageToTraceSpan(
   method: 'log' | 'error' | 'warn',
@@ -28,7 +30,7 @@ export const infoLogger = (
   apiKey?: string,
   ...args: unknown[]
 ): void => {
-  addMessageToTraceSpan('log', message, args);
+  addMessageToTraceSpan('log', message, [...args]);
 
   logger(console.info, source, message, apiKey, ...args);
 };
@@ -46,7 +48,7 @@ export const errorLogger = (
   apiKey?: string,
   ...args: unknown[]
 ): void => {
-  addMessageToTraceSpan('error', message, args);
+  addMessageToTraceSpan('error', message, [...args]);
 
   logger(console.error, source, message, apiKey, ...args);
 };
@@ -64,11 +66,10 @@ export const warnLogger = (
   apiKey?: string,
   ...args: unknown[]
 ): void => {
-  addMessageToTraceSpan('warn', message, args);
+  addMessageToTraceSpan('warn', message, [...args]);
 
   logger(console.warn, source, message, apiKey, ...args);
 };
-
 const logger = (
   logFn: (message?: any, ...optionalParams: any[]) => void,
   source: string,
@@ -76,33 +77,54 @@ const logger = (
   apiKey: string | undefined,
   ...args: unknown[]
 ): void => {
-  // eslint-disable-next-line no-console
+  const formatedMessage = constructLogMessage(`[${source}]`, message);
+
+  if (process.env.NODE_ENV === 'development') {
+    logFn(formatedMessage, ...args);
+    return;
+  }
+  const data: Record<string, unknown> = { ...args };
+
   const anonymizedApiKey = apiKey ? anonymizeKey(apiKey) : undefined;
 
-  const formatedMessage = constructLogMessage(
-    anonymizedApiKey ? `[${anonymizedApiKey}]` : undefined,
-    `[${source}]`,
-    message,
-  );
-
-  if (process.env.NODE_ENV == 'development') {
-    logFn(formatedMessage, ...args);
-  } else {
-    logFn(
-      JSON.stringify({
-        message: formatedMessage,
-        data: args,
-      }),
-    );
+  if (anonymizedApiKey) {
+    data.apiKey = anonymizedApiKey;
   }
+
+  const object: Record<string, unknown> = {};
+  propagation.inject(context.active(), object);
+
+  // format tracing info for gcloud logging
+  let traceProp = {};
+  if (object.traceparent && typeof object.traceparent === 'string') {
+    const [, traceId, spanId] = object.traceparent.split('-');
+
+    traceProp =
+      process.env.NODE_ENV === 'production'
+        ? {
+            'logging.googleapis.com/trace': `projects/clinq-services/traces/${traceId}`,
+            'logging.googleapis.com/spanId': spanId,
+            'logging.googleapis.com/sampled': false,
+          }
+        : {};
+  }
+
+  logFn(
+    JSON.stringify({
+      ...traceProp,
+      message: formatedMessage,
+      userId: userIdStorage.getStore(),
+      ...data,
+    }),
+  );
 };
 
 const constructLogMessage = (...args: unknown[]): string =>
   `${args
     .flat()
-    .filter((item) => item != undefined)
+    .filter((item) => item !== undefined)
     .map((item: unknown) => {
-      if (Array.isArray(item) && item.length == 0) return;
+      if (Array.isArray(item) && item.length === 0) return;
       return typeof item !== 'string' ? JSON.stringify(item) : item;
     })
     .join(' ')}`;

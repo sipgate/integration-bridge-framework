@@ -29,7 +29,7 @@ export class PubSubClient<T> {
     });
 
     await Promise.race([
-      topic.publishMessage({ data: dataBuffer, orderingKey }),
+      topic.publishMessage({ data: dataBuffer, orderingKey, attributes: {} }),
       timeout(
         PUBLISH_TIMEOUT,
         'Could not publish message in time. Did you forget to authenticate with GCP? (gcloud auth application-default login)',

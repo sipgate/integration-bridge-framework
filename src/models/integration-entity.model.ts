@@ -25,6 +25,8 @@ type AdditionalProperties = {
   [IntegrationEntityType.ACCOUNTS]?: never;
   [IntegrationEntityType.OPPORTUNITIES]?: never;
   [IntegrationEntityType.CASES]?: never;
+  [IntegrationEntityType.BUILDING_OBJECTS]?: never;
+  [IntegrationEntityType.BUILDING_OBJECTS_LEADS]?: never;
   [IntegrationEntityType.CONTACTS_FOLDER]?: never;
   [IntegrationEntityType.USERS]?: never;
   [IntegrationEntityType.TASKS]?: never;
@@ -45,6 +47,9 @@ export enum IntegrationEntityType {
   ACCOUNTS = 'accounts',
   OPPORTUNITIES = 'opportunities',
   CASES = 'cases',
+  // lignotrend-salesforce specific
+  BUILDING_OBJECTS = 'building_objects',
+  BUILDING_OBJECTS_LEADS = 'building_objects_leads',
   // outlook specific
   CONTACTS_FOLDER = 'contacts_folder',
   // outlook and sipgate

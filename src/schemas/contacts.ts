@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { IntegrationEntityType } from '../models/integration-entity.model'; // export const contactsSchema: ValidationSchema = {
+import { ContactScope } from '../models';
 
 // export const contactsSchema: ValidationSchema = {
 //   title: 'Contacts',
@@ -92,6 +93,7 @@ export const contactSchema = z.object({
   ),
   type: z.nativeEnum(IntegrationEntityType).optional(),
   relatesTo: z.array(integrationEntitySchema).optional(),
+  scope: z.nativeEnum(ContactScope).optional(),
 });
 
 export const contactsGetSchema = z.array(contactSchema);
@@ -111,4 +113,5 @@ export const contactCreateSchema = z.object({
     }),
   ),
   type: z.nativeEnum(IntegrationEntityType).optional(),
+  scope: z.nativeEnum(ContactScope).optional(),
 });
