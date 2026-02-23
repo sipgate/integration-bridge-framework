@@ -4,7 +4,48 @@ import {
   IntegrationErrorType,
   ServerError,
 } from '../models';
-import { errorLogger } from './logger.util';
+import { errorLogger, warnLogger } from './logger.util';
+
+const STATUS_TO_ERROR_TYPE: Partial<Record<number, IntegrationErrorType>> = {
+  401: IntegrationErrorType.INTEGRATION_REFRESH_ERROR,
+  403: IntegrationErrorType.INTEGRATION_ERROR_FORBIDDEN,
+  404: IntegrationErrorType.ENTITY_NOT_FOUND,
+  409: IntegrationErrorType.ENTITY_ERROR_CONFLICT,
+  502: IntegrationErrorType.INTEGRATION_ERROR_UNAVAILABLE,
+  503: IntegrationErrorType.INTEGRATION_ERROR_UNAVAILABLE,
+  504: IntegrationErrorType.INTEGRATION_ERROR_UNAVAILABLE,
+};
+
+function extractStatus(error: Error): number | undefined {
+  if (isAxiosError(error)) {
+    return error.response?.status ?? error.status;
+  }
+  if (error instanceof ServerError) {
+    return error.status;
+  }
+
+  const err = error as Record<string, any>;
+  if (err.status != null) {
+    return typeof err.status === 'string'
+      ? parseInt(err.status, 10)
+      : err.status;
+  }
+  if (err.response?.status != null) {
+    return err.response.status;
+  }
+  if (err.code != null) {
+    const parsed = parseInt(err.code, 10);
+    return isNaN(parsed) ? undefined : parsed;
+  }
+  return undefined;
+}
+
+function formatErrorMessage(error: Error): string {
+  if (isAxiosError(error) && error.response?.data) {
+    return JSON.stringify(error.response.data);
+  }
+  return error.message;
+}
 
 export const throwAndDelegateError = (
   error: AxiosError | DelegateToFrontedError | ServerError | Error,
@@ -13,72 +54,41 @@ export const throwAndDelegateError = (
   logMessage?: string,
   data?: object,
 ) => {
-  // if already dedicated FrontendError, just forward it
   if (error instanceof DelegateToFrontedError) {
     throw error;
   }
 
-  let errorType: IntegrationErrorType | string | undefined = undefined;
-  let status: number | string | undefined = 500;
+  const status = extractStatus(error);
+  const errorMessage = formatErrorMessage(error);
 
-  // Extract the error information from the correct location
-  if (isAxiosError(error)) {
-    status = error.code;
-
-    errorLogger(source, error.message, apiKey, {
-      data: error.response?.data,
-      error,
-      stackTrace: error.stack,
-      message: logMessage,
-      ...data,
-    });
-  }
-
-  if (error instanceof ServerError) {
-    status = error.status;
-
-    errorLogger(source, error.message, apiKey, {
-      error,
-      stackTrace: error.stack,
-      message: logMessage,
-      ...data,
-    });
-  }
-
-  // Try to interpret the status code and map it to a IntegrationErrorType
-  switch (status) {
-    case 401:
-      errorType = IntegrationErrorType.INTEGRATION_REFRESH_ERROR;
-      break;
-    case 403:
-      errorType = IntegrationErrorType.INTEGRATION_ERROR_FORBIDDEN;
-      break;
-    case 404:
-      errorType = IntegrationErrorType.ENTITY_NOT_FOUND;
-      break;
-    case 409:
-      errorType = IntegrationErrorType.ENTITY_ERROR_CONFLICT;
-      break;
-    case 502:
-    case 503:
-    case 504:
-      errorType = IntegrationErrorType.INTEGRATION_ERROR_UNAVAILABLE;
-      break;
-    default:
-      // No error code found, resorting to internal server error
-      throw new ServerError(
-        500,
-        `An internal error occurred: ${logMessage ?? error.message}`,
-      );
-  }
-
-  errorLogger(source, error.message, apiKey, {
+  errorLogger(source, logMessage ?? errorMessage, apiKey, {
+    ...(isAxiosError(error) && { data: error.response?.data }),
     error,
     stackTrace: error.stack,
-    message: logMessage,
+    ...(logMessage && { message: errorMessage }),
     ...data,
   });
-  throw new ServerError(DELEGATE_TO_FRONTEND_CODE, errorType);
+
+  if (status == null) {
+    throw new ServerError(
+      500,
+      `An internal error occurred: ${logMessage ?? error.message}`,
+    );
+  }
+
+  const errorType = STATUS_TO_ERROR_TYPE[status];
+
+  if (errorType) {
+    warnLogger(
+      'throwAndDelegateError',
+      `Delegating crm error to frontend with code ${DELEGATE_TO_FRONTEND_CODE} and type ${errorType}`,
+      apiKey,
+      logMessage,
+    );
+    throw new ServerError(DELEGATE_TO_FRONTEND_CODE, errorType);
+  }
+
+  throw new ServerError(status, `${source} (${errorMessage})`);
 };
 
 export class DelegateToFrontedError extends ServerError {
