@@ -3,15 +3,16 @@ import {
   DELEGATE_TO_FRONTEND_CODE,
   IntegrationErrorType,
   ServerError,
-} from '../models';
-import { DelegateToFrontedError, throwAndDelegateError } from './error';
+} from '../../models';
+import { throwAndDelegateError } from './error';
 
-jest.mock('./logger.util', () => ({
+jest.mock('../logger.util', () => ({
   errorLogger: jest.fn(),
   warnLogger: jest.fn(),
 }));
 
-import { errorLogger, warnLogger } from './logger.util';
+import { errorLogger, warnLogger } from '../logger.util';
+import { DelegateToFrontedError } from './delegate-to-frontend.error';
 
 const mockedErrorLogger = errorLogger as jest.MockedFunction<
   typeof errorLogger
@@ -64,13 +65,13 @@ describe('throwAndDelegateError', () => {
       return error;
     }
 
-    it('should map 401 to INTEGRATION_REFRESH_ERROR', () => {
+    it('should map 401 to INTEGRATION_UNAUTHORIZED_ERROR', () => {
       const error = createAxiosError(401);
 
       expect(() => throwAndDelegateError(error, SOURCE, API_KEY)).toThrow(
         expect.objectContaining({
           status: DELEGATE_TO_FRONTEND_CODE,
-          message: IntegrationErrorType.INTEGRATION_REFRESH_ERROR,
+          message: IntegrationErrorType.INTEGRATION_UNAUTHORIZED_ERROR,
         }),
       );
     });
@@ -144,13 +145,13 @@ describe('throwAndDelegateError', () => {
   });
 
   describe('ServerError', () => {
-    it('should map ServerError with status 401 to INTEGRATION_REFRESH_ERROR', () => {
+    it('should map ServerError with status 401 to INTEGRATION_UNAUTHORIZED_ERROR', () => {
       const error = new ServerError(401, 'Unauthorized');
 
       expect(() => throwAndDelegateError(error, SOURCE, API_KEY)).toThrow(
         expect.objectContaining({
           status: DELEGATE_TO_FRONTEND_CODE,
-          message: IntegrationErrorType.INTEGRATION_REFRESH_ERROR,
+          message: IntegrationErrorType.INTEGRATION_UNAUTHORIZED_ERROR,
         }),
       );
     });
@@ -178,13 +179,13 @@ describe('throwAndDelegateError', () => {
   });
 
   describe('plain objects with code property', () => {
-    it('should parse numeric code "401" and map to refresh error', () => {
+    it('should parse numeric code "401" and map to unauthorized error', () => {
       const error = Object.assign(new Error('CRM error'), { code: '401' });
 
       expect(() => throwAndDelegateError(error, SOURCE, API_KEY)).toThrow(
         expect.objectContaining({
           status: DELEGATE_TO_FRONTEND_CODE,
-          message: IntegrationErrorType.INTEGRATION_REFRESH_ERROR,
+          message: IntegrationErrorType.INTEGRATION_UNAUTHORIZED_ERROR,
         }),
       );
     });
@@ -231,7 +232,7 @@ describe('throwAndDelegateError', () => {
       expect(() => throwAndDelegateError(error, SOURCE, API_KEY)).toThrow(
         expect.objectContaining({
           status: DELEGATE_TO_FRONTEND_CODE,
-          message: IntegrationErrorType.INTEGRATION_REFRESH_ERROR,
+          message: IntegrationErrorType.INTEGRATION_UNAUTHORIZED_ERROR,
         }),
       );
     });

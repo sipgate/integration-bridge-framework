@@ -3,11 +3,17 @@ import {
   DELEGATE_TO_FRONTEND_CODE,
   IntegrationErrorType,
   ServerError,
-} from '../models';
-import { errorLogger, warnLogger } from './logger.util';
+} from '../../models';
+import { errorLogger, warnLogger } from '../logger.util';
+import { DelegateToFrontedError } from './delegate-to-frontend.error';
 
+/**
+ * Maps CRM HTTP status codes to semantic error types that the frontend
+ * can act on (e.g. trigger re-auth on 401, show "not found" on 404).
+ * Unmapped status codes are passed through as-is.
+ */
 const STATUS_TO_ERROR_TYPE: Partial<Record<number, IntegrationErrorType>> = {
-  401: IntegrationErrorType.INTEGRATION_REFRESH_ERROR,
+  401: IntegrationErrorType.INTEGRATION_UNAUTHORIZED_ERROR,
   403: IntegrationErrorType.INTEGRATION_ERROR_FORBIDDEN,
   404: IntegrationErrorType.ENTITY_NOT_FOUND,
   409: IntegrationErrorType.ENTITY_ERROR_CONFLICT,
@@ -16,7 +22,12 @@ const STATUS_TO_ERROR_TYPE: Partial<Record<number, IntegrationErrorType>> = {
   504: IntegrationErrorType.INTEGRATION_ERROR_UNAVAILABLE,
 };
 
-function extractStatus(error: Error): number | undefined {
+/**
+ * Extracts an HTTP status code from various error shapes thrown by CRM adapters.
+ * Adapters may throw AxiosErrors, ServerErrors, or plain objects with
+ * `.status`, `.response.status`, or `.code` — this normalises them all to a number.
+ */
+const extractStatus = (error: Error): number | undefined => {
   if (isAxiosError(error)) {
     return error.response?.status ?? error.status;
   }
@@ -24,6 +35,7 @@ function extractStatus(error: Error): number | undefined {
     return error.status;
   }
 
+  // Fallback for non-standard error objects from CRM SDKs
   const err = error as Record<string, any>;
   if (err.status != null) {
     return typeof err.status === 'string'
@@ -38,15 +50,24 @@ function extractStatus(error: Error): number | undefined {
     return isNaN(parsed) ? undefined : parsed;
   }
   return undefined;
-}
+};
 
-function formatErrorMessage(error: Error): string {
+/** Prefers the CRM's response body (AxiosError) over the generic error message. */
+const formatErrorMessage = (error: Error): string => {
   if (isAxiosError(error) && error.response?.data) {
     return JSON.stringify(error.response.data);
   }
   return error.message;
-}
+};
 
+/**
+ * Central error handler for calls from bridge.
+ *
+ * Logs the error, then maps the HTTP status to a semantic IntegrationErrorType
+ * and throws a ServerError with status 452 (DELEGATE_TO_FRONTEND_CODE) so the
+ * frontend can show an appropriate message. Unmapped status codes are re-thrown
+ * as-is; errors without any status become a generic 500.
+ */
 export const throwAndDelegateError = (
   error: AxiosError | DelegateToFrontedError | ServerError | Error,
   source: string,
@@ -54,6 +75,7 @@ export const throwAndDelegateError = (
   logMessage?: string,
   data?: object,
 ) => {
+  // Already processed by an inner bridge call — re-throw without double-logging
   if (error instanceof DelegateToFrontedError) {
     throw error;
   }
@@ -69,6 +91,7 @@ export const throwAndDelegateError = (
     ...data,
   });
 
+  // No recognisable status → treat as internal server error
   if (status == null) {
     throw new ServerError(
       500,
@@ -76,6 +99,7 @@ export const throwAndDelegateError = (
     );
   }
 
+  // Known status → delegate to frontend with a semantic error type
   const errorType = STATUS_TO_ERROR_TYPE[status];
 
   if (errorType) {
@@ -88,16 +112,6 @@ export const throwAndDelegateError = (
     throw new ServerError(DELEGATE_TO_FRONTEND_CODE, errorType);
   }
 
+  // Unknown status (e.g. 422, 429) → pass through to the caller
   throw new ServerError(status, `${source} (${errorMessage})`);
 };
-
-export class DelegateToFrontedError extends ServerError {
-  errorType: IntegrationErrorType;
-
-  constructor(errorType: IntegrationErrorType) {
-    super(DELEGATE_TO_FRONTEND_CODE, errorType);
-
-    this.errorType = errorType;
-    this.name = 'DelegateToFrontedError';
-  }
-}
