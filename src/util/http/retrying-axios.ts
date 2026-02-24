@@ -80,7 +80,9 @@ export function useRetryOnErrorInterceptor(
             },
           );
 
-          delayMs && (await delay(delayMs));
+          if (delayMs) {
+            await delay(delayMs);
+          }
 
           return axiosInstance.request(error.config);
         }
