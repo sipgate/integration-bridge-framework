@@ -39,6 +39,10 @@
       "^.+\\.ts?$": "ts-jest"
     },
     "testRegex": "(/__tests__/.*|(\\.|/)(test|spec))\\.(js?|ts?)$",
+    "testPathIgnorePatterns": [
+      "/node_modules/",
+      "/dist/"
+    ],
     "moduleFileExtensions": [
       "js",
       "ts",
