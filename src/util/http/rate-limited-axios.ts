@@ -116,12 +116,13 @@ export function useRateLimitInterceptor(
     try {
       await rateLimiter.consume(effectiveKey, 1);
     } catch (rateLimiterRes: any) {
-      enableLogging &&
+      if (enableLogging) {
         infoLogger(
           'axiosRateLimitInterceptor',
           `Waiting ${rateLimiterRes.msBeforeNext} to respect rate limit`,
           effectiveKey,
         );
+      }
 
       await new Promise((resolve) => {
         setTimeout(resolve, rateLimiterRes.msBeforeNext);
