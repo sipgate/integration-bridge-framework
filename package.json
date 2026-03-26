@@ -1,6 +1,7 @@
 {
   "name": "@sipgate/integration-bridge",
   "version": "1.0.36",
+  "deprecated": "This package has been moved to the sipgate/integration-bridges monorepo.",
   "description": "sipgate Integration Bridge Framework",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

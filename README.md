@@ -1,5 +1,7 @@
 # sipgate Integration Bridge Framework
 
+> **Deprecated:** This repository has been superseded by the [integration-bridges monorepo](https://github.com/sipgate/integration-bridges), where the framework is now maintained as part of a unified workspace alongside all bridge implementations. This repo is no longer actively developed.
+
 This is the sipgate Integration Bridge framework to integrate sipgate apps with external services. It provides a unified
 way to connect apps to any provider of external data management, like contacts or calendar events.
 
