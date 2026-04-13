@@ -63,7 +63,7 @@
     "@types/lru-cache": "7.10.9",
     "@types/node": "18.16.5",
     "@types/redis": "4.0.10",
-    "eslint": "9.26.0",
+    "eslint": "9.39.4",
     "eslint-plugin-import": "^2.29.0",
     "globals": "^14.0.0",
     "husky": "8.0.3",
